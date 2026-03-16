@@ -1,0 +1,85 @@
+# claude-workspace-builder configuration
+#
+# Copy this file to config.yaml and customize. Any key you omit uses the
+# built-in default. You only need to specify what you want to change.
+
+target: output
+
+vault:
+  name: Obsidian
+  parent_dir: "Claude Context"
+  create_bootstrap: true
+  create_templates: true
+
+ecc:
+  source_dir: ecc-curated
+  agents:
+    - architect
+    - build-error-resolver
+    - chief-of-staff
+    - code-reviewer
+    - database-reviewer
+    - doc-updater
+    - e2e-runner
+    - go-build-resolver
+    - go-reviewer
+    - harness-optimizer
+    - loop-operator
+    - planner
+    - python-reviewer
+    - refactor-cleaner
+    - security-reviewer
+    - tdd-guide
+  commands:
+    - build-fix
+    - checkpoint
+    - code-review
+    - e2e
+    - eval
+    - go-build
+    - go-review
+    - go-test
+    - plan
+    - python-review
+    - refactor-clean
+    - tdd
+    - test-coverage
+    - update-docs
+    - verify
+  rules:
+    common:
+      - agents
+      - coding-style
+      - development-workflow
+      - git-workflow
+      - patterns
+      - performance
+      - security
+      - testing
+    golang:
+      - coding-style
+      - patterns
+      - security
+      - testing
+    python:
+      - coding-style
+      - patterns
+      - security
+      - testing
+
+skills:
+  source_dir: skills
+  install:
+    - mobile-inbox-triage
+    - vault-audit
+    - oss-health-check
+
+context_templates:
+  deploy: true
+  files:
+    - about-me.template.md
+    - brand-voice.template.md
+    - working-style.template.md
+
+claude_md:
+  deploy: true
