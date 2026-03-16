@@ -109,8 +109,9 @@ fi
 section "Index-to-Disk Consistency"
 echo "Verifying every project folder appears in its tier index and vice versa..."
 
-for tier in Personal Volcanix Claude; do
-  tier_dir="$VAULT_PATH/projects/$tier"
+for tier_dir in "$VAULT_PATH"/projects/*/; do
+  [[ ! -d "$tier_dir" ]] && continue
+  tier=$(basename "$tier_dir")
   tier_index="$tier_dir/_index.md"
 
   if [[ ! -f "$tier_index" ]]; then
@@ -142,13 +143,27 @@ echo "  Index-to-disk check complete."
 section "Bootstrap Manifest Consistency"
 echo "Checking _bootstrap.md project list matches projects/_index.md..."
 
-BOOTSTRAP="$VAULT_PATH/_bootstrap.md"
-PROJECTS_INDEX="$VAULT_PATH/projects/_index.md"
+# Check vault root first, then nested Claude Context/Obsidian/ location
+BOOTSTRAP=""
+for candidate in "$VAULT_PATH/_bootstrap.md" "$VAULT_PATH/Claude Context/Obsidian/_bootstrap.md"; do
+  if [[ -f "$candidate" ]]; then
+    BOOTSTRAP="$candidate"
+    break
+  fi
+done
 
-if [[ ! -f "$BOOTSTRAP" ]]; then
-  issue "_bootstrap.md is missing from vault root"
-elif [[ ! -f "$PROJECTS_INDEX" ]]; then
-  issue "projects/_index.md is missing"
+PROJECTS_INDEX=""
+for candidate in "$VAULT_PATH/projects/_index.md" "$VAULT_PATH/Claude Context/Obsidian/projects/_index.md"; do
+  if [[ -f "$candidate" ]]; then
+    PROJECTS_INDEX="$candidate"
+    break
+  fi
+done
+
+if [[ -z "$BOOTSTRAP" ]]; then
+  issue "_bootstrap.md is missing (checked vault root and Claude Context/Obsidian/)"
+elif [[ -z "$PROJECTS_INDEX" ]]; then
+  issue "projects/_index.md is missing (checked vault root and Claude Context/Obsidian/)"
 else
   # Extract project names from bootstrap table rows (lines starting with |)
   # Bold project names appear as **Name** in the first column of data rows
@@ -222,6 +237,7 @@ echo "  Frontmatter validation complete."
 section "Required Structural Files"
 echo "Verifying critical vault files exist..."
 
+NESTED_ROOT="$VAULT_PATH/Claude Context/Obsidian"
 for required_file in \
   "_bootstrap.md" \
   "_index.md" \
@@ -231,7 +247,7 @@ for required_file in \
   "code/_index.md" \
   "business/_index.md" \
   "self/_index.md"; do
-  if [[ ! -f "$VAULT_PATH/$required_file" ]]; then
+  if [[ ! -f "$VAULT_PATH/$required_file" && ! -f "$NESTED_ROOT/$required_file" ]]; then
     issue "Missing required file: $required_file"
   fi
 done
@@ -241,6 +257,13 @@ find "$VAULT_PATH/projects" -mindepth 2 -maxdepth 2 -type d -print0 | while IFS=
   proj_rel="${project_dir#$VAULT_PATH/}"
   [[ ! -f "$project_dir/_index.md" ]] && issue "Missing _index.md in $proj_rel"
   [[ ! -f "$project_dir/status.md" ]] && issue "Missing status.md in $proj_rel"
+done
+
+# Check for index.md (without underscore) naming drift in project directories
+echo "Checking for index.md naming drift (should be _index.md)..."
+find "$VAULT_PATH/projects" -mindepth 2 -maxdepth 3 -name "index.md" -print0 2>/dev/null | while IFS= read -r -d '' drift_file; do
+  rel_file="${drift_file#$VAULT_PATH/}"
+  warn "Naming convention: '$rel_file' should be renamed to '_index.md' (underscore prefix required)"
 done
 
 echo "  Structural file check complete."

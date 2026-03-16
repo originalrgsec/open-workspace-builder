@@ -105,6 +105,7 @@ class TestTemplates:
         "selections-tracker.md",
         "session-log.md",
         "spec.md",
+        "status.md",
         "story.md",
         "threat-model.md",
         "vendor-contact-list.md",
@@ -217,6 +218,6 @@ class TestYamlConfigBuild:
         builder = WorkspaceBuilder(config, content_root)
         builder.build(tmp_target)
         templates_dir = tmp_target / "Claude Context" / "TestVault" / "_templates"
-        # Directory exists but should have no template files
-        template_files = list(templates_dir.iterdir()) if templates_dir.exists() else []
-        assert len(template_files) == 0
+        # readme.md is always generated; no other templates should exist
+        template_files = sorted(f.name for f in templates_dir.iterdir()) if templates_dir.exists() else []
+        assert template_files == ["readme.md"]
