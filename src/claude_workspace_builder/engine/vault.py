@@ -6,6 +6,7 @@ Reads templates from content/templates/ at runtime rather than embedding them.
 from __future__ import annotations
 
 import textwrap
+from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -280,6 +281,60 @@ def _business_index() -> str:
     """)
 
 
+def _status_content(project_name: str, created_date: str) -> str:
+    """Generate a status.md for a project from the status template."""
+    return textwrap.dedent(f"""\
+        ---
+        type: status
+        project: "{project_name}"
+        created: "{created_date}"
+        last-updated: "{created_date}"
+        phase: planning
+        ---
+
+        # Status — {project_name}
+
+        ## Current Phase
+
+        Planning
+
+        ## Recent Activity
+
+        - Project created on {created_date}
+
+        ## Blockers
+
+        None
+
+        ## Next Actions
+
+        - [ ] Define project scope and goals
+        - [ ] Create PRD from template
+    """)
+
+
+def _templates_readme() -> str:
+    """Generate the _templates/readme.md file."""
+    return textwrap.dedent("""\
+        # _templates/
+
+        These templates define the standard format for notes that Claude creates and
+        depends on for session continuity and cross-session retrieval.
+
+        ## Design Document Chain (PRD → ADR → Threat Model → SDR → Stories)
+
+        The PRD defines what to build and why. The ADR defines how to build it
+        architecturally and includes data flow diagrams with trust boundaries. The
+        threat model applies STRIDE to the DFDs and scores risk using NIST SP 800-30.
+        The SDR defines how to build it at code level and breaks work into stories.
+        Each story has testable acceptance criteria for TDD.
+
+        ## Available Templates
+
+        See the individual template files in this directory for formats and usage.
+    """)
+
+
 _CONTENT_GENERATORS: dict[str, str | None] = {}
 
 
@@ -344,6 +399,27 @@ class VaultBuilder:
         for f in VAULT_FILES:
             content = vault_file_content(f)
             self._write(vault_root / f, content)
+
+        # Generate status.md per project tier
+        today = date.today().isoformat()
+        tiers = [d for d in VAULT_DIRS if d.startswith("projects/") and d.count("/") == 1]
+        for tier_dir in tiers:
+            tier_name = Path(tier_dir).name
+            self._write(
+                vault_root / tier_dir / "status.md",
+                _status_content(tier_name, today),
+            )
+
+        # Ensure self/ has _index.md with context file stubs
+        # (already in VAULT_FILES, but verify content points to context files)
+
+        # Ensure research/mobile-inbox/archive/ exists with .gitkeep
+        archive_dir = vault_root / "research" / "mobile-inbox" / "archive"
+        self._mkdir(archive_dir)
+        self._write(archive_dir / ".gitkeep", "")
+
+        # Generate _templates/readme.md unconditionally
+        self._write(vault_root / "_templates" / "readme.md", _templates_readme())
 
         if self._config.create_templates:
             print("  Installing vault templates...")
