@@ -86,11 +86,98 @@ def ecc() -> None:
     sys.exit(1)
 
 
-@cwb.command()
+@cwb.group()
 def security() -> None:
-    """Run security checks on workspace configuration."""
-    click.echo("Not yet implemented")
-    sys.exit(1)
+    """Security scanning and analysis commands."""
+
+
+@security.command()
+@click.argument("path", type=click.Path(exists=True))
+@click.option(
+    "--layers",
+    default="1,2,3",
+    help="Comma-separated layer numbers to run (default: 1,2,3).",
+)
+@click.option(
+    "--output", "-o",
+    "output_file",
+    default=None,
+    type=click.Path(),
+    help="Write JSON report to file.",
+)
+def scan(path: str, layers: str, output_file: str | None) -> None:
+    """Scan a file or directory for security issues."""
+    import json
+
+    from claude_workspace_builder.security.scanner import Scanner
+
+    layer_nums = tuple(int(x.strip()) for x in layers.split(",") if x.strip())
+    scanner = Scanner(layers=layer_nums)
+
+    target = Path(path)
+    if target.is_file():
+        verdict = scanner.scan_file(target)
+        report_data = {
+            "file": verdict.file_path,
+            "verdict": verdict.verdict,
+            "flags": [
+                {
+                    "category": f.category,
+                    "severity": f.severity,
+                    "evidence": f.evidence,
+                    "description": f.description,
+                    "line_number": f.line_number,
+                    "layer": f.layer,
+                }
+                for f in verdict.flags
+            ],
+        }
+        _print_verdict(verdict.file_path, verdict.verdict, len(verdict.flags))
+        has_issues = verdict.verdict in ("flagged", "malicious")
+    else:
+        report = scanner.scan_directory(target)
+        report_data = {
+            "directory": report.directory,
+            "summary": report.summary,
+            "verdicts": [
+                {
+                    "file": v.file_path,
+                    "verdict": v.verdict,
+                    "flags": [
+                        {
+                            "category": f.category,
+                            "severity": f.severity,
+                            "evidence": f.evidence,
+                            "description": f.description,
+                            "line_number": f.line_number,
+                            "layer": f.layer,
+                        }
+                        for f in v.flags
+                    ],
+                }
+                for v in report.verdicts
+            ],
+        }
+        for v in report.verdicts:
+            _print_verdict(v.file_path, v.verdict, len(v.flags))
+        click.echo(f"\nSummary: {report.summary}")
+        has_issues = any(
+            v.verdict in ("flagged", "malicious") for v in report.verdicts
+        )
+
+    if output_file:
+        Path(output_file).write_text(
+            json.dumps(report_data, indent=2) + "\n", encoding="utf-8"
+        )
+        click.echo(f"Report written to {output_file}")
+
+    sys.exit(2 if has_issues else 0)
+
+
+def _print_verdict(file_path: str, verdict: str, flag_count: int) -> None:
+    """Print a single file verdict line."""
+    icon = {"clean": "OK", "flagged": "WARN", "malicious": "FAIL", "error": "ERR"}
+    click.echo(f"[{icon.get(verdict, '??')}] {file_path} — {verdict} ({flag_count} flags)")
 
 
 @cwb.command(name="package-skills")
