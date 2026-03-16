@@ -1,0 +1,249 @@
+# Security patterns for Claude workspace content scanning.
+# 42 patterns across 9 categories.
+
+categories:
+  exfiltration:
+    description: "Data exfiltration instructions"
+    patterns:
+      - id: exfil-001
+        pattern: "curl\\s+.*(-d|--data)\\s+.*\\$"
+        severity: critical
+        description: "curl POST with variable data — potential data exfiltration"
+        false_positive_hint: "Legitimate if documenting curl usage without variable interpolation"
+      - id: exfil-002
+        pattern: "wget\\s+.*--post-(data|file).*\\$"
+        severity: critical
+        description: "wget POST with variable data — potential data exfiltration"
+        false_positive_hint: "Legitimate in download documentation"
+      - id: exfil-003
+        pattern: "\\bfetch\\s*\\(.*body\\s*:.*\\benv\\b"
+        severity: critical
+        description: "fetch() sending environment data"
+        false_positive_hint: "Legitimate in API client documentation"
+      - id: exfil-004
+        pattern: "send.*to.*https?://"
+        severity: warning
+        description: "Instruction to send data to external URL"
+        false_positive_hint: "Legitimate in webhook or API documentation"
+      - id: exfil-005
+        pattern: "exfiltrat"
+        severity: critical
+        description: "Explicit exfiltration language"
+        false_positive_hint: "Legitimate in security documentation discussing threats"
+
+  persistence:
+    description: "Persistence and backdoor vectors"
+    patterns:
+      - id: persist-001
+        pattern: "crontab\\s+(-e|-l|.*\\*/)"
+        severity: critical
+        description: "Crontab modification — potential persistence"
+        false_positive_hint: "Legitimate in scheduling documentation"
+      - id: persist-002
+        pattern: "\\.(bashrc|zshrc|profile|bash_profile)\\b"
+        severity: warning
+        description: "Shell profile modification — potential persistence"
+        false_positive_hint: "Legitimate in shell configuration guides"
+      - id: persist-003
+        pattern: "launchctl\\s+(load|submit)"
+        severity: critical
+        description: "macOS launch agent installation"
+        false_positive_hint: "Legitimate in macOS service documentation"
+      - id: persist-004
+        pattern: "systemctl\\s+(enable|start)"
+        severity: warning
+        description: "systemd service installation"
+        false_positive_hint: "Legitimate in Linux service documentation"
+      - id: persist-005
+        pattern: "\\bbackdoor\\b"
+        severity: critical
+        description: "Explicit backdoor language"
+        false_positive_hint: "Legitimate in security education content"
+
+  stealth:
+    description: "Stealth and evasion techniques"
+    patterns:
+      - id: stealth-001
+        pattern: "(?i)do\\s+not\\s+(mention|reveal|disclose|tell|show)"
+        severity: critical
+        description: "Instruction to hide behavior from user"
+        false_positive_hint: "Legitimate in privacy policy context"
+      - id: stealth-002
+        pattern: "(?i)ignore\\s+(previous|prior|above|all)\\s+(instructions?|rules?|guidelines?)"
+        severity: critical
+        description: "Prompt injection — override prior instructions"
+        false_positive_hint: "Legitimate in prompt engineering education"
+      - id: stealth-003
+        pattern: "(?i)pretend\\s+(you|that|to\\s+be)"
+        severity: warning
+        description: "Identity manipulation instruction"
+        false_positive_hint: "Legitimate in roleplay or testing documentation"
+      - id: stealth-004
+        pattern: "(?i)secretly|covertly|silently\\s+(add|install|run|execute|modify)"
+        severity: critical
+        description: "Instruction to perform hidden action"
+        false_positive_hint: "None — almost always malicious in workspace content"
+      - id: stealth-005
+        pattern: "(?i)without\\s+(the\\s+)?user('s)?\\s+(knowledge|knowing|consent|awareness)"
+        severity: critical
+        description: "Instruction to bypass user awareness"
+        false_positive_hint: "Legitimate in UX anti-pattern documentation"
+
+  self_modification:
+    description: "Self-modification and instruction override"
+    patterns:
+      - id: selfmod-001
+        pattern: "(?i)modify\\s+(your|these|the)\\s+(own\\s+)?(instructions?|rules?|config)"
+        severity: critical
+        description: "Instruction to self-modify rules or config"
+        false_positive_hint: "Legitimate in meta-programming documentation"
+      - id: selfmod-002
+        pattern: "(?i)rewrite\\s+(your|this)\\s+(prompt|system|instructions?)"
+        severity: critical
+        description: "Instruction to rewrite system prompt"
+        false_positive_hint: "Legitimate in prompt engineering guides"
+      - id: selfmod-003
+        pattern: "(?i)append.*to.*CLAUDE\\.md"
+        severity: warning
+        description: "Instruction to modify CLAUDE.md"
+        false_positive_hint: "Legitimate in workspace setup documentation"
+      - id: selfmod-004
+        pattern: "(?i)overwrite\\s+(the\\s+)?(config|settings|rules)"
+        severity: critical
+        description: "Instruction to overwrite configuration"
+        false_positive_hint: "Legitimate in migration documentation"
+
+  encoded:
+    description: "Encoded or obfuscated content"
+    patterns:
+      - id: encoded-001
+        pattern: "(?i)base64\\s*(decode|encode|\\-d)"
+        severity: warning
+        description: "Base64 encoding/decoding operation"
+        false_positive_hint: "Legitimate in encoding documentation"
+      - id: encoded-002
+        pattern: "\\beval\\s*\\("
+        severity: warning
+        description: "Dynamic code evaluation"
+        false_positive_hint: "Legitimate in language documentation"
+      - id: encoded-003
+        pattern: "\\\\x[0-9a-fA-F]{2}(\\\\x[0-9a-fA-F]{2}){3,}"
+        severity: warning
+        description: "Hex-encoded string sequence"
+        false_positive_hint: "Legitimate in binary protocol documentation"
+      - id: encoded-005
+        pattern: "\\$\\(.*\\)"
+        severity: warning
+        description: "Command substitution in shell"
+        false_positive_hint: "Legitimate in shell scripting documentation"
+
+  network:
+    description: "Suspicious network operations"
+    patterns:
+      - id: net-001
+        pattern: "(?i)reverse\\s+shell"
+        severity: critical
+        description: "Reverse shell reference"
+        false_positive_hint: "Legitimate in CTF or security education"
+      - id: net-002
+        pattern: "nc\\s+(-e|-c|.*\\|.*sh)"
+        severity: critical
+        description: "Netcat with shell execution"
+        false_positive_hint: "Legitimate in networking documentation"
+      - id: net-003
+        pattern: "/dev/(tcp|udp)/\\S+"
+        severity: critical
+        description: "Bash /dev/tcp network redirect"
+        false_positive_hint: "Legitimate in advanced bash documentation"
+      - id: net-004
+        pattern: "(?i)ngrok|serveo|localtunnel"
+        severity: warning
+        description: "Tunnel service reference"
+        false_positive_hint: "Legitimate in development setup documentation"
+      - id: net-005
+        pattern: "(?i)bind\\s+shell"
+        severity: critical
+        description: "Bind shell reference"
+        false_positive_hint: "Legitimate in security education"
+
+  privilege:
+    description: "Privilege escalation and permission changes"
+    patterns:
+      - id: priv-001
+        pattern: "chmod\\s+[0-7]*7[0-7]{2}"
+        severity: warning
+        description: "chmod with world-writable permission"
+        false_positive_hint: "Legitimate in permission documentation"
+      - id: priv-002
+        pattern: "sudo\\s+chmod|chown"
+        severity: warning
+        description: "Privileged permission change"
+        false_positive_hint: "Legitimate in system administration guides"
+      - id: priv-003
+        pattern: "(?i)privilege\\s+escalat"
+        severity: warning
+        description: "Privilege escalation language"
+        false_positive_hint: "Legitimate in security documentation"
+      - id: priv-004
+        pattern: "SUID|setuid|setgid"
+        severity: warning
+        description: "SUID/SGID permission reference"
+        false_positive_hint: "Legitimate in Linux security documentation"
+
+  sensitive_paths:
+    description: "Access to sensitive file paths"
+    patterns:
+      - id: path-001
+        pattern: "~/.ssh/(id_rsa|id_ed25519|config|authorized_keys)"
+        severity: critical
+        description: "SSH key or config access"
+        false_positive_hint: "Legitimate in SSH setup documentation"
+      - id: path-002
+        pattern: "~/.aws/(credentials|config)"
+        severity: critical
+        description: "AWS credentials access"
+        false_positive_hint: "Legitimate in AWS setup documentation"
+      - id: path-003
+        pattern: "\\.env\\b(?!iron)"
+        severity: warning
+        description: "Environment file access"
+        false_positive_hint: "Legitimate in project setup documentation"
+      - id: path-004
+        pattern: "/etc/(passwd|shadow)"
+        severity: critical
+        description: "System password file access"
+        false_positive_hint: "Legitimate in Linux administration documentation"
+      - id: path-005
+        pattern: "(?i)(api[_-]?key|secret[_-]?key|access[_-]?token)\\s*[=:]\\s*['\"][^'\"]{8,}"
+        severity: critical
+        description: "Hardcoded secret value"
+        false_positive_hint: "Legitimate if using placeholder/example values"
+
+  prompt_injection:
+    description: "Prompt injection and behavioral manipulation"
+    patterns:
+      - id: inject-001
+        pattern: "(?i)you\\s+are\\s+(now|no\\s+longer)\\s+a"
+        severity: critical
+        description: "Identity reassignment injection"
+        false_positive_hint: "Legitimate in roleplay documentation"
+      - id: inject-002
+        pattern: "(?i)system\\s*:\\s*you\\s+are"
+        severity: critical
+        description: "Fake system prompt injection"
+        false_positive_hint: "Legitimate in prompt engineering documentation"
+      - id: inject-003
+        pattern: "(?i)new\\s+instructions?\\s*:"
+        severity: critical
+        description: "Instruction override attempt"
+        false_positive_hint: "Legitimate in update documentation"
+      - id: inject-004
+        pattern: "(?i)from\\s+now\\s+on,?\\s+(you|always|never|ignore)"
+        severity: critical
+        description: "Behavioral override instruction"
+        false_positive_hint: "Legitimate in style guide context"
+      - id: inject-005
+        pattern: "(?i)</?system>|\\[SYSTEM\\]|\\[INST\\]"
+        severity: critical
+        description: "Fake markup delimiter injection"
+        false_positive_hint: "Legitimate in LLM documentation discussing formats"
