@@ -2,10 +2,8 @@
 
 Scaffold, maintain, and secure [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [Cowork](https://docs.anthropic.com/en/docs/cowork) workspaces from a single command.
 
-[![PyPI version](https://img.shields.io/pypi/v/claude-workspace-builder)](https://pypi.org/project/claude-workspace-builder/)
-[![Python 3.10+](https://img.shields.io/pypi/pyversions/claude-workspace-builder)](https://pypi.org/project/claude-workspace-builder/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![CI](https://github.com/VolcanixLLC/claude-workspace-builder/actions/workflows/release.yml/badge.svg)](https://github.com/VolcanixLLC/claude-workspace-builder/actions/workflows/release.yml)
 
 ## What It Does
 
@@ -13,8 +11,10 @@ Scaffold, maintain, and secure [Claude Code](https://docs.anthropic.com/en/docs/
 
 ## Quick Start
 
+> **Private repo** — you need read access to the GitHub repository to install.
+
 ```bash
-pip install claude-workspace-builder
+pip install git+https://github.com/VolcanixLLC/claude-workspace-builder.git
 
 # Scaffold a workspace with sensible defaults
 cwb init
@@ -113,7 +113,7 @@ The scanner runs automatically during `cwb migrate` and `cwb ecc update`. Files 
 Layer 3 (semantic analysis) requires the `security` extra and an `ANTHROPIC_API_KEY`:
 
 ```bash
-pip install claude-workspace-builder[security]
+pip install "claude-workspace-builder[security] @ git+https://github.com/VolcanixLLC/claude-workspace-builder.git"
 export ANTHROPIC_API_KEY=sk-...
 ```
 
@@ -177,9 +177,10 @@ Add the skill name to `config.yaml` under `skills.install` and run `cwb init`.
 ## Requirements
 
 - Python 3.10+
+- Read access to this private GitHub repository
 - Core: `click` (installed automatically)
-- Optional: `pyyaml` for custom config files (`pip install claude-workspace-builder[yaml]`)
-- Optional: `anthropic` for Layer 3 semantic scanning (`pip install claude-workspace-builder[security]`)
+- Optional: `pyyaml` for custom config files (`pip install "claude-workspace-builder[yaml] @ git+https://github.com/VolcanixLLC/claude-workspace-builder.git"`)
+- Optional: `anthropic` for Layer 3 semantic scanning (`pip install "claude-workspace-builder[security] @ git+https://github.com/VolcanixLLC/claude-workspace-builder.git"`)
 
 ## Contributing
 
