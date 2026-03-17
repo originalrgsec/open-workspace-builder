@@ -79,11 +79,144 @@ def migrate() -> None:
     sys.exit(1)
 
 
-@cwb.command()
+@cwb.group()
 def ecc() -> None:
     """Manage ECC catalog installation."""
-    click.echo("Not yet implemented")
-    sys.exit(1)
+
+
+@ecc.command()
+@click.option(
+    "--accept-all",
+    is_flag=True,
+    default=False,
+    help="Auto-accept all non-flagged files (batch mode).",
+)
+@click.option(
+    "--dry-run", "-n",
+    is_flag=True,
+    default=False,
+    help="Fetch and scan but do not write any files.",
+)
+def update(accept_all: bool, dry_run: bool) -> None:
+    """Fetch latest upstream ECC, diff, scan, and selectively apply updates."""
+    from claude_workspace_builder.engine.ecc_update import (
+        FileReview,
+        run_update,
+    )
+    from claude_workspace_builder.security.reputation import FlagEvent, ReputationLedger
+
+    content_root = _find_content_root()
+    vendor_dir = content_root / "vendor" / "ecc"
+
+    if not vendor_dir.exists():
+        click.echo("Error: vendor/ecc/ not found.")
+        sys.exit(1)
+
+    def _interactive_prompt(review: FileReview) -> str:
+        d = review.diff
+        click.echo(f"\n--- {d.relative_path} [{d.category}] ---")
+        if d.unified_diff:
+            click.echo(d.unified_diff)
+
+        if review.verdict is not None and hasattr(review.verdict, "verdict"):
+            v = review.verdict
+            icon = {"clean": "OK", "flagged": "WARN", "malicious": "FAIL"}
+            click.echo(f"Security: [{icon.get(v.verdict, '??')}] {v.verdict}")
+            if hasattr(v, "flags"):
+                for f in v.flags:
+                    click.echo(f"  [{f.severity}] {f.category}: {f.description}")
+
+        while True:
+            choice = click.prompt(
+                "[a]ccept / [r]eject / [d]etail / [q]uit",
+                type=str,
+                default="r",
+            ).lower().strip()
+            if choice == "d":
+                click.echo(f"\n=== Full content of {d.relative_path} ===")
+                continue
+            if choice in ("a", "r", "q"):
+                return choice
+
+    prompt_fn = None if accept_all else _interactive_prompt
+
+    try:
+        results = run_update(
+            vendor_dir,
+            dry_run=dry_run,
+            accept_all=accept_all,
+            prompt_fn=prompt_fn,
+        )
+    except Exception as exc:
+        click.echo(f"Error during update: {exc}")
+        sys.exit(1)
+
+    ledger = ReputationLedger()
+    for r in results:
+        if r.action == "blocked":
+            event = FlagEvent.now(
+                source="ecc",
+                file_path=r.relative_path,
+                flag_category="security_scan",
+                severity="critical",
+                disposition="confirmed_malicious",
+                details="; ".join(r.flag_details or []),
+            )
+            ledger.record_event(event)
+
+    if ledger.check_threshold("ecc"):
+        click.echo(
+            "\n[WARNING] ECC source has exceeded the malicious flag threshold.\n"
+            "Recommendation: drop this upstream and freeze on current vendored copy."
+        )
+
+    accepted = sum(1 for r in results if r.action == "accepted")
+    rejected = sum(1 for r in results if r.action == "rejected")
+    blocked = sum(1 for r in results if r.action == "blocked")
+    click.echo(f"\nUpdate complete: {accepted} accepted, {rejected} rejected, {blocked} blocked")
+
+
+@ecc.command()
+def status() -> None:
+    """Display current ECC status: pinned commit, flag history, recent updates."""
+    from claude_workspace_builder.engine.ecc_update import get_status
+
+    content_root = _find_content_root()
+    vendor_dir = content_root / "vendor" / "ecc"
+
+    if not vendor_dir.exists():
+        click.echo("Error: vendor/ecc/ not found.")
+        sys.exit(1)
+
+    info = get_status(vendor_dir)
+
+    click.echo("=== ECC Status ===")
+    click.echo(f"  Repo URL:     {info['repo_url']}")
+    click.echo(f"  Pinned commit: {info['commit_hash']}")
+    click.echo(f"  Last fetch:    {info['fetch_date']}")
+
+    if info["flag_history"]:
+        click.echo(f"\n  Flag history ({len(info['flag_history'])} events):")
+        for event in info["flag_history"]:
+            click.echo(
+                f"    [{event['severity']}] {event['file_path']} "
+                f"— {event['disposition']} ({event['timestamp']})"
+            )
+    else:
+        click.echo("\n  No flag history for ECC source.")
+
+    if info["recent_updates"]:
+        click.echo(f"\n  Recent updates ({len(info['recent_updates'])}):")
+        for entry in info["recent_updates"]:
+            accepted = len(entry.get("files_accepted", []))
+            rejected = len(entry.get("files_rejected", []))
+            blocked = len(entry.get("files_blocked", []))
+            click.echo(
+                f"    {entry.get('timestamp', '?')} — "
+                f"{accepted} accepted, {rejected} rejected, {blocked} blocked"
+            )
+    else:
+        click.echo("\n  No update history.")
 
 
 @cwb.group()
