@@ -1,18 +1,46 @@
-# claude-workspace-builder configuration
+# cwb (Claude Workspace Builder) — Full Configuration Reference
 #
-# Copy this file to config.yaml and customize. Any key you omit uses the
-# built-in default. You only need to specify what you want to change.
+# Copy this file to config.yaml and pass it with: cwb init --config config.yaml
+# Every key is optional. Omitted keys use built-in defaults.
+# The defaults below match what cwb does when no config file is provided.
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Target directory for the built workspace.
+# Default: "output"
+# ──────────────────────────────────────────────────────────────────────────────
 target: output
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Obsidian knowledge vault settings
+# ──────────────────────────────────────────────────────────────────────────────
 vault:
+  # Name of the vault subdirectory inside parent_dir.
+  # Default: "Obsidian"
   name: Obsidian
+
+  # Parent directory that contains the vault (relative to target).
+  # Default: "Claude Context"
   parent_dir: "Claude Context"
+
+  # Create _bootstrap.md — a session entry point template.
+  # Default: true
   create_bootstrap: true
+
+  # Create the _templates/ directory with all 18 note templates.
+  # Default: true
   create_templates: true
 
+# ──────────────────────────────────────────────────────────────────────────────
+# ECC (Everything Claude Code) catalog — agents, commands, and rules
+# installed into .claude/
+# ──────────────────────────────────────────────────────────────────────────────
 ecc:
+  # Directory containing the vendored ECC content.
+  # Default: "ecc-curated"
   source_dir: ecc-curated
+
+  # Agents to install into .claude/agents/
+  # Each name corresponds to a directory in ecc-curated/agents/
   agents:
     - architect
     - build-error-resolver
@@ -30,6 +58,9 @@ ecc:
     - refactor-cleaner
     - security-reviewer
     - tdd-guide
+
+  # Slash commands to install into .claude/commands/
+  # Each name corresponds to a file in ecc-curated/commands/
   commands:
     - build-fix
     - checkpoint
@@ -46,6 +77,9 @@ ecc:
     - test-coverage
     - update-docs
     - verify
+
+  # Rules to install into .claude/rules/<category>/
+  # Each category maps to a subdirectory; each name maps to a file.
   rules:
     common:
       - agents
@@ -67,19 +101,39 @@ ecc:
       - security
       - testing
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Custom Cowork skills installed into .skills/skills/
+# ──────────────────────────────────────────────────────────────────────────────
 skills:
+  # Directory containing skill source folders.
+  # Default: "skills"
   source_dir: skills
+
+  # Skills to install. Each name corresponds to a directory in source_dir.
   install:
     - mobile-inbox-triage
     - vault-audit
     - oss-health-check
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Context template files (about-me.md, brand-voice.md, working-style.md)
+# deployed into "Claude Context/" in the target.
+# ──────────────────────────────────────────────────────────────────────────────
 context_templates:
+  # Whether to deploy context template files.
+  # Default: true
   deploy: true
+
+  # Template files to deploy. Located in content/context_templates/.
   files:
     - about-me.template.md
     - brand-voice.template.md
     - working-style.template.md
 
+# ──────────────────────────────────────────────────────────────────────────────
+# CLAUDE.md — workspace entry point deployed to .claude/CLAUDE.md
+# ──────────────────────────────────────────────────────────────────────────────
 claude_md:
+  # Whether to deploy CLAUDE.md.
+  # Default: true
   deploy: true
