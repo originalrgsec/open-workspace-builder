@@ -1,7 +1,8 @@
-"""Click CLI: cwb group with init subcommand and stubs for future commands."""
+"""Click CLI: cwb group with subcommands for init, diff, migrate, and security."""
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -66,17 +67,97 @@ def init(target: str | None, config_path: str | None, dry_run: bool) -> None:
 
 
 @cwb.command()
-def diff() -> None:
-    """Show differences between workspace and expected state."""
-    click.echo("Not yet implemented")
-    sys.exit(1)
+@click.argument("vault_path", type=click.Path(exists=True))
+@click.option(
+    "--config", "-c",
+    "config_path",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to YAML config file.",
+)
+@click.option(
+    "--output", "-o",
+    "output_file",
+    default=None,
+    type=click.Path(),
+    help="Write JSON report to file.",
+)
+def diff(vault_path: str, config_path: str | None, output_file: str | None) -> None:
+    """Show differences between workspace and reference state."""
+    from claude_workspace_builder.engine.differ import (
+        diff_report_to_dict,
+        diff_workspace,
+        format_diff_report,
+    )
+
+    config = load_config(config_path)
+    content_root = _find_content_root()
+
+    report = diff_workspace(
+        Path(vault_path), config=config, content_root=content_root
+    )
+    click.echo(format_diff_report(report))
+
+    if output_file:
+        Path(output_file).write_text(
+            json.dumps(diff_report_to_dict(report), indent=2) + "\n",
+            encoding="utf-8",
+        )
+        click.echo(f"\nReport written to {output_file}")
+
+    has_gaps = any(
+        report.summary.get(k, 0) > 0 for k in ("missing", "outdated", "modified")
+    )
+    sys.exit(1 if has_gaps else 0)
 
 
 @cwb.command()
-def migrate() -> None:
-    """Migrate workspace to latest template version."""
-    click.echo("Not yet implemented")
-    sys.exit(1)
+@click.argument("vault_path", type=click.Path(exists=True))
+@click.option(
+    "--config", "-c",
+    "config_path",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to YAML config file.",
+)
+@click.option(
+    "--accept-all",
+    is_flag=True,
+    default=False,
+    help="Accept all clean files without prompting (batch mode).",
+)
+@click.option(
+    "--dry-run", "-n",
+    is_flag=True,
+    default=False,
+    help="Show what would happen without writing files.",
+)
+def migrate(
+    vault_path: str,
+    config_path: str | None,
+    accept_all: bool,
+    dry_run: bool,
+) -> None:
+    """Migrate workspace to latest reference state."""
+    from claude_workspace_builder.engine.migrator import (
+        format_migrate_report,
+        migrate_workspace,
+    )
+
+    config = load_config(config_path)
+    content_root = _find_content_root()
+
+    report = migrate_workspace(
+        Path(vault_path),
+        config=config,
+        content_root=content_root,
+        accept_all=accept_all,
+        dry_run=dry_run,
+    )
+    click.echo(format_migrate_report(report))
+
+    has_blocked = report.summary.get("blocked", 0) > 0
+    sys.exit(2 if has_blocked else 0)
 
 
 @cwb.command()
@@ -107,8 +188,6 @@ def security() -> None:
 )
 def scan(path: str, layers: str, output_file: str | None) -> None:
     """Scan a file or directory for security issues."""
-    import json
-
     from claude_workspace_builder.security.scanner import Scanner
 
     layer_nums = tuple(int(x.strip()) for x in layers.split(",") if x.strip())
