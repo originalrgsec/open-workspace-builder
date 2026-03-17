@@ -182,6 +182,16 @@ Add the skill name to `config.yaml` under `skills.install` and run `cwb init`.
 - Optional: `pyyaml` for custom config files (`pip install "claude-workspace-builder[yaml] @ git+https://github.com/VolcanixLLC/claude-workspace-builder.git"`)
 - Optional: `anthropic` for Layer 3 semantic scanning (`pip install "claude-workspace-builder[security] @ git+https://github.com/VolcanixLLC/claude-workspace-builder.git"`)
 
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [PRD](docs/prd.md) | Requirements, personas, use cases |
+| [ADR](docs/adr.md) | Architecture decisions, C4 model, technology stack |
+| [SDR](docs/sdr.md) | Module design, data schemas, sprint plan |
+| [Threat Model](docs/threat-model.md) | STRIDE analysis, mitigations, NIST control mapping |
+| [Skill Evaluator Spec](docs/spec-skill-evaluator.md) | v2 evaluation framework design |
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, branch naming conventions, testing requirements, and the PR process.
