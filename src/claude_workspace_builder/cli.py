@@ -57,7 +57,12 @@ def cwb() -> None:
     help="Print what would be created without writing anything.",
 )
 def init(target: str | None, config_path: str | None, dry_run: bool) -> None:
-    """Initialize a new Claude workspace (vault, ECC, skills, context)."""
+    """Initialize a new Claude workspace.
+
+    Creates the full directory structure including Obsidian vault, ECC agents/commands/rules,
+    custom Cowork skills, context templates, and CLAUDE.md entry point. Defaults work out of
+    the box — pass --config to customize which components are installed.
+    """
     config = load_config(config_path)
     target_path = Path(target) if target else Path(config.target)
     content_root = _find_content_root()
@@ -83,7 +88,11 @@ def init(target: str | None, config_path: str | None, dry_run: bool) -> None:
     help="Write JSON report to file.",
 )
 def diff(vault_path: str, config_path: str | None, output_file: str | None) -> None:
-    """Show differences between workspace and reference state."""
+    """Show differences between an existing workspace and the reference state.
+
+    Compares VAULT_PATH against a freshly generated reference workspace and reports files
+    that are missing, outdated, or modified. Returns exit code 1 if any gaps are found.
+    """
     from claude_workspace_builder.engine.differ import (
         diff_report_to_dict,
         diff_workspace,
@@ -138,7 +147,12 @@ def migrate(
     accept_all: bool,
     dry_run: bool,
 ) -> None:
-    """Migrate workspace to latest reference state."""
+    """Migrate an existing workspace to the latest reference state.
+
+    Reviews each changed file interactively. Use --accept-all for batch mode.
+    Files that fail security scanning are blocked. Returns exit code 2 if any
+    files are blocked by security.
+    """
     from claude_workspace_builder.engine.migrator import (
         format_migrate_report,
         migrate_workspace,
@@ -179,7 +193,12 @@ def ecc() -> None:
     help="Fetch and scan but do not write any files.",
 )
 def update(accept_all: bool, dry_run: bool) -> None:
-    """Fetch latest upstream ECC, diff, scan, and selectively apply updates."""
+    """Fetch latest upstream ECC content and selectively apply updates.
+
+    Diffs the upstream Everything Claude Code catalog against your vendored copy,
+    runs the security scanner on changed files, and lets you accept or reject each
+    update. Use --accept-all to auto-accept files that pass scanning.
+    """
     from claude_workspace_builder.engine.ecc_update import (
         FileReview,
         run_update,
@@ -320,7 +339,12 @@ def security() -> None:
     help="Write JSON report to file.",
 )
 def scan(path: str, layers: str, output_file: str | None) -> None:
-    """Scan a file or directory for security issues."""
+    """Scan a file or directory for security issues.
+
+    Runs a three-layer scanner: structural validation, pattern matching, and
+    (optionally) semantic analysis via Claude API. Use --layers to select which
+    layers to run. Returns exit code 2 if any issues are found.
+    """
     from claude_workspace_builder.security.scanner import Scanner
 
     layer_nums = tuple(int(x.strip()) for x in layers.split(",") if x.strip())
@@ -394,6 +418,6 @@ def _print_verdict(file_path: str, verdict: str, flag_count: int) -> None:
 
 @cwb.command(name="package-skills")
 def package_skills() -> None:
-    """Package custom skills for distribution."""
+    """Package custom skills for Cowork distribution. (Coming soon.)"""
     click.echo("Not yet implemented")
     sys.exit(1)
