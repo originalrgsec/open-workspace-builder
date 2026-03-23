@@ -64,15 +64,54 @@ def owb(ctx: click.Context) -> None:
     default=False,
     help="Print what would be created without writing anything.",
 )
+@click.option(
+    "--from-vault",
+    "from_vault",
+    default=None,
+    type=click.Path(exists=True),
+    help="Generate config from existing vault.",
+)
+@click.option(
+    "--no-wizard",
+    is_flag=True,
+    default=False,
+    help="Skip interactive wizard, use defaults.",
+)
 @click.pass_context
-def init(ctx: click.Context, target: str | None, config_path: str | None, dry_run: bool) -> None:
-    """Initialize a new Claude workspace.
+def init(
+    ctx: click.Context,
+    target: str | None,
+    config_path: str | None,
+    dry_run: bool,
+    from_vault: str | None,
+    no_wizard: bool,
+) -> None:
+    """Initialize a new AI workspace.
 
-    Creates the full directory structure including Obsidian vault, ECC agents/commands/rules,
-    custom Cowork skills, context templates, and CLAUDE.md entry point. Defaults work out of
-    the box — pass --config to customize which components are installed.
+    On first run (no config exists), launches an interactive wizard. Use --no-wizard
+    to skip it, --config to provide a pre-written config, or --from-vault to generate
+    config from an existing Obsidian vault.
     """
-    config = load_config(config_path, cli_name=ctx.obj["cli_name"])
+    cli_name = ctx.obj["cli_name"]
+
+    if from_vault is not None:
+        from open_workspace_builder.wizard.vault_scan import scan_vault
+
+        config = scan_vault(Path(from_vault), cli_name=cli_name)
+    elif config_path is not None:
+        config = load_config(config_path, cli_name=cli_name)
+    elif no_wizard:
+        config = load_config(cli_name=cli_name)
+    else:
+        # Check if user config already exists
+        user_config = Path.home() / f".{cli_name}" / "config.yaml"
+        if user_config.exists():
+            config = load_config(cli_name=cli_name)
+        else:
+            from open_workspace_builder.wizard.setup import run_setup_wizard
+
+            config = run_setup_wizard(cli_name=cli_name)
+
     target_path = Path(target) if target else Path(config.target)
     content_root = _find_content_root()
 
@@ -377,7 +416,7 @@ def scan(
     """Scan a file or directory for security issues.
 
     Runs a three-layer scanner: structural validation, pattern matching, and
-    (optionally) semantic analysis via Claude API. Use --layers to select which
+    (optionally) semantic analysis via LLM. Use --layers to select which
     layers to run. Returns exit code 2 if any issues are found.
     """
     from open_workspace_builder.security.scanner import Scanner
