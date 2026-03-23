@@ -21,7 +21,7 @@ def built_workspace(tmp_target: Path, content_root: Path) -> Path:
 
 
 def _vault_root(workspace: Path) -> Path:
-    return workspace / "Claude Context" / "Obsidian"
+    return workspace / "Context" / "Obsidian"
 
 
 class TestStatusMdGeneration:
@@ -62,9 +62,7 @@ class TestSelfDirectoryStub:
         assert path.is_file()
 
     def test_self_index_references_context_files(self, built_workspace: Path) -> None:
-        content = (_vault_root(built_workspace) / "self" / "_index.md").read_text(
-            encoding="utf-8"
-        )
+        content = (_vault_root(built_workspace) / "self" / "_index.md").read_text(encoding="utf-8")
         assert "working-style.md" in content
         assert "brand-voice.md" in content
         assert "about-me.md" in content
@@ -100,7 +98,7 @@ class TestTemplatesReadme:
         config = load_config(sample_yaml_config)
         builder = WorkspaceBuilder(config, content_root)
         builder.build(tmp_target)
-        vault = tmp_target / "Claude Context" / "TestVault"
+        vault = tmp_target / "Context" / "TestVault"
         readme = vault / "_templates" / "readme.md"
         assert readme.is_file()
         content = readme.read_text(encoding="utf-8")
@@ -113,7 +111,7 @@ class TestTemplatesReadme:
         config = load_config(sample_yaml_config)
         builder = WorkspaceBuilder(config, content_root)
         builder.build(tmp_target)
-        vault = tmp_target / "Claude Context" / "TestVault"
+        vault = tmp_target / "Context" / "TestVault"
         templates_dir = vault / "_templates"
         files = [f.name for f in templates_dir.iterdir() if f.is_file()]
         assert files == ["readme.md"]

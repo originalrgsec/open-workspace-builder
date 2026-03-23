@@ -39,7 +39,7 @@ class EccInstaller:
 
     def _install_agents(self, source: Path, target: Path) -> None:
         agents_src = source / "agents"
-        agents_dst = target / ".claude" / "agents"
+        agents_dst = target / self._config.target_dir / "agents"
         for agent_name in self._config.agents:
             src_file = agents_src / f"{agent_name}.md"
             if src_file.exists():
@@ -49,7 +49,7 @@ class EccInstaller:
 
     def _install_commands(self, source: Path, target: Path) -> None:
         commands_src = source / "commands"
-        commands_dst = target / ".claude" / "commands"
+        commands_dst = target / self._config.target_dir / "commands"
         for cmd_name in self._config.commands:
             src_file = commands_src / f"{cmd_name}.md"
             if src_file.exists():
@@ -59,7 +59,7 @@ class EccInstaller:
 
     def _install_rules(self, source: Path, target: Path) -> None:
         rules_src = source / "rules"
-        rules_dst = target / ".claude" / "rules"
+        rules_dst = target / self._config.target_dir / "rules"
         for category, filenames in self._config.rules.items():
             for fname in filenames:
                 src_file = rules_src / category / f"{fname}.md"

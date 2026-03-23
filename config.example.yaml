@@ -1,6 +1,9 @@
 # Open Workspace Builder configuration
 # Copy to ~/.owb/config.yaml and customize.
 # All values shown are defaults — omit any section to use defaults.
+#
+# CWB (Claude Workspace Builder) users: override defaults via your own config
+# overlay to set agent_config, ecc.enabled, ecc.target_dir, vault.parent_dir, etc.
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Target directory for the built workspace.
@@ -22,20 +25,26 @@ models:
 # ──────────────────────────────────────────────────────────────────────────────
 vault:
   name: Obsidian
-  parent_dir: "Claude Context"
+  parent_dir: Context
+  assistant_name: "AI assistant"
   create_bootstrap: true
   create_templates: true
 
 # ──────────────────────────────────────────────────────────────────────────────
-# ECC (Everything Claude Code) catalog — agents, commands, and rules
-# installed into .claude/
+# ECC (Everything Claude Code) catalog — agents, commands, and rules.
+# Disabled by default in OWB. CWB enables via overlay with:
+#   ecc:
+#     enabled: true
+#     target_dir: ".claude"
 # ──────────────────────────────────────────────────────────────────────────────
 ecc:
+  enabled: false
   source_dir: vendor/ecc
+  target_dir: ".ai"
   # agents, commands, rules lists omitted for brevity — see defaults in config.py
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Custom Cowork skills installed into .skills/skills/
+# Custom skills installed into .skills/skills/
 # ──────────────────────────────────────────────────────────────────────────────
 skills:
   source_dir: content/skills
@@ -66,16 +75,20 @@ marketplace:
   format: generic
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Context template files deployed into "Claude Context/" in the target.
+# Context template files deployed into the vault parent_dir in the target.
 # ──────────────────────────────────────────────────────────────────────────────
 context_templates:
   deploy: true
 
 # ──────────────────────────────────────────────────────────────────────────────
-# CLAUDE.md — workspace entry point deployed to .claude/CLAUDE.md
+# Workspace config file — deployed to <directory>/<filename> in the target.
+# CWB overrides to: directory: ".claude", filename: "CLAUDE.md"
+# Legacy key "claude_md" is accepted as an alias for backward compatibility.
 # ──────────────────────────────────────────────────────────────────────────────
-claude_md:
+agent_config:
   deploy: true
+  directory: ".ai"
+  filename: "WORKSPACE.md"
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Directory paths for config, data, and credentials.

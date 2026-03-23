@@ -12,14 +12,17 @@ from typing import Any
 @dataclass(frozen=True)
 class VaultConfig:
     name: str = "Obsidian"
-    parent_dir: str = "Claude Context"
+    parent_dir: str = "Context"
+    assistant_name: str = "AI assistant"
     create_bootstrap: bool = True
     create_templates: bool = True
 
 
 @dataclass(frozen=True)
 class EccConfig:
+    enabled: bool = False
     source_dir: str = "vendor/ecc"
+    target_dir: str = ".ai"
     agents: tuple[str, ...] = (
         "architect",
         "build-error-resolver",
@@ -104,8 +107,16 @@ class ContextTemplatesConfig:
 
 
 @dataclass(frozen=True)
-class ClaudeMdConfig:
+class AgentConfigConfig:
+    """Workspace configuration file deployed to the agent config directory."""
+
     deploy: bool = True
+    directory: str = ".ai"
+    filename: str = "WORKSPACE.md"
+
+
+# Backward-compatible alias so existing imports still work.
+ClaudeMdConfig = AgentConfigConfig
 
 
 @dataclass(frozen=True)
@@ -156,7 +167,7 @@ class Config:
     ecc: EccConfig = field(default_factory=EccConfig)
     skills: SkillsConfig = field(default_factory=SkillsConfig)
     context_templates: ContextTemplatesConfig = field(default_factory=ContextTemplatesConfig)
-    claude_md: ClaudeMdConfig = field(default_factory=ClaudeMdConfig)
+    agent_config: AgentConfigConfig = field(default_factory=AgentConfigConfig)
     models: ModelsConfig = field(default_factory=ModelsConfig)
     security: SecurityConfig = field(default_factory=SecurityConfig)
     trust: TrustConfig = field(default_factory=TrustConfig)
@@ -170,7 +181,7 @@ _SECTION_CLASSES: dict[str, type] = {
     "ecc": EccConfig,
     "skills": SkillsConfig,
     "context_templates": ContextTemplatesConfig,
-    "claude_md": ClaudeMdConfig,
+    "agent_config": AgentConfigConfig,
     "models": ModelsConfig,
     "security": SecurityConfig,
     "trust": TrustConfig,
@@ -278,7 +289,7 @@ def _with_resolved_paths(config: Config, cli_name: str) -> Config:
         ecc=config.ecc,
         skills=config.skills,
         context_templates=config.context_templates,
-        claude_md=config.claude_md,
+        agent_config=config.agent_config,
         models=config.models,
         security=config.security,
         trust=config.trust,
@@ -287,8 +298,18 @@ def _with_resolved_paths(config: Config, cli_name: str) -> Config:
     )
 
 
+_SECTION_ALIASES: dict[str, str] = {
+    "claude_md": "agent_config",
+}
+
+
 def _build_config_from_dict(defaults: Config, raw: dict[str, Any]) -> Config:
     """Build a Config from raw dict, overlaying on defaults."""
+    # Apply backward-compatible aliases before processing.
+    for alias, canonical in _SECTION_ALIASES.items():
+        if alias in raw and canonical not in raw:
+            raw[canonical] = raw.pop(alias)
+
     sections: dict[str, Any] = {}
     for section_name, cls in _SECTION_CLASSES.items():
         default_val = getattr(defaults, section_name)

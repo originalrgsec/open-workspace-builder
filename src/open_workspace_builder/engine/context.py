@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from open_workspace_builder.config import ClaudeMdConfig, ContextTemplatesConfig
+    from open_workspace_builder.config import AgentConfigConfig, ContextTemplatesConfig, VaultConfig
 
 
 def _load_context_template(content_root: Path, filename: str) -> str:
@@ -18,45 +18,50 @@ def _load_context_template(content_root: Path, filename: str) -> str:
 
 
 class ContextDeployer:
-    """Deploys context file templates and CLAUDE.md."""
+    """Deploys context file templates and workspace config."""
 
     def __init__(
         self,
         context_config: ContextTemplatesConfig,
-        claude_md_config: ClaudeMdConfig,
+        agent_config: AgentConfigConfig,
+        vault_config: VaultConfig,
         content_root: Path,
         dry_run: bool = False,
     ) -> None:
         self._context_config = context_config
-        self._claude_md_config = claude_md_config
+        self._agent_config = agent_config
+        self._vault_config = vault_config
         self._content_root = content_root
         self._dry_run = dry_run
         self.created_files: list[Path] = []
 
     def deploy(self, target: Path) -> None:
-        """Deploy context templates and CLAUDE.md to target."""
+        """Deploy context templates and workspace config to target."""
         self._deploy_context_templates(target)
-        self._deploy_claude_md(target)
+        self._deploy_workspace_config(target)
 
     def _deploy_context_templates(self, target: Path) -> None:
         if not self._context_config.deploy:
             return
 
         print("=== Deploying Context File Templates ===")
-        context_dir = target / "Claude Context"
+        context_dir = target / self._vault_config.parent_dir
 
         for filename in self._context_config.files:
             content = _load_context_template(self._content_root, filename)
             deployed_name = filename.replace(".template", "")
             self._write(context_dir / deployed_name, content)
 
-    def _deploy_claude_md(self, target: Path) -> None:
-        if not self._claude_md_config.deploy:
+    def _deploy_workspace_config(self, target: Path) -> None:
+        if not self._agent_config.deploy:
             return
 
-        print("=== Deploying CLAUDE.md Template ===")
+        print(f"=== Deploying {self._agent_config.filename} ===")
         content = _load_context_template(self._content_root, "claude-md.template.md")
-        self._write(target / ".claude" / "CLAUDE.md", content)
+        self._write(
+            target / self._agent_config.directory / self._agent_config.filename,
+            content,
+        )
 
     def _write(self, path: Path, content: str) -> None:
         if self._dry_run:

@@ -48,17 +48,17 @@ VAULT_FILES = [
 ]
 
 
-def _vault_index() -> str:
-    return textwrap.dedent("""\
+def _vault_index(assistant_name: str) -> str:
+    return textwrap.dedent(f"""\
         # Vault Index
 
         This is the top-level map of content for the knowledge vault.
 
         ## Quick Start
 
-        For Claude sessions: read [[_bootstrap]] first. It contains a compact project manifest
-        with current phases and next actions, eliminating the need to traverse multiple index
-        files before starting work.
+        For {assistant_name} sessions: read [[_bootstrap]] first. It contains a compact project
+        manifest with current phases and next actions, eliminating the need to traverse multiple
+        index files before starting work.
 
         ## Areas
 
@@ -71,8 +71,8 @@ def _vault_index() -> str:
     """)
 
 
-def _vault_bootstrap() -> str:
-    return textwrap.dedent("""\
+def _vault_bootstrap(assistant_name: str, parent_dir: str) -> str:
+    return textwrap.dedent(f"""\
         ---
         type: bootstrap
         updated: YYYY-MM-DD
@@ -82,16 +82,16 @@ def _vault_bootstrap() -> str:
         # Bootstrap
 
         This file provides a compact manifest of all projects, their current phase, and their
-        top next action. It is designed to be the first file Claude reads in any new session,
-        replacing the need to traverse multiple _index.md files before starting work.
+        top next action. It is designed to be the first file the {assistant_name} reads in any
+        new session, replacing the need to traverse multiple _index.md files before starting work.
 
         ## Context Files (read as needed)
 
         | File | Location | Purpose |
         |------|----------|---------|
-        | Working Style | `Claude Context/working-style.md` | Behavioral instructions, output calibration, tool preferences |
-        | Brand Voice | `Claude Context/brand-voice.md` | Writing voice, register tiers, vocabulary, anti-patterns |
-        | About Me | `Claude Context/about-me.md` | Professional background, domain expertise, project details |
+        | Working Style | `{parent_dir}/working-style.md` | Behavioral instructions, output calibration, tool preferences |
+        | Brand Voice | `{parent_dir}/brand-voice.md` | Writing voice, register tiers, vocabulary, anti-patterns |
+        | About Me | `{parent_dir}/about-me.md` | Professional background, domain expertise, project details |
 
         ## Project Manifest
 
@@ -136,8 +136,8 @@ def _vault_bootstrap() -> str:
     """)
 
 
-def _self_index() -> str:
-    return textwrap.dedent("""\
+def _self_index(parent_dir: str, assistant_name: str) -> str:
+    return textwrap.dedent(f"""\
         ---
         type: index
         area: self
@@ -146,17 +146,17 @@ def _self_index() -> str:
         # Self
 
         Identity context files. These are stubs that point to the canonical source files
-        in the workspace root (`Claude Context/`).
+        in the workspace root (`{parent_dir}/`).
 
         ## Context Files
 
-        - Working Style → `Claude Context/working-style.md`
-        - Brand Voice → `Claude Context/brand-voice.md`
-        - About Me → `Claude Context/about-me.md`
+        - Working Style → `{parent_dir}/working-style.md`
+        - Brand Voice → `{parent_dir}/brand-voice.md`
+        - About Me → `{parent_dir}/about-me.md`
 
         ## Tool Inventory
 
-        (Document your Claude tooling setup: MCP connectors, skills, agents, scheduled tasks.)
+        (Document your {assistant_name} tooling setup: MCP connectors, skills, agents, scheduled tasks.)
     """)
 
 
@@ -179,7 +179,7 @@ def _research_index() -> str:
         ## How to Use
 
         New research goes into `inbox/` (or `mobile-inbox/` if captured on mobile).
-        Claude processes it during triage: reads, classifies, routes to the correct
+        The assistant processes it during triage: reads, classifies, routes to the correct
         project folder or `processed/`, and archives the original.
     """)
 
@@ -314,8 +314,8 @@ def _templates_readme() -> str:
     return textwrap.dedent("""\
         # _templates/
 
-        These templates define the standard format for notes that Claude creates and
-        depends on for session continuity and cross-session retrieval.
+        These templates define the standard format for notes that the AI assistant creates
+        and depends on for session continuity and cross-session retrieval.
 
         ## Design Document Chain (PRD → ADR → Threat Model → SDR → Stories)
 
@@ -334,12 +334,16 @@ def _templates_readme() -> str:
 _CONTENT_GENERATORS: dict[str, str | None] = {}
 
 
-def vault_file_content(rel_path: str) -> str:
+def vault_file_content(
+    rel_path: str,
+    assistant_name: str = "AI assistant",
+    parent_dir: str = "Context",
+) -> str:
     """Return the content for a vault structural file based on its path."""
     generators = {
-        "_index.md": _vault_index,
-        "_bootstrap.md": _vault_bootstrap,
-        "self/_index.md": _self_index,
+        "_index.md": lambda: _vault_index(assistant_name),
+        "_bootstrap.md": lambda: _vault_bootstrap(assistant_name, parent_dir),
+        "self/_index.md": lambda: _self_index(parent_dir, assistant_name),
         "research/_index.md": _research_index,
         "projects/_index.md": _projects_index,
         "projects/Work/_index.md": lambda: _tier_index("Work"),
@@ -392,7 +396,11 @@ class VaultBuilder:
             self._mkdir(vault_root / d)
 
         for f in VAULT_FILES:
-            content = vault_file_content(f)
+            content = vault_file_content(
+                f,
+                assistant_name=self._config.assistant_name,
+                parent_dir=self._config.parent_dir,
+            )
             self._write(vault_root / f, content)
 
         # Generate status.md per project tier
@@ -404,9 +412,6 @@ class VaultBuilder:
                 vault_root / tier_dir / "status.md",
                 _status_content(tier_name, today),
             )
-
-        # Ensure self/ has _index.md with context file stubs
-        # (already in VAULT_FILES, but verify content points to context files)
 
         # Ensure research/mobile-inbox/archive/ exists with .gitkeep
         archive_dir = vault_root / "research" / "mobile-inbox" / "archive"

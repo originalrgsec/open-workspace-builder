@@ -12,7 +12,7 @@ from open_workspace_builder.engine.vault import VaultBuilder
 
 
 class WorkspaceBuilder:
-    """Builds a Claude workspace from configuration."""
+    """Builds an AI workspace from configuration."""
 
     def __init__(self, config: Config, content_root: Path, dry_run: bool = False) -> None:
         self._config = config
@@ -22,7 +22,7 @@ class WorkspaceBuilder:
         self._ecc = EccInstaller(config.ecc, content_root, dry_run)
         self._skills = SkillsInstaller(config.skills, content_root, dry_run)
         self._context = ContextDeployer(
-            config.context_templates, config.claude_md, content_root, dry_run
+            config.context_templates, config.agent_config, config.vault, content_root, dry_run
         )
 
     def build(self, target: Path) -> None:
@@ -32,7 +32,8 @@ class WorkspaceBuilder:
         print()
 
         self._vault.build(target)
-        self._ecc.install(target)
+        if self._config.ecc.enabled:
+            self._ecc.install(target)
         self._skills.install(target)
         self._context.deploy(target)
 
