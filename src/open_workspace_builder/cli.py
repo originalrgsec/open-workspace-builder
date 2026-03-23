@@ -32,38 +32,47 @@ def _find_content_root() -> Path:
 
 @click.group()
 @click.version_option(package_name="open-workspace-builder")
-def owb() -> None:
+@click.pass_context
+def owb(ctx: click.Context) -> None:
     """Scaffold, maintain, and secure AI coding workspaces."""
+    from open_workspace_builder.config import _detect_cli_name
+
+    ctx.ensure_object(dict)
+    ctx.obj["cli_name"] = _detect_cli_name()
 
 
 @owb.command()
 @click.option(
-    "--target", "-t",
+    "--target",
+    "-t",
     default=None,
     type=click.Path(),
     help="Target directory for the built workspace (default: ./output/).",
 )
 @click.option(
-    "--config", "-c",
+    "--config",
+    "-c",
     "config_path",
     default=None,
     type=click.Path(exists=True),
     help="Path to YAML config file.",
 )
 @click.option(
-    "--dry-run", "-n",
+    "--dry-run",
+    "-n",
     is_flag=True,
     default=False,
     help="Print what would be created without writing anything.",
 )
-def init(target: str | None, config_path: str | None, dry_run: bool) -> None:
+@click.pass_context
+def init(ctx: click.Context, target: str | None, config_path: str | None, dry_run: bool) -> None:
     """Initialize a new Claude workspace.
 
     Creates the full directory structure including Obsidian vault, ECC agents/commands/rules,
     custom Cowork skills, context templates, and CLAUDE.md entry point. Defaults work out of
     the box — pass --config to customize which components are installed.
     """
-    config = load_config(config_path)
+    config = load_config(config_path, cli_name=ctx.obj["cli_name"])
     target_path = Path(target) if target else Path(config.target)
     content_root = _find_content_root()
 
@@ -74,20 +83,25 @@ def init(target: str | None, config_path: str | None, dry_run: bool) -> None:
 @owb.command()
 @click.argument("vault_path", type=click.Path(exists=True))
 @click.option(
-    "--config", "-c",
+    "--config",
+    "-c",
     "config_path",
     default=None,
     type=click.Path(exists=True),
     help="Path to YAML config file.",
 )
 @click.option(
-    "--output", "-o",
+    "--output",
+    "-o",
     "output_file",
     default=None,
     type=click.Path(),
     help="Write JSON report to file.",
 )
-def diff(vault_path: str, config_path: str | None, output_file: str | None) -> None:
+@click.pass_context
+def diff(
+    ctx: click.Context, vault_path: str, config_path: str | None, output_file: str | None
+) -> None:
     """Show differences between an existing workspace and the reference state.
 
     Compares VAULT_PATH against a freshly generated reference workspace and reports files
@@ -99,12 +113,10 @@ def diff(vault_path: str, config_path: str | None, output_file: str | None) -> N
         format_diff_report,
     )
 
-    config = load_config(config_path)
+    config = load_config(config_path, cli_name=ctx.obj["cli_name"])
     content_root = _find_content_root()
 
-    report = diff_workspace(
-        Path(vault_path), config=config, content_root=content_root
-    )
+    report = diff_workspace(Path(vault_path), config=config, content_root=content_root)
     click.echo(format_diff_report(report))
 
     if output_file:
@@ -114,16 +126,15 @@ def diff(vault_path: str, config_path: str | None, output_file: str | None) -> N
         )
         click.echo(f"\nReport written to {output_file}")
 
-    has_gaps = any(
-        report.summary.get(k, 0) > 0 for k in ("missing", "outdated", "modified")
-    )
+    has_gaps = any(report.summary.get(k, 0) > 0 for k in ("missing", "outdated", "modified"))
     sys.exit(1 if has_gaps else 0)
 
 
 @owb.command()
 @click.argument("vault_path", type=click.Path(exists=True))
 @click.option(
-    "--config", "-c",
+    "--config",
+    "-c",
     "config_path",
     default=None,
     type=click.Path(exists=True),
@@ -136,12 +147,15 @@ def diff(vault_path: str, config_path: str | None, output_file: str | None) -> N
     help="Accept all clean files without prompting (batch mode).",
 )
 @click.option(
-    "--dry-run", "-n",
+    "--dry-run",
+    "-n",
     is_flag=True,
     default=False,
     help="Show what would happen without writing files.",
 )
+@click.pass_context
 def migrate(
+    ctx: click.Context,
     vault_path: str,
     config_path: str | None,
     accept_all: bool,
@@ -158,7 +172,7 @@ def migrate(
         migrate_workspace,
     )
 
-    config = load_config(config_path)
+    config = load_config(config_path, cli_name=ctx.obj["cli_name"])
     content_root = _find_content_root()
 
     report = migrate_workspace(
@@ -187,7 +201,8 @@ def ecc() -> None:
     help="Auto-accept all non-flagged files (batch mode).",
 )
 @click.option(
-    "--dry-run", "-n",
+    "--dry-run",
+    "-n",
     is_flag=True,
     default=False,
     help="Fetch and scan but do not write any files.",
@@ -227,11 +242,15 @@ def update(accept_all: bool, dry_run: bool) -> None:
                     click.echo(f"  [{f.severity}] {f.category}: {f.description}")
 
         while True:
-            choice = click.prompt(
-                "[a]ccept / [r]eject / [d]etail / [q]uit",
-                type=str,
-                default="r",
-            ).lower().strip()
+            choice = (
+                click.prompt(
+                    "[a]ccept / [r]eject / [d]etail / [q]uit",
+                    type=str,
+                    default="r",
+                )
+                .lower()
+                .strip()
+            )
             if choice == "d":
                 click.echo(f"\n=== Full content of {d.relative_path} ===")
                 continue
@@ -328,17 +347,33 @@ def security() -> None:
 @click.argument("path", type=click.Path(exists=True))
 @click.option(
     "--layers",
-    default="1,2,3",
-    help="Comma-separated layer numbers to run (default: 1,2,3).",
+    default=None,
+    help="Comma-separated layer numbers to run (default: from config or 1,2,3).",
 )
 @click.option(
-    "--output", "-o",
+    "--config",
+    "-c",
+    "config_path",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to YAML config file.",
+)
+@click.option(
+    "--output",
+    "-o",
     "output_file",
     default=None,
     type=click.Path(),
     help="Write JSON report to file.",
 )
-def scan(path: str, layers: str, output_file: str | None) -> None:
+@click.pass_context
+def scan(
+    ctx: click.Context,
+    path: str,
+    layers: str | None,
+    config_path: str | None,
+    output_file: str | None,
+) -> None:
     """Scan a file or directory for security issues.
 
     Runs a three-layer scanner: structural validation, pattern matching, and
@@ -347,8 +382,13 @@ def scan(path: str, layers: str, output_file: str | None) -> None:
     """
     from open_workspace_builder.security.scanner import Scanner
 
-    layer_nums = tuple(int(x.strip()) for x in layers.split(",") if x.strip())
-    scanner = Scanner(layers=layer_nums)
+    config = load_config(config_path, cli_name=ctx.obj.get("cli_name"))
+    layer_nums = (
+        tuple(int(x.strip()) for x in layers.split(",") if x.strip())
+        if layers is not None
+        else None
+    )
+    scanner = Scanner(layers=layer_nums, security_config=config.security)
 
     target = Path(path)
     if target.is_file():
@@ -397,14 +437,10 @@ def scan(path: str, layers: str, output_file: str | None) -> None:
         for v in report.verdicts:
             _print_verdict(v.file_path, v.verdict, len(v.flags))
         click.echo(f"\nSummary: {report.summary}")
-        has_issues = any(
-            v.verdict in ("flagged", "malicious") for v in report.verdicts
-        )
+        has_issues = any(v.verdict in ("flagged", "malicious") for v in report.verdicts)
 
     if output_file:
-        Path(output_file).write_text(
-            json.dumps(report_data, indent=2) + "\n", encoding="utf-8"
-        )
+        Path(output_file).write_text(json.dumps(report_data, indent=2) + "\n", encoding="utf-8")
         click.echo(f"Report written to {output_file}")
 
     sys.exit(2 if has_issues else 0)
@@ -414,5 +450,3 @@ def _print_verdict(file_path: str, verdict: str, flag_count: int) -> None:
     """Print a single file verdict line."""
     icon = {"clean": "OK", "flagged": "WARN", "malicious": "FAIL", "error": "ERR"}
     click.echo(f"[{icon.get(verdict, '??')}] {file_path} — {verdict} ({flag_count} flags)")
-
-

@@ -5,6 +5,10 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from open_workspace_builder.config import SecurityConfig
 
 
 @dataclass(frozen=True)
@@ -52,12 +56,17 @@ class Scanner:
 
     def __init__(
         self,
-        layers: tuple[int, ...] = (1, 2, 3),
+        layers: tuple[int, ...] | None = None,
         api_key: str | None = None,
         model: str = "claude-sonnet-4-6",
         patterns_path: Path | None = None,
+        security_config: SecurityConfig | None = None,
     ) -> None:
-        self._layers = layers
+        from open_workspace_builder.config import SecurityConfig as _SC
+
+        self._security_config = security_config or _SC()
+        # Explicit layers arg overrides config default.
+        self._layers = layers if layers is not None else self._security_config.scanner_layers
         self._api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         self._model = model
         self._patterns_path = patterns_path
@@ -116,9 +125,7 @@ class Scanner:
             flags=flags_tuple,
         )
 
-    def scan_directory(
-        self, dir_path: Path, glob_pattern: str = "*.md"
-    ) -> ScanReport:
+    def scan_directory(self, dir_path: Path, glob_pattern: str = "*.md") -> ScanReport:
         """Scan all matching files in a directory, return aggregated report."""
         verdicts: list[ScanVerdict] = []
         for file_path in sorted(dir_path.glob(glob_pattern)):

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -54,30 +55,32 @@ class EccConfig:
         "update-docs",
         "verify",
     )
-    rules: dict[str, tuple[str, ...]] = field(default_factory=lambda: {
-        "common": (
-            "agents",
-            "coding-style",
-            "development-workflow",
-            "git-workflow",
-            "patterns",
-            "performance",
-            "security",
-            "testing",
-        ),
-        "golang": (
-            "coding-style",
-            "patterns",
-            "security",
-            "testing",
-        ),
-        "python": (
-            "coding-style",
-            "patterns",
-            "security",
-            "testing",
-        ),
-    })
+    rules: dict[str, tuple[str, ...]] = field(
+        default_factory=lambda: {
+            "common": (
+                "agents",
+                "coding-style",
+                "development-workflow",
+                "git-workflow",
+                "patterns",
+                "performance",
+                "security",
+                "testing",
+            ),
+            "golang": (
+                "coding-style",
+                "patterns",
+                "security",
+                "testing",
+            ),
+            "python": (
+                "coding-style",
+                "patterns",
+                "security",
+                "testing",
+            ),
+        }
+    )
 
 
 @dataclass(frozen=True)
@@ -106,6 +109,47 @@ class ClaudeMdConfig:
 
 
 @dataclass(frozen=True)
+class ModelsConfig:
+    """Per-operation model strings. LiteLLM resolves provider from prefix."""
+
+    classify: str = ""
+    generate: str = ""
+    judge: str = ""
+    security_scan: str = ""
+
+
+@dataclass(frozen=True)
+class SecurityConfig:
+    """Security scanner configuration."""
+
+    active_patterns: tuple[str, ...] = ("owb-default",)
+    scanner_layers: tuple[int, ...] = (1, 2, 3)
+
+
+@dataclass(frozen=True)
+class TrustConfig:
+    """Trust tier policy configuration."""
+
+    active_policies: tuple[str, ...] = ("owb-default",)
+
+
+@dataclass(frozen=True)
+class MarketplaceConfig:
+    """Marketplace output format."""
+
+    format: str = "generic"
+
+
+@dataclass(frozen=True)
+class PathsConfig:
+    """Directory paths for config, data, and credentials."""
+
+    config_dir: str = ""
+    data_dir: str = ""
+    credentials_dir: str = ""
+
+
+@dataclass(frozen=True)
 class Config:
     target: str = "output"
     vault: VaultConfig = field(default_factory=VaultConfig)
@@ -113,6 +157,26 @@ class Config:
     skills: SkillsConfig = field(default_factory=SkillsConfig)
     context_templates: ContextTemplatesConfig = field(default_factory=ContextTemplatesConfig)
     claude_md: ClaudeMdConfig = field(default_factory=ClaudeMdConfig)
+    models: ModelsConfig = field(default_factory=ModelsConfig)
+    security: SecurityConfig = field(default_factory=SecurityConfig)
+    trust: TrustConfig = field(default_factory=TrustConfig)
+    marketplace: MarketplaceConfig = field(default_factory=MarketplaceConfig)
+    paths: PathsConfig = field(default_factory=PathsConfig)
+
+
+# Mapping of section names to their dataclass types for DRY overlay building.
+_SECTION_CLASSES: dict[str, type] = {
+    "vault": VaultConfig,
+    "ecc": EccConfig,
+    "skills": SkillsConfig,
+    "context_templates": ContextTemplatesConfig,
+    "claude_md": ClaudeMdConfig,
+    "models": ModelsConfig,
+    "security": SecurityConfig,
+    "trust": TrustConfig,
+    "marketplace": MarketplaceConfig,
+    "paths": PathsConfig,
+}
 
 
 def _merge_dataclass(cls: type, defaults: Any, overrides: dict[str, Any]) -> Any:
@@ -130,19 +194,58 @@ def _merge_dataclass(cls: type, defaults: Any, overrides: dict[str, Any]) -> Any
     return cls(**merged)
 
 
-def load_config(config_path: str | Path | None = None) -> Config:
+def _detect_cli_name() -> str:
+    """Detect the CLI tool name from sys.argv[0]."""
+    if sys.argv and sys.argv[0]:
+        name = Path(sys.argv[0]).name
+        if name.endswith("cwb"):
+            return "cwb"
+    return "owb"
+
+
+def _resolve_paths(paths: PathsConfig, cli_name: str) -> PathsConfig:
+    """Resolve empty PathsConfig fields based on CLI name."""
+    config_dir = paths.config_dir or str(Path.home() / f".{cli_name}")
+    data_dir = paths.data_dir or str(Path(config_dir) / "data")
+    credentials_dir = paths.credentials_dir or str(Path(config_dir) / "credentials")
+    return PathsConfig(
+        config_dir=config_dir,
+        data_dir=data_dir,
+        credentials_dir=credentials_dir,
+    )
+
+
+def load_config(
+    config_path: str | Path | None = None,
+    cli_name: str | None = None,
+) -> Config:
     """Load config from optional YAML file, overlaying on defaults.
+
+    Resolution order:
+    1. Built-in defaults (dataclass defaults)
+    2. User config file (~/.owb/config.yaml or ~/.cwb/config.yaml)
+    3. CLI flag (config_path overrides both)
 
     If PyYAML is not installed, warns and returns defaults.
     """
+    if cli_name is None:
+        cli_name = _detect_cli_name()
+
     defaults = Config()
 
-    if config_path is None:
-        return defaults
+    # Determine which config file to load: explicit path wins, else user config.
+    resolved_path: Path | None = None
+    if config_path is not None:
+        resolved_path = Path(config_path)
+        if not resolved_path.exists():
+            resolved_path = None
+    else:
+        user_config = Path.home() / f".{cli_name}" / "config.yaml"
+        if user_config.exists():
+            resolved_path = user_config
 
-    config_path = Path(config_path)
-    if not config_path.exists():
-        return defaults
+    if resolved_path is None:
+        return _with_resolved_paths(defaults, cli_name)
 
     try:
         import yaml  # type: ignore[import-untyped]
@@ -151,54 +254,50 @@ def load_config(config_path: str | Path | None = None) -> Config:
             "PyYAML not installed. Using default config. Install with: pip install pyyaml",
             stacklevel=2,
         )
-        return defaults
+        return _with_resolved_paths(defaults, cli_name)
 
     try:
-        raw = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+        raw = yaml.safe_load(resolved_path.read_text(encoding="utf-8")) or {}
     except Exception as exc:
         warnings.warn(f"Could not load config file: {exc}", stacklevel=2)
-        return defaults
+        return _with_resolved_paths(defaults, cli_name)
 
-    return _build_config_from_dict(defaults, raw)
+    config = _build_config_from_dict(defaults, raw)
+    return _with_resolved_paths(config, cli_name)
+
+
+def _with_resolved_paths(config: Config, cli_name: str) -> Config:
+    """Return a new Config with PathsConfig fields resolved."""
+    resolved = _resolve_paths(config.paths, cli_name)
+    if resolved == config.paths:
+        return config
+    # Rebuild with resolved paths (frozen dataclass — must reconstruct).
+    return Config(
+        target=config.target,
+        vault=config.vault,
+        ecc=config.ecc,
+        skills=config.skills,
+        context_templates=config.context_templates,
+        claude_md=config.claude_md,
+        models=config.models,
+        security=config.security,
+        trust=config.trust,
+        marketplace=config.marketplace,
+        paths=resolved,
+    )
 
 
 def _build_config_from_dict(defaults: Config, raw: dict[str, Any]) -> Config:
     """Build a Config from raw dict, overlaying on defaults."""
-    vault = (
-        _merge_dataclass(VaultConfig, defaults.vault, raw["vault"])
-        if "vault" in raw
-        else defaults.vault
-    )
-    ecc = (
-        _merge_dataclass(EccConfig, defaults.ecc, raw["ecc"])
-        if "ecc" in raw
-        else defaults.ecc
-    )
-    skills = (
-        _merge_dataclass(SkillsConfig, defaults.skills, raw["skills"])
-        if "skills" in raw
-        else defaults.skills
-    )
-    context_templates = (
-        _merge_dataclass(
-            ContextTemplatesConfig,
-            defaults.context_templates,
-            raw["context_templates"],
-        )
-        if "context_templates" in raw
-        else defaults.context_templates
-    )
-    claude_md = (
-        _merge_dataclass(ClaudeMdConfig, defaults.claude_md, raw["claude_md"])
-        if "claude_md" in raw
-        else defaults.claude_md
-    )
+    sections: dict[str, Any] = {}
+    for section_name, cls in _SECTION_CLASSES.items():
+        default_val = getattr(defaults, section_name)
+        if section_name in raw:
+            sections[section_name] = _merge_dataclass(cls, default_val, raw[section_name])
+        else:
+            sections[section_name] = default_val
 
     return Config(
         target=raw.get("target", defaults.target),
-        vault=vault,
-        ecc=ecc,
-        skills=skills,
-        context_templates=context_templates,
-        claude_md=claude_md,
+        **sections,
     )

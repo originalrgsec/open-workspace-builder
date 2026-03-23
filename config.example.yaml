@@ -1,33 +1,29 @@
-# owb (Open Workspace Builder) — Full Configuration Reference
-#
-# Copy this file to config.yaml and pass it with: owb init --config config.yaml
-# Every key is optional. Omitted keys use built-in defaults.
-# The defaults below match what owb does when no config file is provided.
+# Open Workspace Builder configuration
+# Copy to ~/.owb/config.yaml and customize.
+# All values shown are defaults — omit any section to use defaults.
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Target directory for the built workspace.
-# Default: "output"
 # ──────────────────────────────────────────────────────────────────────────────
 target: output
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Per-operation model strings. LiteLLM resolves provider from prefix.
+# Examples: anthropic/claude-sonnet-4-20250514, openai/gpt-4o, ollama/mistral
+# ──────────────────────────────────────────────────────────────────────────────
+models:
+  classify: ""
+  generate: ""
+  judge: ""
+  security_scan: ""
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Obsidian knowledge vault settings
 # ──────────────────────────────────────────────────────────────────────────────
 vault:
-  # Name of the vault subdirectory inside parent_dir.
-  # Default: "Obsidian"
   name: Obsidian
-
-  # Parent directory that contains the vault (relative to target).
-  # Default: "Claude Context"
   parent_dir: "Claude Context"
-
-  # Create _bootstrap.md — a session entry point template.
-  # Default: true
   create_bootstrap: true
-
-  # Create the _templates/ directory with all 18 note templates.
-  # Default: true
   create_templates: true
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -35,105 +31,57 @@ vault:
 # installed into .claude/
 # ──────────────────────────────────────────────────────────────────────────────
 ecc:
-  # Directory containing the vendored ECC content.
-  # Default: "ecc-curated"
-  source_dir: ecc-curated
-
-  # Agents to install into .claude/agents/
-  # Each name corresponds to a directory in ecc-curated/agents/
-  agents:
-    - architect
-    - build-error-resolver
-    - chief-of-staff
-    - code-reviewer
-    - database-reviewer
-    - doc-updater
-    - e2e-runner
-    - go-build-resolver
-    - go-reviewer
-    - harness-optimizer
-    - loop-operator
-    - planner
-    - python-reviewer
-    - refactor-cleaner
-    - security-reviewer
-    - tdd-guide
-
-  # Slash commands to install into .claude/commands/
-  # Each name corresponds to a file in ecc-curated/commands/
-  commands:
-    - build-fix
-    - checkpoint
-    - code-review
-    - e2e
-    - eval
-    - go-build
-    - go-review
-    - go-test
-    - plan
-    - python-review
-    - refactor-clean
-    - tdd
-    - test-coverage
-    - update-docs
-    - verify
-
-  # Rules to install into .claude/rules/<category>/
-  # Each category maps to a subdirectory; each name maps to a file.
-  rules:
-    common:
-      - agents
-      - coding-style
-      - development-workflow
-      - git-workflow
-      - patterns
-      - performance
-      - security
-      - testing
-    golang:
-      - coding-style
-      - patterns
-      - security
-      - testing
-    python:
-      - coding-style
-      - patterns
-      - security
-      - testing
+  source_dir: vendor/ecc
+  # agents, commands, rules lists omitted for brevity — see defaults in config.py
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Custom Cowork skills installed into .skills/skills/
 # ──────────────────────────────────────────────────────────────────────────────
 skills:
-  # Directory containing skill source folders.
-  # Default: "skills"
-  source_dir: skills
-
-  # Skills to install. Each name corresponds to a directory in source_dir.
+  source_dir: content/skills
   install:
     - mobile-inbox-triage
     - vault-audit
     - oss-health-check
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Context template files (about-me.md, brand-voice.md, working-style.md)
-# deployed into "Claude Context/" in the target.
+# Security scanner configuration
+# ──────────────────────────────────────────────────────────────────────────────
+security:
+  active_patterns:
+    - owb-default
+  scanner_layers: [1, 2, 3]
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Trust tier policy configuration
+# ──────────────────────────────────────────────────────────────────────────────
+trust:
+  active_policies:
+    - owb-default
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Marketplace output format
+# ──────────────────────────────────────────────────────────────────────────────
+marketplace:
+  format: generic
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Context template files deployed into "Claude Context/" in the target.
 # ──────────────────────────────────────────────────────────────────────────────
 context_templates:
-  # Whether to deploy context template files.
-  # Default: true
   deploy: true
-
-  # Template files to deploy. Located in content/context_templates/.
-  files:
-    - about-me.template.md
-    - brand-voice.template.md
-    - working-style.template.md
 
 # ──────────────────────────────────────────────────────────────────────────────
 # CLAUDE.md — workspace entry point deployed to .claude/CLAUDE.md
 # ──────────────────────────────────────────────────────────────────────────────
 claude_md:
-  # Whether to deploy CLAUDE.md.
-  # Default: true
   deploy: true
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Directory paths for config, data, and credentials.
+# Leave empty to auto-detect from CLI name (owb → ~/.owb/, cwb → ~/.cwb/).
+# ──────────────────────────────────────────────────────────────────────────────
+paths:
+  config_dir: ""
+  data_dir: ""
+  credentials_dir: ""
