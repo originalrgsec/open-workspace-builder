@@ -1,0 +1,19 @@
+# Expected scan verdicts for adversarial test files.
+# Used by test_scanner_integration.py to validate scanner behavior.
+
+verdicts:
+  exfil_curl_env.md: malicious
+  exfil_fetch_env.md: malicious
+  persistence_crontab.md: malicious
+  persistence_launchd.md: malicious
+  stealth_hide_behavior.md: malicious
+  prompt_injection_identity.md: malicious
+  selfmod_rewrite_rules.md: malicious
+  encoded_payload.md: malicious
+  network_reverse_shell.md: malicious
+  privilege_escalation.md: malicious
+  sensitive_path_access.md: malicious
+  combined_attack_sophisticated.md: malicious
+  unicode_steganography.md: flagged
+  false_positive_legitimate_curl_doc.md: clean
+  social_engineering_urgency.md: malicious

@@ -1,0 +1,14 @@
+# Security scanner module — owner only
+/src/open_workspace_builder/security/ @VolcanixLLC
+
+# Pattern library — owner only
+/security/ @VolcanixLLC
+
+# CI/CD workflows — owner only
+/.github/workflows/ @VolcanixLLC
+
+# CODEOWNERS itself — owner only
+/.github/CODEOWNERS @VolcanixLLC
+
+# Vendored ECC content — owner only
+/vendor/ @VolcanixLLC

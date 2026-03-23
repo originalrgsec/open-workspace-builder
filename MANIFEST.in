@@ -1,0 +1,3 @@
+recursive-include src/open_workspace_builder/security/data *.yaml
+include LICENSE
+include README.md
