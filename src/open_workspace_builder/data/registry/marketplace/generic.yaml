@@ -1,0 +1,15 @@
+id: "generic"
+version: "1.0.0"
+type: "marketplace_format"
+author: "Open Workspace Builder"
+description: "Generic workspace output format (OWB default)"
+compatibility: ">=0.1.0"
+
+payload:
+  output_structure:
+    root: "."
+    config_dir: ".claude"
+    vault_parent: "Claude Context"
+  metadata:
+    format_name: "Generic"
+    supports_plugins: false

@@ -1,0 +1,34 @@
+id: "owb-network"
+version: "1.0.0"
+type: "pattern"
+author: "Open Workspace Builder"
+description: "Suspicious network operation detection patterns"
+compatibility: ">=0.1.0"
+
+payload:
+  patterns:
+    - id: net-001
+      pattern: "(?i)reverse\\s+shell"
+      severity: critical
+      description: "Reverse shell reference"
+      false_positive_hint: "Legitimate in CTF or security education"
+    - id: net-002
+      pattern: "nc\\s+(-e|-c|.*\\|.*sh)"
+      severity: critical
+      description: "Netcat with shell execution"
+      false_positive_hint: "Legitimate in networking documentation"
+    - id: net-003
+      pattern: "/dev/(tcp|udp)/\\S+"
+      severity: critical
+      description: "Bash /dev/tcp network redirect"
+      false_positive_hint: "Legitimate in advanced bash documentation"
+    - id: net-004
+      pattern: "(?i)ngrok|serveo|localtunnel"
+      severity: warning
+      description: "Tunnel service reference"
+      false_positive_hint: "Legitimate in development setup documentation"
+    - id: net-005
+      pattern: "(?i)bind\\s+shell"
+      severity: critical
+      description: "Bind shell reference"
+      false_positive_hint: "Legitimate in security education"

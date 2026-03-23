@@ -1,0 +1,34 @@
+id: "owb-stealth"
+version: "1.0.0"
+type: "pattern"
+author: "Open Workspace Builder"
+description: "Stealth and evasion technique detection patterns"
+compatibility: ">=0.1.0"
+
+payload:
+  patterns:
+    - id: stealth-001
+      pattern: "(?i)do\\s+not\\s+(mention|reveal|disclose|tell|show)"
+      severity: critical
+      description: "Instruction to hide behavior from user"
+      false_positive_hint: "Legitimate in privacy policy context"
+    - id: stealth-002
+      pattern: "(?i)ignore\\s+(previous|prior|above|all)\\s+(instructions?|rules?|guidelines?)"
+      severity: critical
+      description: "Prompt injection — override prior instructions"
+      false_positive_hint: "Legitimate in prompt engineering education"
+    - id: stealth-003
+      pattern: "(?i)pretend\\s+(you|that|to\\s+be)"
+      severity: warning
+      description: "Identity manipulation instruction"
+      false_positive_hint: "Legitimate in roleplay or testing documentation"
+    - id: stealth-004
+      pattern: "(?i)secretly|covertly|silently\\s+(add|install|run|execute|modify)"
+      severity: critical
+      description: "Instruction to perform hidden action"
+      false_positive_hint: "None — almost always malicious in workspace content"
+    - id: stealth-005
+      pattern: "(?i)without\\s+(the\\s+)?user('s)?\\s+(knowledge|knowing|consent|awareness)"
+      severity: critical
+      description: "Instruction to bypass user awareness"
+      false_positive_hint: "Legitimate in UX anti-pattern documentation"

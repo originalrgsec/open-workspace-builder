@@ -1,0 +1,16 @@
+id: "anthropic"
+version: "1.0.0"
+type: "marketplace_format"
+author: "Open Workspace Builder"
+description: "Anthropic plugin output format"
+compatibility: ">=0.1.0"
+
+payload:
+  output_structure:
+    root: "."
+    config_dir: ".claude"
+    vault_parent: "Claude Context"
+  metadata:
+    format_name: "Anthropic"
+    supports_plugins: true
+    plugin_manifest: "claude-plugin.json"

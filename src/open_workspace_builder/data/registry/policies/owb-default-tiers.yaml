@@ -1,0 +1,30 @@
+id: "owb-default"
+version: "1.0.0"
+type: "policy"
+author: "Open Workspace Builder"
+description: "Default three-tier trust policy"
+compatibility: ">=0.1.0"
+
+payload:
+  tiers:
+    - name: "T0 — Managed"
+      level: 0
+      description: "First-party and verified content"
+      actions:
+        auto_install: true
+        requires_review: false
+        quarantine: false
+    - name: "T1 — Community"
+      level: 1
+      description: "Community-contributed content with review"
+      actions:
+        auto_install: false
+        requires_review: true
+        quarantine: false
+    - name: "T2 — Untrusted"
+      level: 2
+      description: "Untrusted or unknown-source content"
+      actions:
+        auto_install: false
+        requires_review: true
+        quarantine: true

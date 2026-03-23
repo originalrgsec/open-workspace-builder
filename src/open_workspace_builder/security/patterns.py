@@ -5,8 +5,12 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from open_workspace_builder.security.scanner import ScanFlag
+
+if TYPE_CHECKING:
+    from open_workspace_builder.registry.registry import Registry
 
 _DEFAULT_PATTERNS_PATH = Path(__file__).parent / "data" / "patterns.yaml"
 
@@ -23,8 +27,43 @@ class PatternRule:
     false_positive_hint: str
 
 
-def load_patterns(patterns_path: Path | None = None) -> list[PatternRule]:
-    """Load pattern rules from YAML file."""
+def _load_patterns_from_registry(
+    registry: Registry,
+    active_patterns: tuple[str, ...] = ("owb-default",),
+) -> list[PatternRule]:
+    """Load pattern rules from registry items matching active_patterns config."""
+    items = registry.get_active_items("pattern", active_patterns)
+    rules: list[PatternRule] = []
+    for item in items:
+        # Category name derived from item id (e.g. "owb-exfiltration" -> "exfiltration")
+        cat_name = item.id.removeprefix("owb-") if item.id.startswith("owb-") else item.id
+        for p in item.payload.get("patterns", []):
+            rules.append(
+                PatternRule(
+                    id=p["id"],
+                    category=cat_name,
+                    pattern=p["pattern"],
+                    severity=p["severity"],
+                    description=p["description"],
+                    false_positive_hint=p.get("false_positive_hint", ""),
+                )
+            )
+    return rules
+
+
+def load_patterns(
+    patterns_path: Path | None = None,
+    registry: Registry | None = None,
+    active_patterns: tuple[str, ...] = ("owb-default",),
+) -> list[PatternRule]:
+    """Load pattern rules from registry or YAML file.
+
+    When a registry is provided, patterns are loaded from registry items
+    matching active_patterns. Otherwise falls back to the monolithic YAML file.
+    """
+    if registry is not None:
+        return _load_patterns_from_registry(registry, active_patterns)
+
     path = patterns_path or _DEFAULT_PATTERNS_PATH
 
     try:
@@ -40,14 +79,16 @@ def load_patterns(patterns_path: Path | None = None) -> list[PatternRule]:
     rules: list[PatternRule] = []
     for cat_name, cat_data in categories.items():
         for p in cat_data.get("patterns", []):
-            rules.append(PatternRule(
-                id=p["id"],
-                category=cat_name,
-                pattern=p["pattern"],
-                severity=p["severity"],
-                description=p["description"],
-                false_positive_hint=p.get("false_positive_hint", ""),
-            ))
+            rules.append(
+                PatternRule(
+                    id=p["id"],
+                    category=cat_name,
+                    pattern=p["pattern"],
+                    severity=p["severity"],
+                    description=p["description"],
+                    false_positive_hint=p.get("false_positive_hint", ""),
+                )
+            )
     return rules
 
 
@@ -71,13 +112,15 @@ def check_patterns(path: Path, patterns: list[PatternRule]) -> list[ScanFlag]:
         for rule, regex in compiled:
             match = regex.search(line)
             if match:
-                flags.append(ScanFlag(
-                    category=rule.category,
-                    severity=rule.severity,
-                    evidence=f"Line {line_num}: {match.group()!r} (pattern: {rule.id})",
-                    description=rule.description,
-                    line_number=line_num,
-                    layer=2,
-                ))
+                flags.append(
+                    ScanFlag(
+                        category=rule.category,
+                        severity=rule.severity,
+                        evidence=f"Line {line_num}: {match.group()!r} (pattern: {rule.id})",
+                        description=rule.description,
+                        line_number=line_num,
+                        layer=2,
+                    )
+                )
 
     return flags

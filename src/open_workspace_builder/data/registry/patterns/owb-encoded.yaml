@@ -1,0 +1,29 @@
+id: "owb-encoded"
+version: "1.0.0"
+type: "pattern"
+author: "Open Workspace Builder"
+description: "Encoded or obfuscated content detection patterns"
+compatibility: ">=0.1.0"
+
+payload:
+  patterns:
+    - id: encoded-001
+      pattern: "(?i)base64\\s*(decode|encode|\\-d)"
+      severity: warning
+      description: "Base64 encoding/decoding operation"
+      false_positive_hint: "Legitimate in encoding documentation"
+    - id: encoded-002
+      pattern: "\\beval\\s*\\("
+      severity: warning
+      description: "Dynamic code evaluation"
+      false_positive_hint: "Legitimate in language documentation"
+    - id: encoded-003
+      pattern: "\\\\x[0-9a-fA-F]{2}(\\\\x[0-9a-fA-F]{2}){3,}"
+      severity: warning
+      description: "Hex-encoded string sequence"
+      false_positive_hint: "Legitimate in binary protocol documentation"
+    - id: encoded-005
+      pattern: "\\$\\(.*\\)"
+      severity: warning
+      description: "Command substitution in shell"
+      false_positive_hint: "Legitimate in shell scripting documentation"

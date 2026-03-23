@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from open_workspace_builder.config import SecurityConfig
     from open_workspace_builder.llm.backend import ModelBackend
+    from open_workspace_builder.registry.registry import Registry
 
 
 @dataclass(frozen=True)
@@ -60,6 +61,7 @@ class Scanner:
         backend: ModelBackend | None = None,
         patterns_path: Path | None = None,
         security_config: SecurityConfig | None = None,
+        registry: Registry | None = None,
     ) -> None:
         from open_workspace_builder.config import SecurityConfig as _SC
 
@@ -68,6 +70,7 @@ class Scanner:
         self._layers = layers if layers is not None else self._security_config.scanner_layers
         self._backend = backend
         self._patterns_path = patterns_path
+        self._registry = registry
         self._loaded_patterns: list | None = None
 
     def _get_patterns(self) -> list:
@@ -75,7 +78,11 @@ class Scanner:
         if self._loaded_patterns is None:
             from open_workspace_builder.security.patterns import load_patterns
 
-            self._loaded_patterns = load_patterns(self._patterns_path)
+            self._loaded_patterns = load_patterns(
+                patterns_path=self._patterns_path,
+                registry=self._registry,
+                active_patterns=self._security_config.active_patterns,
+            )
         return self._loaded_patterns
 
     def scan_file(self, path: Path) -> ScanVerdict:

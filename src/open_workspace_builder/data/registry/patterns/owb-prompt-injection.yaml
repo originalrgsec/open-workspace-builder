@@ -1,0 +1,34 @@
+id: "owb-prompt-injection"
+version: "1.0.0"
+type: "pattern"
+author: "Open Workspace Builder"
+description: "Prompt injection and behavioral manipulation detection patterns"
+compatibility: ">=0.1.0"
+
+payload:
+  patterns:
+    - id: inject-001
+      pattern: "(?i)you\\s+are\\s+(now|no\\s+longer)\\s+a"
+      severity: critical
+      description: "Identity reassignment injection"
+      false_positive_hint: "Legitimate in roleplay documentation"
+    - id: inject-002
+      pattern: "(?i)system\\s*:\\s*you\\s+are"
+      severity: critical
+      description: "Fake system prompt injection"
+      false_positive_hint: "Legitimate in prompt engineering documentation"
+    - id: inject-003
+      pattern: "(?i)new\\s+instructions?\\s*:"
+      severity: critical
+      description: "Instruction override attempt"
+      false_positive_hint: "Legitimate in update documentation"
+    - id: inject-004
+      pattern: "(?i)from\\s+now\\s+on,?\\s+(you|always|never|ignore)"
+      severity: critical
+      description: "Behavioral override instruction"
+      false_positive_hint: "Legitimate in style guide context"
+    - id: inject-005
+      pattern: "(?i)</?system>|\\[SYSTEM\\]|\\[INST\\]"
+      severity: critical
+      description: "Fake markup delimiter injection"
+      false_positive_hint: "Legitimate in LLM documentation discussing formats"

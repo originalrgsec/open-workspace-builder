@@ -1,0 +1,34 @@
+id: "owb-sensitive-paths"
+version: "1.0.0"
+type: "pattern"
+author: "Open Workspace Builder"
+description: "Sensitive file path access detection patterns"
+compatibility: ">=0.1.0"
+
+payload:
+  patterns:
+    - id: path-001
+      pattern: "~/.ssh/(id_rsa|id_ed25519|config|authorized_keys)"
+      severity: critical
+      description: "SSH key or config access"
+      false_positive_hint: "Legitimate in SSH setup documentation"
+    - id: path-002
+      pattern: "~/.aws/(credentials|config)"
+      severity: critical
+      description: "AWS credentials access"
+      false_positive_hint: "Legitimate in AWS setup documentation"
+    - id: path-003
+      pattern: "\\.env\\b(?!iron)"
+      severity: warning
+      description: "Environment file access"
+      false_positive_hint: "Legitimate in project setup documentation"
+    - id: path-004
+      pattern: "/etc/(passwd|shadow)"
+      severity: critical
+      description: "System password file access"
+      false_positive_hint: "Legitimate in Linux administration documentation"
+    - id: path-005
+      pattern: "(?i)(api[_-]?key|secret[_-]?key|access[_-]?token)\\s*[=:]\\s*['\"][^'\"]{8,}"
+      severity: critical
+      description: "Hardcoded secret value"
+      false_positive_hint: "Legitimate if using placeholder/example values"

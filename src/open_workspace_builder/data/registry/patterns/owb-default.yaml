@@ -1,0 +1,18 @@
+id: "owb-default"
+version: "1.0.0"
+type: "pattern_set"
+author: "Open Workspace Builder"
+description: "All default OWB security patterns"
+compatibility: ">=0.1.0"
+
+payload:
+  includes:
+    - owb-exfiltration
+    - owb-persistence
+    - owb-stealth
+    - owb-self-modification
+    - owb-encoded
+    - owb-network
+    - owb-privilege
+    - owb-sensitive-paths
+    - owb-prompt-injection

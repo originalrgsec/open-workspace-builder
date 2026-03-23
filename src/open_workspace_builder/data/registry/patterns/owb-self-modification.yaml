@@ -1,0 +1,29 @@
+id: "owb-self-modification"
+version: "1.0.0"
+type: "pattern"
+author: "Open Workspace Builder"
+description: "Self-modification and instruction override detection patterns"
+compatibility: ">=0.1.0"
+
+payload:
+  patterns:
+    - id: selfmod-001
+      pattern: "(?i)modify\\s+(your|these|the)\\s+(own\\s+)?(instructions?|rules?|config)"
+      severity: critical
+      description: "Instruction to self-modify rules or config"
+      false_positive_hint: "Legitimate in meta-programming documentation"
+    - id: selfmod-002
+      pattern: "(?i)rewrite\\s+(your|this)\\s+(prompt|system|instructions?)"
+      severity: critical
+      description: "Instruction to rewrite system prompt"
+      false_positive_hint: "Legitimate in prompt engineering guides"
+    - id: selfmod-003
+      pattern: "(?i)append.*to.*CLAUDE\\.md"
+      severity: warning
+      description: "Instruction to modify CLAUDE.md"
+      false_positive_hint: "Legitimate in workspace setup documentation"
+    - id: selfmod-004
+      pattern: "(?i)overwrite\\s+(the\\s+)?(config|settings|rules)"
+      severity: critical
+      description: "Instruction to overwrite configuration"
+      false_positive_hint: "Legitimate in migration documentation"

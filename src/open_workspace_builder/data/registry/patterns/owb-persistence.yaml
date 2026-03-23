@@ -1,0 +1,34 @@
+id: "owb-persistence"
+version: "1.0.0"
+type: "pattern"
+author: "Open Workspace Builder"
+description: "Persistence and backdoor vector detection patterns"
+compatibility: ">=0.1.0"
+
+payload:
+  patterns:
+    - id: persist-001
+      pattern: "crontab\\s+(-e|-l|.*\\*/)"
+      severity: critical
+      description: "Crontab modification — potential persistence"
+      false_positive_hint: "Legitimate in scheduling documentation"
+    - id: persist-002
+      pattern: "\\.(bashrc|zshrc|profile|bash_profile)\\b"
+      severity: warning
+      description: "Shell profile modification — potential persistence"
+      false_positive_hint: "Legitimate in shell configuration guides"
+    - id: persist-003
+      pattern: "launchctl\\s+(load|submit)"
+      severity: critical
+      description: "macOS launch agent installation"
+      false_positive_hint: "Legitimate in macOS service documentation"
+    - id: persist-004
+      pattern: "systemctl\\s+(enable|start)"
+      severity: warning
+      description: "systemd service installation"
+      false_positive_hint: "Legitimate in Linux service documentation"
+    - id: persist-005
+      pattern: "\\bbackdoor\\b"
+      severity: critical
+      description: "Explicit backdoor language"
+      false_positive_hint: "Legitimate in security education content"

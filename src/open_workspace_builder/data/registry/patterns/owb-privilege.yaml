@@ -1,0 +1,29 @@
+id: "owb-privilege"
+version: "1.0.0"
+type: "pattern"
+author: "Open Workspace Builder"
+description: "Privilege escalation and permission change detection patterns"
+compatibility: ">=0.1.0"
+
+payload:
+  patterns:
+    - id: priv-001
+      pattern: "chmod\\s+[0-7]*7[0-7]{2}"
+      severity: warning
+      description: "chmod with world-writable permission"
+      false_positive_hint: "Legitimate in permission documentation"
+    - id: priv-002
+      pattern: "sudo\\s+chmod|chown"
+      severity: warning
+      description: "Privileged permission change"
+      false_positive_hint: "Legitimate in system administration guides"
+    - id: priv-003
+      pattern: "(?i)privilege\\s+escalat"
+      severity: warning
+      description: "Privilege escalation language"
+      false_positive_hint: "Legitimate in security documentation"
+    - id: priv-004
+      pattern: "SUID|setuid|setgid"
+      severity: warning
+      description: "SUID/SGID permission reference"
+      false_positive_hint: "Legitimate in Linux security documentation"

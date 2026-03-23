@@ -1,0 +1,16 @@
+id: "openai"
+version: "1.0.0"
+type: "marketplace_format"
+author: "Open Workspace Builder"
+description: "OpenAI plugin output format"
+compatibility: ">=0.1.0"
+
+payload:
+  output_structure:
+    root: "."
+    config_dir: ".well-known"
+    vault_parent: "context"
+  metadata:
+    format_name: "OpenAI"
+    supports_plugins: true
+    plugin_manifest: "ai-plugin.json"

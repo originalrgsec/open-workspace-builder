@@ -1,0 +1,34 @@
+id: "owb-exfiltration"
+version: "1.0.0"
+type: "pattern"
+author: "Open Workspace Builder"
+description: "Data exfiltration detection patterns"
+compatibility: ">=0.1.0"
+
+payload:
+  patterns:
+    - id: exfil-001
+      pattern: "curl\\s+.*(-d|--data)\\s+.*\\$"
+      severity: critical
+      description: "curl POST with variable data — potential data exfiltration"
+      false_positive_hint: "Legitimate if documenting curl usage without variable interpolation"
+    - id: exfil-002
+      pattern: "wget\\s+.*--post-(data|file).*\\$"
+      severity: critical
+      description: "wget POST with variable data — potential data exfiltration"
+      false_positive_hint: "Legitimate in download documentation"
+    - id: exfil-003
+      pattern: "\\bfetch\\s*\\(.*body\\s*:.*\\benv\\b"
+      severity: critical
+      description: "fetch() sending environment data"
+      false_positive_hint: "Legitimate in API client documentation"
+    - id: exfil-004
+      pattern: "send.*to.*https?://"
+      severity: warning
+      description: "Instruction to send data to external URL"
+      false_positive_hint: "Legitimate in webhook or API documentation"
+    - id: exfil-005
+      pattern: "exfiltrat"
+      severity: critical
+      description: "Explicit exfiltration language"
+      false_positive_hint: "Legitimate in security documentation discussing threats"
