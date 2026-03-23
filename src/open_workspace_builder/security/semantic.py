@@ -1,10 +1,14 @@
-"""S011 — Layer 3: Semantic analysis via Claude API."""
+"""S011 — Layer 3: Semantic analysis via LLM backend."""
 
 from __future__ import annotations
 
 import json
+from typing import TYPE_CHECKING
 
 from open_workspace_builder.security.scanner import ScanFlag
+
+if TYPE_CHECKING:
+    from open_workspace_builder.llm.backend import ModelBackend
 
 _ANALYSIS_SYSTEM_PROMPT = """\
 You are a security analyst reviewing content files that will be installed into \
@@ -48,46 +52,30 @@ If there is any doubt, err on the side of flagging rather than clearing.\
 def analyze_content(
     content: str,
     file_name: str,
-    api_key: str,
-    model: str = "claude-sonnet-4-6",
+    backend: ModelBackend,
 ) -> list[ScanFlag]:
-    """Send file content to Claude API for security analysis.
+    """Send file content to LLM for security analysis.
 
-    Uses a separate API client (not the user's session).
+    Uses a ModelBackend for provider-agnostic completion.
     Returns list of ScanFlag from the analysis.
-    If the API is unavailable, raises an exception (caller handles as "error" verdict).
+    If the backend is unavailable, raises an exception (caller handles as "error" verdict).
     """
-    try:
-        import anthropic  # type: ignore[import-untyped]
-    except ImportError as exc:
-        raise ImportError(
-            "anthropic package is required for Layer 3 semantic analysis. "
-            "Install with: pip install anthropic"
-        ) from exc
-
-    client = anthropic.Anthropic(api_key=api_key)
-
-    message = client.messages.create(
-        model=model,
-        max_tokens=1024,
-        system=_ANALYSIS_SYSTEM_PROMPT,
-        messages=[
-            {
-                "role": "user",
-                "content": (
-                    f"Analyze this workspace content file ({file_name}) "
-                    f"for security threats:\n\n```\n{content}\n```"
-                ),
-            }
-        ],
+    user_message = (
+        f"Analyze this workspace content file ({file_name}) "
+        f"for security threats:\n\n```\n{content}\n```"
     )
 
-    response_text = message.content[0].text
+    response_text = backend.completion(
+        operation="security_scan",
+        system_prompt=_ANALYSIS_SYSTEM_PROMPT,
+        user_message=user_message,
+    )
+
     return _parse_response(response_text)
 
 
 def _parse_response(response_text: str) -> list[ScanFlag]:
-    """Parse Claude's JSON response into ScanFlag list."""
+    """Parse LLM's JSON response into ScanFlag list."""
     try:
         data = json.loads(response_text)
     except json.JSONDecodeError:
@@ -102,11 +90,13 @@ def _parse_response(response_text: str) -> list[ScanFlag]:
 
     flags: list[ScanFlag] = []
     for f in data.get("flags", []):
-        flags.append(ScanFlag(
-            category=f.get("category", "semantic"),
-            severity=f.get("severity", "warning"),
-            evidence=f.get("evidence", ""),
-            description=f.get("explanation", ""),
-            layer=3,
-        ))
+        flags.append(
+            ScanFlag(
+                category=f.get("category", "semantic"),
+                severity=f.get("severity", "warning"),
+                evidence=f.get("evidence", ""),
+                description=f.get("explanation", ""),
+                layer=3,
+            )
+        )
     return flags

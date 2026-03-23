@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from open_workspace_builder.config import SecurityConfig
+    from open_workspace_builder.llm.backend import ModelBackend
 
 
 @dataclass(frozen=True)
@@ -57,8 +57,7 @@ class Scanner:
     def __init__(
         self,
         layers: tuple[int, ...] | None = None,
-        api_key: str | None = None,
-        model: str = "claude-sonnet-4-6",
+        backend: ModelBackend | None = None,
         patterns_path: Path | None = None,
         security_config: SecurityConfig | None = None,
     ) -> None:
@@ -67,8 +66,7 @@ class Scanner:
         self._security_config = security_config or _SC()
         # Explicit layers arg overrides config default.
         self._layers = layers if layers is not None else self._security_config.scanner_layers
-        self._api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
-        self._model = model
+        self._backend = backend
         self._patterns_path = patterns_path
         self._loaded_patterns: list | None = None
 
@@ -94,7 +92,7 @@ class Scanner:
 
             all_flags.extend(check_patterns(path, self._get_patterns()))
 
-        if 3 in self._layers and self._api_key:
+        if 3 in self._layers and self._backend is not None:
             from open_workspace_builder.security.semantic import analyze_content
 
             try:
@@ -102,8 +100,7 @@ class Scanner:
                 result = analyze_content(
                     content=content,
                     file_name=path.name,
-                    api_key=self._api_key,
-                    model=self._model,
+                    backend=self._backend,
                 )
                 all_flags.extend(result)
             except Exception:

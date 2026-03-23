@@ -388,7 +388,19 @@ def scan(
         if layers is not None
         else None
     )
-    scanner = Scanner(layers=layer_nums, security_config=config.security)
+
+    # Construct ModelBackend for Layer 3 if requested.
+    backend = None
+    effective_layers = layer_nums if layer_nums is not None else config.security.scanner_layers
+    if 3 in effective_layers:
+        try:
+            from open_workspace_builder.llm.backend import ModelBackend
+
+            backend = ModelBackend(models_config=config.models)
+        except ImportError:
+            pass  # Layer 3 will be skipped gracefully (no backend)
+
+    scanner = Scanner(layers=layer_nums, backend=backend, security_config=config.security)
 
     target = Path(path)
     if target.is_file():
