@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Pluggable secrets backend with `SecretsBackend` protocol and three implementations (OWB-S050):
+  - OS keyring (macOS Keychain, GNOME Keyring, Windows Credential Manager) via `keyring` package
+  - Age encryption with pyrage/CLI fallback and automatic key generation
+  - Environment variable fallback (backward compatible, zero config)
+- `owb auth` CLI command group: `store-key`, `get-key`, `status`, `backends`
+- Runtime API key resolution with four-step fallback: CLI flag → secrets backend → env var → error
+- `SecretsConfig` section in config overlay (`secrets.backend`, `secrets.age_identity`, etc.)
+- Wizard secrets backend selection step with availability checking and graceful fallbacks
+- Wizard API key storage now routes through the configured secrets backend
+- `keyring`, `age`, and `secrets` optional dependency groups in pyproject.toml
+- 88 new tests (625 → 713)
+
 ## [0.3.0] - 2026-03-24
 
 ### Added

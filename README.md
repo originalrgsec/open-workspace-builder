@@ -4,7 +4,7 @@ Scaffold, maintain, and secure AI coding workspaces from a single command.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Tests: 625](https://img.shields.io/badge/tests-625%20passed-brightgreen)](tests/)
+[![Tests: 713](https://img.shields.io/badge/tests-713%20passed-brightgreen)](tests/)
 
 ## What It Does
 
