@@ -4,7 +4,7 @@ Scaffold, maintain, and secure AI coding workspaces from a single command.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Tests: 374](https://img.shields.io/badge/tests-374%20passed-brightgreen)](tests/)
+[![Tests: 625](https://img.shields.io/badge/tests-625%20passed-brightgreen)](tests/)
 
 ## What It Does
 
@@ -20,6 +20,8 @@ Key capabilities:
 - **Three-layer security scanner** with structural, pattern, and semantic analysis
 - **Config overlay system** with three layers: built-in defaults, user config file, CLI flags
 - **Name-aware CLI** that resolves config paths from the binary name (`owb` vs `cwb`)
+- **Skill evaluation pipeline** with scoring, judging, and three evaluation modes (new, update, overlap)
+- **Multi-source content infrastructure** with config-driven discovery, repo audit, and update pipeline
 
 ## Quick Start
 
@@ -134,6 +136,25 @@ owb security scan ./path --layers 1,2   # structural + pattern only
 owb security scan ./path -o report.json # write JSON report
 ```
 
+### `owb update` — Multi-Source Content Update
+
+Updates content from named upstream sources. Replaces the single-source `owb ecc update` path with a config-driven pipeline supporting arbitrary sources.
+
+```bash
+owb update ecc                    # update ECC source
+owb update <source>               # update any configured source
+owb ecc update                    # backward-compatible alias
+```
+
+### `owb eval` — Skill Evaluation
+
+Evaluates skills using a multi-stage pipeline: classify, generate tests, execute against baseline and candidate, score, and decide.
+
+```bash
+owb eval ./path/to/skill          # evaluate a new skill
+owb eval ./path/to/skill --compare  # compare against existing version
+```
+
 ## Security Scanner
 
 The scanner uses a defense-in-depth approach to catch malicious content in workspace files.
@@ -161,7 +182,7 @@ OWB is designed to be used as a dependency by downstream packages. A vendor-spec
 1. Depend on `open-workspace-builder>=0.1.0`
 2. Provide a pre-baked config YAML with vendor-specific defaults
 3. Register its own CLI entry point that sets `cli_name` in the Click context
-4. Add vendor-specific modules (evaluator, metrics, policies) on top of OWB's engine
+4. Use OWB's evaluator, sources, and security infrastructure directly, or add vendor-specific modules on top
 
 OWB's config system resolves paths based on the CLI name, so `cwb` loads from `~/.cwb/config.yaml` while `owb` loads from `~/.owb/config.yaml`. The `claude_md` YAML key is accepted as a backward-compatible alias for `agent_config`.
 
@@ -173,7 +194,7 @@ cd open-workspace-builder
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev,security]"
 
-# Run tests (374 tests)
+# Run tests (625 tests)
 pytest tests/
 
 # Lint

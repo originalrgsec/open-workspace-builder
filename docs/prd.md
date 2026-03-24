@@ -66,6 +66,27 @@ Claude Code and Cowork power users who want a structured, repeatable workspace w
 - **Flow:** The scanner runs three layers on the target files: structural validation (file type, size, encoding), pattern matching (URLs, shell commands, sensitive paths, stealth keywords), and sandboxed semantic analysis (Claude reviews content for prompt injection, behavioral manipulation, and social engineering). Results are returned as a structured report with per-file verdicts: clean, flagged (with specific concerns), or malicious (with evidence).
 - **Outcome:** A security report. Flagged or malicious files block the triggering operation (merge, update, migration) until resolved by forking to a safe edit or marking as malicious.
 
+### UC-6: Skill Evaluation — New Skill
+
+- **Actor:** Solo Power User or Team Lead
+- **Trigger:** User runs `owb eval <skill-path>` to evaluate a new skill before incorporating it
+- **Flow:** The evaluator classifies the skill type, generates a tailored test suite, executes tests against both a baseline (raw LLM) and the skill-augmented LLM, scores each on four dimensions (novelty, efficiency, precision, defect_rate), computes weighted composites, and decides whether to incorporate or reject.
+- **Outcome:** An evaluation result with per-dimension scores, composite delta vs baseline, and an incorporate/reject decision with reasoning.
+
+### UC-7: Skill Evaluation — Update Existing
+
+- **Actor:** Solo Power User
+- **Trigger:** User runs `owb eval <skill-path> --compare` to evaluate an updated version of an existing skill
+- **Flow:** The evaluator loads the existing test suite and stored scores, executes the existing tests against the new version, compares scores with the stored results, and decides whether to replace, keep, or reject.
+- **Outcome:** A decision to deprecate-and-replace (new version is better), reject (new version is worse), or keep existing (within threshold).
+
+### UC-8: Multi-Source Update
+
+- **Actor:** Solo Power User or Team Lead
+- **Trigger:** User runs `owb update <source>` to pull updates from a named upstream source
+- **Flow:** The updater discovers files in the source according to configured glob patterns, runs a repo-level security audit (checking for hooks dirs, setup scripts, event triggers), presents results for review, and applies accepted changes. Each source is independently configured with its own repo URL, pin, and discovery rules.
+- **Outcome:** The local copy of the source is updated with reviewed, security-audited changes. Backward-compatible: `owb ecc update` still works as an alias.
+
 ## Goals
 
 1. **Goal:** Reduce time-to-productive-workspace from hours to minutes — **Metric:** Time from install to first use — **Target:** Under 5 minutes for default config, under 15 minutes for interactive setup

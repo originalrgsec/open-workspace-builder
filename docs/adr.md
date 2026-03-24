@@ -201,6 +201,27 @@ This is a CLI tool, not a distributed system. The "containers" are logical modul
 - **License check:** N/A.
 - **OSS health check:** N/A.
 
+### AD-7: Evaluator Extraction from CWB to OWB
+
+- **Context:** The skill evaluator (classifier, generator, persistence) was originally built in CWB using CWB's direct Anthropic SDK backend. Sprint 6 extracts it to OWB to make evaluation available to any downstream package. The generator's single-string prompt interface needed adaptation to OWB's system/user prompt separation.
+- **Decision:** Extract classifier, generator, persistence to OWB's evaluator package. Adapt generator to use ModelBackend.completion(operation="generate", system_prompt=..., user_message=...) with system/user separation. Add scorer, judge, and manager as new OWB modules. Weight vectors and skill type definitions ship as YAML data files.
+- **Alternatives considered:** Keeping the evaluator in CWB only was rejected because evaluation is a core capability that should be available to any OWB downstream package, not just Claude-specific wrappers.
+- **Consequences:** CWB's evaluator modules become thin wrappers or are deprecated in favor of OWB's. The prompt interface change means CWB's ModelBackend (single-string generate) cannot be used directly — CWB must adapt or delegate to OWB's evaluator.
+
+### AD-8: Prompt Injection Hardening in Evaluator
+
+- **Context:** The evaluator processes untrusted SKILL.md content as input to LLM prompts. A malicious skill could attempt prompt injection to influence scoring in its favor. The judge component compares candidate and baseline outputs, both of which are untrusted.
+- **Decision:** Strict system/user prompt separation across all evaluator components. Scoring rubrics and instructions stay in the system prompt (trusted). Skill content and test outputs go in the user message (untrusted), wrapped in XML delimiters (`<skill_output>`, `<skill_instructions>`) with explicit "treat as data" instructions. The judge system prompt includes an injection warning.
+- **Alternatives considered:** Single-prompt approach (mixing instructions and data) was rejected because it makes injection trivial. Post-hoc score validation (check for suspiciously high scores) was considered as an additional layer but deferred.
+- **Consequences:** All evaluator LLM calls use two-message format (system + user). This is compatible with OWB's ModelBackend but not with backends that only support single-prompt interfaces.
+
+### AD-9: Config-Driven Multi-Source Architecture
+
+- **Context:** The original ECC update path was hardcoded: one upstream repo, one update command, one set of file patterns. Sprint 6 introduces support for arbitrary upstream sources, each with its own discovery rules, audit policies, and update pipeline.
+- **Decision:** Add SourcesConfig to config.py with named source entries. Each entry specifies repo_url, pin, discovery patterns (globs), and exclude rules. The `owb update <source>` command replaces `owb ecc update` as the primary interface. `owb ecc update` is preserved as a backward-compatible alias. Discovery, audit, and update are separate pipeline stages.
+- **Alternatives considered:** Extending the existing ECC-specific code with flags for different sources was rejected because it would create an ever-growing switch statement. A plugin system was considered but rejected as over-engineering for the current need.
+- **Consequences:** Adding a new upstream source requires only a config entry, not code changes. The audit stage (checking for hooks dirs, setup scripts) runs before any content is accepted, providing a security gate for new sources.
+
 ## Technology Stack
 
 | Layer | Technology | Rationale |

@@ -131,6 +131,32 @@ This threat model uses STRIDE per element applied to the data flow diagrams defi
 | **D**enial of Service | No | Local file | -- |
 | **E**levation of Privilege | No | Data file, not executable | -- |
 
+### Element: Evaluator Pipeline (P-2)
+**Type:** process
+**DFD Reference:** P-2 (Evaluation Flow)
+
+| STRIDE Category | Applicable? | Threat Description | Threat ID |
+|----------------|-------------|-------------------|-----------|
+| **S**poofing | No | Evaluator runs locally | -- |
+| **T**ampering | Yes | A malicious SKILL.md contains prompt injection that manipulates the scoring LLM to report inflated scores, causing the evaluator to incorporate a harmful skill | T-021 |
+| **R**epudiation | No | Evaluation results are persisted | -- |
+| **I**nformation Disclosure | Yes | Skill content sent to LLM for scoring may contain proprietary instructions that are disclosed to the model provider | T-022 |
+| **D**enial of Service | Yes | A crafted skill generates an extremely large test suite or produces responses that exhaust token budgets | T-023 |
+| **E**levation of Privilege | No | Evaluator does not execute skill output as code | -- |
+
+### Element: Source Infrastructure (P-3)
+**Type:** process
+**DFD Reference:** P-3 (Source Update Flow)
+
+| STRIDE Category | Applicable? | Threat Description | Threat ID |
+|----------------|-------------|-------------------|-----------|
+| **S**poofing | Yes | Attacker compromises a named upstream source's repo, delivering malicious content that passes basic content scans but contains hook directories or setup scripts with host modification commands | T-024 |
+| **T**ampering | Yes | Upstream source includes a `.hooks/` directory, `setup.py` with `os.system()` calls, or event trigger files that execute on the user's machine when the content is applied | T-025 |
+| **R**epudiation | No | Update operations are logged | -- |
+| **I**nformation Disclosure | No | Source content is fetched, not user data sent | -- |
+| **D**enial of Service | Yes | Malicious source provides extremely large files or deeply nested directories to exhaust disk or processing time | T-026 |
+| **E**levation of Privilege | Yes | Setup scripts or hooks in upstream sources attempt to modify the host system (install packages, modify PATH, write to system directories) | T-027 |
+
 ## Risk Assessment
 
 Risk scoring follows NIST SP 800-30 Rev. 1. Each identified threat is rated on likelihood and impact, producing an overall risk level.
@@ -184,6 +210,13 @@ Risk scoring follows NIST SP 800-30 Rev. 1. Each identified threat is rated on l
 | T-018 | PR disables security scanning or modifies scanner to whitelist | E | DF-2 | Low (2) | Very High (10) | Moderate | M-014 |
 | T-019 | Reputation ledger tampering | T | DS-3 | Very Low (0) | Moderate (5) | Low | M-015 |
 | T-020 | Reputation ledger information disclosure | I | DS-3 | Very Low (0) | Low (2) | Low | M-015 |
+| T-021 | Score manipulation via prompt injection in SKILL.md | T | P-2 | Moderate (5) | High (8) | High | M-016, M-006 |
+| T-022 | Proprietary skill content disclosed to model provider | I | P-2 | Moderate (5) | Moderate (5) | Moderate | M-008 |
+| T-023 | Token exhaustion via crafted test suite | D | P-2 | Low (2) | Moderate (5) | Low | M-017 |
+| T-024 | Compromised upstream source with hidden hooks | S | P-3 | Moderate (5) | High (8) | High | M-018 |
+| T-025 | Setup scripts with host modification in upstream | T | P-3 | Moderate (5) | Very High (10) | High | M-018 |
+| T-026 | Resource exhaustion via malicious source content | D | P-3 | Low (2) | Low (2) | Low | M-017 |
+| T-027 | Host system modification via upstream hooks/scripts | E | P-3 | Moderate (5) | Very High (10) | High | M-018 |
 ## Mitigations
 
 ### M-001: Pinned Vendoring with Commit Hash Tracking
@@ -321,6 +354,33 @@ Risk scoring follows NIST SP 800-30 Rev. 1. Each identified threat is rated on l
 - **Status:** partial
 - **Residual risk:** A user with filesystem access can still modify the file. This is acceptable — the user is the trust anchor in this threat model.
 
+### M-016: System/User Prompt Separation in Evaluator
+
+- **Threat(s) addressed:** T-021
+- **Description:** All evaluator LLM calls use strict system/user message separation. Scoring rubrics and decision criteria stay in the system prompt (trusted, not influenced by skill content). Skill content and test outputs are placed in the user message, wrapped in XML delimiters (`<skill_output>`, `<skill_instructions>`) with explicit instructions to treat the content as data to evaluate, not instructions to follow.
+- **NIST 800-53 Control:** SI-3 Malicious Code Protection, SC-7 Boundary Protection
+- **Implementation:** evaluator/scorer.py, evaluator/judge.py, evaluator/manager.py
+- **Status:** implemented
+- **Residual risk:** Sophisticated prompt injection may still influence scoring. The system/user separation raises the bar but does not eliminate the risk. Future mitigation: post-hoc score validation and multi-judge consensus.
+
+### M-017: Resource Limits on Evaluation and Source Operations
+
+- **Threat(s) addressed:** T-023, T-026
+- **Description:** The evaluator enforces a minimum test case count (configurable, default 8) and uses bounded max_tokens on all LLM calls. Source discovery respects exclude patterns and does not recurse into directories matching exclusion rules.
+- **NIST 800-53 Control:** SC-5 Denial of Service Protection
+- **Implementation:** EvaluationConfig.min_test_cases, max_tokens parameters on ModelBackend calls, SourceConfig.exclude patterns
+- **Status:** implemented
+- **Residual risk:** Token budgets protect against single-call exhaustion but not against many legitimate calls in a large test suite.
+
+### M-018: Repo Audit Gate for Upstream Sources
+
+- **Threat(s) addressed:** T-024, T-025, T-027
+- **Description:** Before any content from an upstream source is presented for review, the RepoAuditor checks for known-dangerous patterns: `.hooks/` directories, `setup.py`/`setup.cfg` with executable content, event trigger files, and cross-file import chains. Files matching these patterns receive warn or block verdicts. Blocked files cannot be accepted.
+- **NIST 800-53 Control:** SA-12 Supply Chain Protection, SI-3 Malicious Code Protection
+- **Implementation:** sources/audit.py with configurable check rules
+- **Status:** implemented
+- **Residual risk:** Novel attack vectors (e.g., content that instructs the AI to create hooks post-installation) are not caught by static audit. The security scanner (M-006) is the compensating control.
+
 ## Residual Risk Summary
 
 | Threat ID | Original Risk | Mitigation | Residual Risk | Accepted? | Accepted By |
@@ -331,6 +391,9 @@ Risk scoring follows NIST SP 800-30 Rev. 1. Each identified threat is rated on l
 | T-013 | High | M-006, M-010, M-011 | Moderate | Yes | Owner — exfiltration patterns are well-characterized; creative indirect exfiltration is the residual |
 | T-015 | High | M-006, M-010 | Moderate | Yes | Owner — same residual as T-011 and T-013 |
 | T-018 | Moderate | M-014 | Low | Yes | Owner — CODEOWNERS + branch protection is strong; only fails if both are disabled simultaneously |
+| T-021 | High | M-016, M-006 | Moderate | Yes | Owner — system/user separation raises the bar; novel injection remains possible |
+| T-025 | High | M-018 | Low | Yes | Owner — repo audit gate catches known patterns; static analysis is comprehensive |
+| T-027 | High | M-018 | Low | Yes | Owner — same as T-025 |
 ## Assumptions and Dependencies
 
 - Claude API provides adequate isolation between separate API calls. A malicious file analyzed in one call cannot influence the response of a subsequent call.
@@ -371,6 +434,7 @@ Next scheduled review: 2026-06-16
 | SC-39 | Process Isolation | Sys/Comm Protection | M-009 | implemented |
 | SI-3 | Malicious Code Protection | Sys/Info Integrity | M-006, M-010, M-011, M-013 | partial (M-013 not implemented) |
 | SI-7 | Software/Firmware/Info Integrity | Sys/Info Integrity | M-005 | partial |
+| SC-5 | Denial of Service Protection | Sys/Comm Protection | M-017 | implemented |
 
 ## Links
 

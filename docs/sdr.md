@@ -25,15 +25,36 @@ open-workspace-builder/
 │       │   ├── context.py           # Context file template deployment
 │       │   ├── differ.py            # Workspace diff engine
 │       │   └── migrator.py          # Interactive migration with accept/reject
-│       └── security/
-│           ├── __init__.py
-│           ├── scanner.py           # Orchestrator: runs all layers
-│           ├── structural.py        # Layer 1: file type, size, encoding
-│           ├── patterns.py          # Layer 2: regex/keyword matching
-│           ├── semantic.py          # Layer 3: sandboxed Claude API analysis
-│           ├── reputation.py        # Reputation ledger management
-│           └── data/
-│               └── patterns.yaml    # Pattern library for Layer 2
+│       ├── security/
+│       │   ├── __init__.py
+│       │   ├── scanner.py           # Orchestrator: runs all layers
+│       │   ├── structural.py        # Layer 1: file type, size, encoding
+│       │   ├── patterns.py          # Layer 2: regex/keyword matching
+│       │   ├── semantic.py          # Layer 3: sandboxed Claude API analysis
+│       │   ├── reputation.py        # Reputation ledger management
+│       │   └── data/
+│       │       └── patterns.yaml    # Pattern library for Layer 2
+│       ├── evaluator/
+│       │   ├── __init__.py
+│       │   ├── types.py              # TestExecutionResult shared dataclass
+│       │   ├── classifier.py         # Skill type classifier (10 types)
+│       │   ├── scorer.py             # Per-dimension and composite scoring
+│       │   ├── judge.py              # Pairwise quality comparison
+│       │   ├── generator.py          # Test suite generation
+│       │   ├── persistence.py        # Suite/result JSON persistence
+│       │   ├── manager.py            # Evaluation pipeline orchestrator
+│       │   ├── org_layer.py          # Organizational layer classifier (L0-L3)
+│       │   ├── trust.py              # Trust tier assignment
+│       │   └── data/
+│       │       ├── weight_vectors.yaml
+│       │       ├── org_layer_examples.yaml
+│       │       └── trust_policies/
+│       │           └── owb-default.yaml
+│       ├── sources/
+│       │   ├── __init__.py
+│       │   ├── discovery.py          # Config-driven file discovery
+│       │   ├── audit.py              # Repo-level security audit
+│       │   └── updater.py            # Multi-source update pipeline
 ├── vendor/
 │   └── ecc/
 │       ├── .upstream-meta.json      # Upstream repo URL, commit hash, fetch date
@@ -575,6 +596,14 @@ class ReputationLedger:
 16. S016 — Implement ECC upstream update workflow (fetch, diff, scan, accept/reject, audit log).
 17. S017 — Finalize pyproject.toml for installable package, GitHub Actions release workflow (dormant until public), version consistency tests. Install via `pip install git+https://github.com/VolcanixLLC/open-workspace-builder.git`.
 18. S018 — Rewrite README for external users, split getting-started by environment, document security model.
+19. S022 — Evaluator scorer: SkillScorer with per-dimension scoring and weighted composite via ModelBackend judge operation.
+20. S023 — Evaluator judge: QualityJudge with pairwise candidate/baseline comparison and prompt injection hardening.
+21. S024 — Evaluator manager: EvaluationManager orchestrating classify → generate → execute → score → judge → decide with three evaluation modes.
+22. S028 — Org layer classifier: OrgLayerClassifier with L0-L3 detection heuristics, few-shot examples, confidence-gated review.
+23. S029 — Trust tier integration: TrustTierAssigner loading policies from registry with data-driven tier assignment and transitions.
+24. S035 — Source discovery: SourceDiscovery with per-source glob patterns, excludes, and SourcesConfig added to config.py.
+25. S036 — Repo audit: RepoAuditor with pass/warn/block verdicts for hooks dirs, setup scripts, event triggers.
+26. S037 — Update command refactor: SourceUpdater and `owb update <source>` replacing hardcoded ECC update path.
 
 ## Sprint Plan
 
@@ -593,6 +622,16 @@ class ReputationLedger:
 ### Sprint 3: Packaging and Distribution
 - Stories: S017, S018
 - Goal: Package installable via `pip install git+https://...`. README rewritten for external users. PyPI trusted publishing configured and ready to activate.
+
+### Sprint 5: Core Extraction and Registry
+- Stories: S040, S041, S042, S043, S044
+- Goal: Config-driven architecture, LiteLLM model backend, extensible registry, interactive wizard. OWB genericized as shared core.
+- Tests: 374 passing
+
+### Sprint 6: Evaluator and Source Infrastructure
+- Stories: S022, S023, S024, S028, S029, S035, S036, S037
+- Goal: Full skill evaluation pipeline (scorer, judge, manager), organizational layer and trust tier classification, multi-source content infrastructure. 251 new tests.
+- Tests: 625 passing
 
 ## Open Questions
 
