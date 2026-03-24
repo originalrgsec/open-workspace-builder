@@ -108,6 +108,7 @@ class TestTemplates:
         "project-index.md",
         "readme.md",
         "research-note.md",
+        "retrospective.md",
         "roadmap.md",
         "sdr.md",
         "selections-tracker.md",
@@ -115,6 +116,7 @@ class TestTemplates:
         "spec.md",
         "status.md",
         "story.md",
+        "tech-debt.md",
         "threat-model.md",
         "vendor-contact-list.md",
     ]

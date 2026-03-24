@@ -1,0 +1,64 @@
+# Skill type to dimension weight vector mapping.
+# Weights must sum to 1.0 for each type.
+# Dimensions: novelty, efficiency, precision, defect_rate
+
+skill_types:
+  marketing-copywriting:
+    novelty: 0.40
+    efficiency: 0.15
+    precision: 0.25
+    defect_rate: 0.20
+
+  security-analysis:
+    novelty: 0.10
+    efficiency: 0.20
+    precision: 0.35
+    defect_rate: 0.35
+
+  code-review:
+    novelty: 0.10
+    efficiency: 0.20
+    precision: 0.30
+    defect_rate: 0.40
+
+  research-analysis:
+    novelty: 0.30
+    efficiency: 0.15
+    precision: 0.35
+    defect_rate: 0.20
+
+  project-management:
+    novelty: 0.15
+    efficiency: 0.25
+    precision: 0.35
+    defect_rate: 0.25
+
+  document-generation:
+    novelty: 0.20
+    efficiency: 0.20
+    precision: 0.35
+    defect_rate: 0.25
+
+  data-analysis:
+    novelty: 0.20
+    efficiency: 0.25
+    precision: 0.30
+    defect_rate: 0.25
+
+  devops-infrastructure:
+    novelty: 0.10
+    efficiency: 0.30
+    precision: 0.25
+    defect_rate: 0.35
+
+  testing-qa:
+    novelty: 0.10
+    efficiency: 0.20
+    precision: 0.30
+    defect_rate: 0.40
+
+  general:
+    novelty: 0.25
+    efficiency: 0.25
+    precision: 0.25
+    defect_rate: 0.25
