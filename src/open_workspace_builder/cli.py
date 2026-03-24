@@ -227,6 +227,106 @@ def migrate(
     sys.exit(2 if has_blocked else 0)
 
 
+@owb.command("update")
+@click.argument("source")
+@click.option(
+    "--accept-all",
+    is_flag=True,
+    default=False,
+    help="Auto-accept all non-flagged files (batch mode).",
+)
+@click.option(
+    "--dry-run",
+    "-n",
+    is_flag=True,
+    default=False,
+    help="Fetch and scan but do not write any files.",
+)
+@click.pass_context
+def update_source(
+    ctx: click.Context,
+    source: str,
+    accept_all: bool,
+    dry_run: bool,
+) -> None:
+    """Fetch latest content from SOURCE and selectively apply updates.
+
+    Runs the multi-source update pipeline: clone/fetch, discover files,
+    per-file security scan, repo-level audit, then accept/reject per file.
+    Use --accept-all to auto-accept files that pass scanning.
+    """
+    from open_workspace_builder.security.scanner import Scanner
+    from open_workspace_builder.sources.audit import RepoAuditor
+    from open_workspace_builder.sources.discovery import SourceConfig, SourceDiscovery
+    from open_workspace_builder.sources.updater import SourceUpdater
+
+    config = load_config(cli_name=ctx.obj["cli_name"])
+
+    if source not in config.sources.entries:
+        click.echo(f"Error: source {source!r} not found in config.")
+        click.echo(f"Available sources: {', '.join(config.sources.entries.keys()) or '(none)'}")
+        sys.exit(1)
+
+    entry = config.sources.entries[source]
+    source_cfg = SourceConfig(
+        name=source,
+        repo_url=entry.repo_url,
+        pin=entry.pin,
+        discovery_method=entry.discovery_method,
+        patterns=entry.patterns,
+        exclude=entry.exclude,
+    )
+
+    scanner = Scanner(layers=(1, 2), security_config=config.security)
+    discovery = SourceDiscovery([source_cfg])
+    auditor = RepoAuditor(scanner)
+
+    content_root = _find_content_root()
+    vendor_dir = content_root / "vendor" / source
+
+    def _prompt(rel_path: str, verdict: object) -> str:
+        click.echo(f"\n--- {rel_path} ---")
+        if verdict is not None and hasattr(verdict, "verdict"):
+            icon = {"clean": "OK", "flagged": "WARN", "malicious": "FAIL"}
+            click.echo(f"Security: [{icon.get(verdict.verdict, '??')}] {verdict.verdict}")
+        while True:
+            choice = (
+                click.prompt("[a]ccept / [r]eject / [q]uit", type=str, default="r").lower().strip()
+            )
+            if choice in ("a", "r", "q"):
+                return choice
+
+    prompt_fn = None if accept_all else _prompt
+    updater = SourceUpdater(config, scanner, discovery, auditor)
+
+    try:
+        summary = updater.update(
+            source,
+            interactive=not accept_all,
+            prompt_fn=prompt_fn,
+            dry_run=dry_run,
+            vendor_dir=vendor_dir,
+        )
+    except Exception as exc:
+        click.echo(f"Error during update: {exc}")
+        sys.exit(1)
+
+    if summary.audit_verdict == "block":
+        click.echo(f"\n[BLOCKED] Repo audit blocked source {source!r}.")
+        for path in summary.files_blocked:
+            click.echo(f"  - {path}")
+        sys.exit(2)
+
+    accepted = len(summary.files_accepted)
+    rejected = len(summary.files_rejected)
+    blocked = len(summary.files_blocked)
+    warned = len(summary.files_warned)
+    click.echo(
+        f"\nUpdate complete: {accepted} accepted, {rejected} rejected, "
+        f"{blocked} blocked, {warned} warned"
+    )
+
+
 @owb.group()
 def ecc() -> None:
     """Manage ECC catalog installation."""

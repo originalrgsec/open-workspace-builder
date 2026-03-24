@@ -1,0 +1,61 @@
+id: "owb-default"
+version: "1.0.0"
+type: "trust_policy"
+author: "Open Workspace Builder"
+description: "Default trust tier assignment policy with criteria-driven classification"
+compatibility: ">=0.1.0"
+
+payload:
+  tiers:
+    - level: 0
+      name: "T0 — High Trust"
+      description: "Owner-authored content with no upstream dependency"
+      criteria:
+        source_prefixes:
+          - "content/custom/"
+          - "content/skills/"
+        requires_security_scan: false
+        requires_evaluation: false
+        requires_owner_approval: false
+      actions:
+        auto_install: true
+        requires_review: false
+        quarantine: false
+
+    - level: 1
+      name: "T1 — Medium Trust"
+      description: "Passed security scan, evaluation, and owner approval"
+      criteria:
+        source_prefixes: []
+        requires_security_scan: true
+        requires_evaluation: true
+        requires_owner_approval: true
+      actions:
+        auto_install: false
+        requires_review: true
+        quarantine: false
+
+    - level: 2
+      name: "T2 — Untrusted"
+      description: "Downloaded and scanned but not evaluated or approved"
+      criteria:
+        source_prefixes: []
+        requires_security_scan: false
+        requires_evaluation: false
+        requires_owner_approval: false
+      actions:
+        auto_install: false
+        requires_review: true
+        quarantine: true
+
+  transitions:
+    - from_tier: 2
+      to_tier: 1
+      requires:
+        security_passed: true
+        evaluation_passed: true
+        owner_approved: true
+    - from_tier: 1
+      to_tier: 2
+      on: "regression_failure"
+      description: "Demote to untrusted on security or evaluation regression"

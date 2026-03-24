@@ -1,0 +1,31 @@
+layers:
+  - layer: 0
+    name: "Identity"
+    description: "Context files, templates, policies — not agents, loaded automatically"
+    examples:
+      - "A brand-voice.md template that defines the company's writing style and tone guidelines."
+      - "A CLAUDE.md policy file that sets repository-level rules for code style."
+      - "An about-me.md context file that describes the user's role and preferences."
+
+  - layer: 1
+    name: "Director"
+    description: "Delegates work, decomposes tasks, routes to other agents"
+    examples:
+      - "A project planning skill that breaks down feature requests into subtasks and assigns each to a specialist agent."
+      - "A PR review orchestrator that routes code changes to reviewer agents based on file type."
+      - "A release coordinator that decomposes a release checklist into parallel workstreams."
+
+  - layer: 2
+    name: "Specialist"
+    description: "Domain expertise, focused execution, no delegation"
+    examples:
+      - "A security-analysis skill that reads source code and identifies OWASP Top 10 vulnerabilities."
+      - "A code-review skill that analyzes code changes for style violations and potential bugs."
+
+  - layer: 3
+    name: "Sub-agent"
+    description: "Invoked by specialists or directors, narrow bounded tasks, leaf nodes"
+    examples:
+      - "A regex-pattern-checker that receives a single file and a pattern list, returns matching lines."
+      - "A commit-message-formatter that takes a diff summary and produces a conventional-commit message."
+      - "A YAML-schema-validator that checks a single YAML file against a provided schema."

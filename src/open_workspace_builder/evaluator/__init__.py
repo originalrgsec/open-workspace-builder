@@ -1,1 +1,1 @@
-"""Evaluator package: scoring, judging, and quality assessment for AI skills."""
+"""Evaluator package: scoring, judging, classification, org layer, and trust tier assessment."""

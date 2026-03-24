@@ -152,6 +152,24 @@ class MarketplaceConfig:
 
 
 @dataclass(frozen=True)
+class SourceEntryConfig:
+    """Configuration for a single upstream content source."""
+
+    repo_url: str = ""
+    pin: str = ""
+    discovery_method: str = "glob"
+    patterns: tuple[str, ...] = ("**/SKILL.md",)
+    exclude: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class SourcesConfig:
+    """Mapping of source names to their configurations."""
+
+    entries: dict[str, SourceEntryConfig] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class PathsConfig:
     """Directory paths for config, data, and credentials."""
 
@@ -171,6 +189,7 @@ class Config:
     models: ModelsConfig = field(default_factory=ModelsConfig)
     security: SecurityConfig = field(default_factory=SecurityConfig)
     trust: TrustConfig = field(default_factory=TrustConfig)
+    sources: SourcesConfig = field(default_factory=SourcesConfig)
     marketplace: MarketplaceConfig = field(default_factory=MarketplaceConfig)
     paths: PathsConfig = field(default_factory=PathsConfig)
 
@@ -185,6 +204,7 @@ _SECTION_CLASSES: dict[str, type] = {
     "models": ModelsConfig,
     "security": SecurityConfig,
     "trust": TrustConfig,
+    "sources": SourcesConfig,
     "marketplace": MarketplaceConfig,
     "paths": PathsConfig,
 }
@@ -293,6 +313,7 @@ def _with_resolved_paths(config: Config, cli_name: str) -> Config:
         models=config.models,
         security=config.security,
         trust=config.trust,
+        sources=config.sources,
         marketplace=config.marketplace,
         paths=resolved,
     )
@@ -314,7 +335,10 @@ def _build_config_from_dict(defaults: Config, raw: dict[str, Any]) -> Config:
     for section_name, cls in _SECTION_CLASSES.items():
         default_val = getattr(defaults, section_name)
         if section_name in raw:
-            sections[section_name] = _merge_dataclass(cls, default_val, raw[section_name])
+            if section_name == "sources":
+                sections[section_name] = _build_sources_config(raw[section_name])
+            else:
+                sections[section_name] = _merge_dataclass(cls, default_val, raw[section_name])
         else:
             sections[section_name] = default_val
 
@@ -322,3 +346,14 @@ def _build_config_from_dict(defaults: Config, raw: dict[str, Any]) -> Config:
         target=raw.get("target", defaults.target),
         **sections,
     )
+
+
+def _build_sources_config(raw_sources: dict[str, Any]) -> SourcesConfig:
+    """Build SourcesConfig from raw YAML dict of source entries."""
+    entries: dict[str, SourceEntryConfig] = {}
+    for name, entry_raw in raw_sources.items():
+        if not isinstance(entry_raw, dict):
+            continue
+        defaults = SourceEntryConfig()
+        entries[name] = _merge_dataclass(SourceEntryConfig, defaults, entry_raw)
+    return SourcesConfig(entries=entries)
