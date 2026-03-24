@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import stat
 from pathlib import Path
 from unittest.mock import patch
 
@@ -10,6 +9,7 @@ from open_workspace_builder.config import (
     Config,
     MarketplaceConfig,
     ModelsConfig,
+    SecretsConfig,
     SecurityConfig,
     TrustConfig,
 )
@@ -49,6 +49,10 @@ class TestWizardAnthropic:
                     ),
                     "anthropic",
                 ),
+            ),
+            patch(
+                "open_workspace_builder.wizard.setup._step_secrets_backend",
+                return_value=SecretsConfig(),
             ),
             patch("open_workspace_builder.wizard.setup._step_api_key"),
             patch(
@@ -101,6 +105,10 @@ class TestWizardOpenAI:
                     "openai",
                 ),
             ),
+            patch(
+                "open_workspace_builder.wizard.setup._step_secrets_backend",
+                return_value=SecretsConfig(),
+            ),
             patch("open_workspace_builder.wizard.setup._step_api_key"),
             patch(
                 "open_workspace_builder.wizard.setup._step_vault_tiers",
@@ -151,6 +159,10 @@ class TestWizardOllama:
                     "ollama",
                 ),
             ),
+            patch(
+                "open_workspace_builder.wizard.setup._step_secrets_backend",
+                return_value=SecretsConfig(),
+            ),
             patch("open_workspace_builder.wizard.setup._step_api_key"),
             patch(
                 "open_workspace_builder.wizard.setup._step_vault_tiers",
@@ -191,6 +203,10 @@ class TestWizardSkip:
             patch(
                 "open_workspace_builder.wizard.setup._step_models",
                 return_value=(ModelsConfig(), "skip"),
+            ),
+            patch(
+                "open_workspace_builder.wizard.setup._step_secrets_backend",
+                return_value=SecretsConfig(),
             ),
             patch("open_workspace_builder.wizard.setup._step_api_key"),
             patch(
@@ -352,39 +368,37 @@ class TestStepSecurityPatterns:
         assert len(sec.active_patterns) == 2
 
 
-class TestCredentialFile:
-    """Credential file creation with correct permissions."""
+class TestCredentialStorage:
+    """API key storage via secrets backend."""
 
-    def test_api_key_file_created_with_0600(self, tmp_path: Path) -> None:
+    def test_api_key_stored_via_backend(self, tmp_path: Path) -> None:
+        from unittest.mock import MagicMock
+
         from open_workspace_builder.wizard.setup import _step_api_key
 
-        cred_dir = tmp_path / "credentials"
+        mock_backend = MagicMock()
         with (
             patch("click.confirm", return_value=True),
             patch("click.prompt", return_value="sk-test-key-123"),
+            patch(
+                "open_workspace_builder.secrets.factory.get_backend",
+                return_value=mock_backend,
+            ),
         ):
-            _step_api_key("anthropic", cred_dir)
+            _step_api_key("anthropic", SecretsConfig())
 
-        key_file = cred_dir / "anthropic.key"
-        assert key_file.exists()
-        assert key_file.read_text(encoding="utf-8").strip() == "sk-test-key-123"
-        mode = key_file.stat().st_mode
-        assert mode & 0o777 == stat.S_IRUSR | stat.S_IWUSR  # 0600
+        mock_backend.set.assert_called_once_with("anthropic_api_key", "sk-test-key-123")
 
-    def test_skip_provider_no_credential_file(self, tmp_path: Path) -> None:
+    def test_skip_provider_no_storage(self) -> None:
         from open_workspace_builder.wizard.setup import _step_api_key
 
-        cred_dir = tmp_path / "credentials"
-        _step_api_key("skip", cred_dir)
-        assert not cred_dir.exists()
+        _step_api_key("skip", SecretsConfig())  # should not prompt
 
-    def test_decline_storage(self, tmp_path: Path) -> None:
+    def test_decline_storage(self) -> None:
         from open_workspace_builder.wizard.setup import _step_api_key
 
-        cred_dir = tmp_path / "credentials"
         with patch("click.confirm", return_value=False):
-            _step_api_key("anthropic", cred_dir)
-        assert not cred_dir.exists()
+            _step_api_key("anthropic", SecretsConfig())  # should not store
 
 
 class TestWizardConfigFileWritten:
@@ -401,6 +415,10 @@ class TestWizardConfigFileWritten:
             patch(
                 "open_workspace_builder.wizard.setup._step_models",
                 return_value=(ModelsConfig(), "skip"),
+            ),
+            patch(
+                "open_workspace_builder.wizard.setup._step_secrets_backend",
+                return_value=SecretsConfig(),
             ),
             patch("open_workspace_builder.wizard.setup._step_api_key"),
             patch(

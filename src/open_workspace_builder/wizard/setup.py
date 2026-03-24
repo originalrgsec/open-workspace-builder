@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import stat
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +12,7 @@ from open_workspace_builder.config import (
     MarketplaceConfig,
     ModelsConfig,
     PathsConfig,
+    SecretsConfig,
     SecurityConfig,
     TrustConfig,
     _resolve_paths,
@@ -87,8 +87,52 @@ def _step_models() -> tuple[ModelsConfig, str]:
     return ModelsConfig(), provider
 
 
-def _step_api_key(provider: str, credentials_dir: Path) -> None:
-    """Step 2: API key storage."""
+def _step_secrets_backend() -> SecretsConfig:
+    """Step 2a: Secrets backend selection."""
+    click.echo("\nHow should API keys be stored?")
+    click.echo("  [1] Environment variables (default — keys set in shell)")
+    click.echo("  [2] OS keyring (macOS Keychain, GNOME Keyring, etc.)")
+    click.echo("  [3] Age encryption (file-based, encrypted at rest)")
+
+    choice = click.prompt("Selection", type=click.Choice(["1", "2", "3"]), default="1")
+
+    if choice == "1":
+        return SecretsConfig(backend="env")
+
+    if choice == "2":
+        try:
+            from open_workspace_builder.secrets.keyring_backend import KeyringBackend
+
+            if not KeyringBackend.is_available():
+                click.echo("Warning: keyring is installed but using a fail backend.")
+                click.echo("Falling back to env.")
+                return SecretsConfig(backend="env")
+        except ImportError:
+            click.echo("Warning: keyring not installed. Install with:")
+            click.echo("  pip install 'open-workspace-builder[keyring]'")
+            click.echo("Falling back to env.")
+            return SecretsConfig(backend="env")
+        return SecretsConfig(backend="keyring")
+
+    # choice == "3" — age
+    try:
+        from open_workspace_builder.secrets.age_backend import AgeBackend
+
+        if not AgeBackend.is_available():
+            click.echo("Warning: neither pyrage nor age CLI found.")
+            click.echo("Install with: pip install 'open-workspace-builder[age]'")
+            click.echo("Falling back to env.")
+            return SecretsConfig(backend="env")
+    except ImportError:
+        click.echo("Warning: age backend not available. Falling back to env.")
+        return SecretsConfig(backend="env")
+
+    identity = click.prompt("Identity file path", default="~/.config/owb/key.txt")
+    return SecretsConfig(backend="age", age_identity=identity)
+
+
+def _step_api_key(provider: str, secrets_cfg: SecretsConfig) -> None:
+    """Step 2b: API key storage via secrets backend."""
     if provider == "skip":
         return
 
@@ -100,6 +144,8 @@ def _step_api_key(provider: str, credentials_dir: Path) -> None:
 
     if provider in ("anthropic", "openai"):
         env_var = "ANTHROPIC_API_KEY" if provider == "anthropic" else "OPENAI_API_KEY"
+        key_name = env_var.lower()
+
         click.echo(f"\nYou can set {env_var} in your environment instead of storing here.")
         store = click.confirm("Store API key now?", default=False)
         if not store:
@@ -110,11 +156,15 @@ def _step_api_key(provider: str, credentials_dir: Path) -> None:
             click.echo("No key entered, skipping.")
             return
 
-        credentials_dir.mkdir(parents=True, exist_ok=True)
-        key_file = credentials_dir / f"{provider}.key"
-        key_file.write_text(api_key.strip() + "\n", encoding="utf-8")
-        key_file.chmod(stat.S_IRUSR | stat.S_IWUSR)  # 0600
-        click.echo(f"API key stored in {key_file}")
+        from open_workspace_builder.secrets.factory import get_backend
+
+        try:
+            backend = get_backend(secrets_cfg)
+            backend.set(key_name, api_key.strip())
+            click.echo(f"API key stored in {backend.backend_name()} backend as '{key_name}'.")
+        except Exception as exc:
+            click.echo(f"Error storing key: {exc}")
+            click.echo(f"Set {env_var} in your environment instead.")
         return
 
     # "other" provider — no standard key storage
@@ -225,6 +275,17 @@ def _write_config_yaml(config: Config, config_path: Path) -> None:
     if config.trust.active_policies != ("owb-default",):
         data["trust"] = {"active_policies": list(config.trust.active_policies)}
 
+    # Only write secrets config if non-default
+    if config.secrets.backend != "env":
+        secrets_data: dict[str, str] = {"backend": config.secrets.backend}
+        if config.secrets.backend == "age" and config.secrets.age_identity != "~/.config/owb/key.txt":
+            secrets_data["age_identity"] = config.secrets.age_identity
+        if config.secrets.age_secrets_dir:
+            secrets_data["age_secrets_dir"] = config.secrets.age_secrets_dir
+        if config.secrets.keyring_service != "open-workspace-builder":
+            secrets_data["keyring_service"] = config.secrets.keyring_service
+        data["secrets"] = secrets_data
+
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(
         yaml.dump(data, default_flow_style=False, sort_keys=False),
@@ -245,8 +306,11 @@ def run_setup_wizard(cli_name: str = "owb") -> Config:
     # Step 1 — Models
     models, provider = _step_models()
 
-    # Step 2 — API key
-    _step_api_key(provider, credentials_dir)
+    # Step 2a — Secrets backend
+    secrets_cfg = _step_secrets_backend()
+
+    # Step 2b — API key (now uses secrets backend)
+    _step_api_key(provider, secrets_cfg)
 
     # Step 3 — Vault tiers
     vault_tiers = _step_vault_tiers()
@@ -266,6 +330,7 @@ def run_setup_wizard(cli_name: str = "owb") -> Config:
         marketplace=marketplace,
         security=security,
         trust=trust,
+        secrets=secrets_cfg,
         paths=paths,
     )
 

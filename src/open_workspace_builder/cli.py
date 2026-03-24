@@ -601,3 +601,201 @@ def _print_verdict(file_path: str, verdict: str, flag_count: int) -> None:
     """Print a single file verdict line."""
     icon = {"clean": "OK", "flagged": "WARN", "malicious": "FAIL", "error": "ERR"}
     click.echo(f"[{icon.get(verdict, '??')}] {file_path} — {verdict} ({flag_count} flags)")
+
+
+# ── owb auth ─────────────────────────────────────────────────────────────────
+
+
+@owb.group()
+@click.pass_context
+def auth(ctx: click.Context) -> None:
+    """Manage API keys and secrets backends."""
+    ctx.ensure_object(dict)
+
+
+@auth.command("store-key")
+@click.option("--backend", "backend_name", default=None, help="Backend to use (env, keyring, age).")
+@click.option("--key-name", default="anthropic_api_key", help="Logical key name to store.")
+@click.option(
+    "--config",
+    "-c",
+    "config_path",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to YAML config file.",
+)
+@click.pass_context
+def store_key(
+    ctx: click.Context,
+    backend_name: str | None,
+    key_name: str,
+    config_path: str | None,
+) -> None:
+    """Store an API key in the configured secrets backend.
+
+    Prompts for the secret value (input is masked). Use --backend to override
+    the configured backend. Refuses to store empty values.
+    """
+    from open_workspace_builder.secrets.factory import get_backend
+
+    config = load_config(config_path, cli_name=ctx.obj.get("cli_name"))
+    secrets_cfg = config.secrets
+    if backend_name is not None:
+        from open_workspace_builder.config import SecretsConfig
+
+        secrets_cfg = SecretsConfig(
+            backend=backend_name,
+            age_identity=config.secrets.age_identity,
+            age_secrets_dir=config.secrets.age_secrets_dir,
+            keyring_service=config.secrets.keyring_service,
+        )
+
+    try:
+        backend = get_backend(secrets_cfg)
+    except (ValueError, ImportError) as exc:
+        click.echo(f"Error: {exc}")
+        sys.exit(1)
+
+    value = click.prompt(f"Enter value for '{key_name}'", hide_input=True)
+    if not value or not value.strip():
+        click.echo("Error: empty value. Nothing stored.")
+        sys.exit(1)
+
+    try:
+        backend.set(key_name, value.strip())
+    except Exception as exc:
+        click.echo(f"Error storing key: {exc}")
+        sys.exit(1)
+
+    click.echo(f"Key '{key_name}' stored in {backend.backend_name()} backend.")
+
+
+@auth.command("get-key")
+@click.option("--key-name", default="anthropic_api_key", help="Logical key name to retrieve.")
+@click.option(
+    "--config",
+    "-c",
+    "config_path",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to YAML config file.",
+)
+@click.pass_context
+def get_key(ctx: click.Context, key_name: str, config_path: str | None) -> None:
+    """Retrieve and display an API key.
+
+    Warns that sensitive data will be displayed and requires confirmation.
+    Uses the configured backend with environment variable fallback.
+    """
+    from open_workspace_builder.secrets.factory import get_backend
+    from open_workspace_builder.secrets.resolver import resolve_key
+
+    click.echo("WARNING: This displays sensitive data.")
+    if not click.confirm("Display API key?", default=False):
+        click.echo("Aborted.")
+        return
+
+    config = load_config(config_path, cli_name=ctx.obj.get("cli_name"))
+    try:
+        backend = get_backend(config.secrets)
+    except (ValueError, ImportError):
+        backend = None
+
+    try:
+        value = resolve_key(key_name, backend)
+    except ValueError as exc:
+        click.echo(f"Error: {exc}")
+        sys.exit(1)
+
+    click.echo(value)
+
+
+@auth.command("status")
+@click.option(
+    "--config",
+    "-c",
+    "config_path",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to YAML config file.",
+)
+@click.pass_context
+def auth_status(ctx: click.Context, config_path: str | None) -> None:
+    """Show secrets backend status, health, and stored keys."""
+    import os
+
+    from open_workspace_builder.secrets.factory import get_backend
+
+    config = load_config(config_path, cli_name=ctx.obj.get("cli_name"))
+    click.echo(f"Configured backend: {config.secrets.backend}")
+
+    try:
+        backend = get_backend(config.secrets)
+    except (ValueError, ImportError) as exc:
+        click.echo(f"Backend status: UNAVAILABLE ({exc})")
+        return
+
+    # Backend-specific health check
+    backend_type = config.secrets.backend
+    if backend_type == "keyring":
+        from open_workspace_builder.secrets.keyring_backend import KeyringBackend
+
+        if KeyringBackend.is_available():
+            click.echo("Backend status: available")
+        else:
+            click.echo("Backend status: locked (fail backend active)")
+    elif backend_type == "age":
+        from pathlib import Path as _Path
+
+        identity = _Path(config.secrets.age_identity).expanduser()
+        if identity.is_file():
+            click.echo("Backend status: available (identity file found)")
+        else:
+            click.echo("Backend status: available (identity will be created on first store)")
+    else:
+        click.echo("Backend status: available")
+
+    # List stored keys
+    keys = backend.list_keys()
+    if keys:
+        click.echo(f"Stored keys: {', '.join(keys)}")
+    else:
+        click.echo("Stored keys: (none)")
+
+    # For env backend, also show which OWB env vars are set (names only)
+    if backend_type == "env":
+        _ENV_NAMES = ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "OWB_API_KEY", "LITELLM_API_KEY")
+        present = [k for k in _ENV_NAMES if k in os.environ]
+        if present:
+            click.echo(f"Environment variables set: {', '.join(present)}")
+
+
+@auth.command("backends")
+def auth_backends() -> None:
+    """List all available secrets backends and their status."""
+    click.echo("Available backends:\n")
+
+    # env — always available
+    click.echo("  env       : available (reads from environment variables)")
+
+    # keyring
+    try:
+        from open_workspace_builder.secrets.keyring_backend import KeyringBackend
+
+        if KeyringBackend.is_available():
+            click.echo("  keyring   : available")
+        else:
+            click.echo("  keyring   : installed but using fail backend")
+    except ImportError:
+        click.echo("  keyring   : not installed (pip install 'open-workspace-builder[keyring]')")
+
+    # age
+    try:
+        from open_workspace_builder.secrets.age_backend import AgeBackend
+
+        if AgeBackend.is_available():
+            click.echo("  age       : available")
+        else:
+            click.echo("  age       : not available (install pyrage or age CLI)")
+    except ImportError:
+        click.echo("  age       : not installed (pip install 'open-workspace-builder[age]')")
