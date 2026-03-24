@@ -66,6 +66,8 @@ output/
 
 ECC (Everything Claude Code) agent/command/rule installation is disabled by default. Enable it by setting `ecc.enabled: true` in your config file.
 
+**Already have a vault?** See the [First Run Guide](docs/howto-first-run.md) for a step-by-step walkthrough of running OWB against an existing Obsidian vault, including how to safely test on a copy before touching the live vault.
+
 ## Configuration
 
 OWB uses a three-layer configuration system:
