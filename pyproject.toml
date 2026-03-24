@@ -35,6 +35,16 @@ security = [
     "pyyaml>=6.0",
     "litellm>=1.40.0",
 ]
+keyring = [
+    "keyring>=24.0",
+]
+age = [
+    "pyrage>=1.0",
+]
+secrets = [
+    "keyring>=24.0",
+    "pyrage>=1.0",
+]
 dev = [
     "pytest>=7.0",
     "ruff>=0.1.0",

@@ -170,6 +170,16 @@ class SourcesConfig:
 
 
 @dataclass(frozen=True)
+class SecretsConfig:
+    """Secrets backend configuration."""
+
+    backend: str = "env"  # env | keyring | age
+    age_identity: str = "~/.config/owb/key.txt"
+    age_secrets_dir: str = ""  # empty = derive from paths.config_dir
+    keyring_service: str = "open-workspace-builder"
+
+
+@dataclass(frozen=True)
 class PathsConfig:
     """Directory paths for config, data, and credentials."""
 
@@ -191,6 +201,7 @@ class Config:
     trust: TrustConfig = field(default_factory=TrustConfig)
     sources: SourcesConfig = field(default_factory=SourcesConfig)
     marketplace: MarketplaceConfig = field(default_factory=MarketplaceConfig)
+    secrets: SecretsConfig = field(default_factory=SecretsConfig)
     paths: PathsConfig = field(default_factory=PathsConfig)
 
 
@@ -206,6 +217,7 @@ _SECTION_CLASSES: dict[str, type] = {
     "trust": TrustConfig,
     "sources": SourcesConfig,
     "marketplace": MarketplaceConfig,
+    "secrets": SecretsConfig,
     "paths": PathsConfig,
 }
 
@@ -315,6 +327,7 @@ def _with_resolved_paths(config: Config, cli_name: str) -> Config:
         trust=config.trust,
         sources=config.sources,
         marketplace=config.marketplace,
+        secrets=config.secrets,
         paths=resolved,
     )
 
