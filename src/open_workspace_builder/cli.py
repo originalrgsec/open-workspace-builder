@@ -1049,6 +1049,28 @@ def auth_backends() -> None:
     except ImportError:
         click.echo("  age       : not installed (pip install 'open-workspace-builder[age]')")
 
+    # bitwarden
+    try:
+        from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+
+        if BitwardenBackend.is_available():
+            click.echo("  bitwarden : available")
+        else:
+            click.echo("  bitwarden : not available (install bw CLI: https://bitwarden.com/help/cli/)")
+    except ImportError:
+        click.echo("  bitwarden : not available (install bw CLI: https://bitwarden.com/help/cli/)")
+
+    # onepassword
+    try:
+        from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+
+        if OnePasswordBackend.is_available():
+            click.echo("  onepassword: available")
+        else:
+            click.echo("  onepassword: not available (install op CLI: https://developer.1password.com/docs/cli/)")
+    except ImportError:
+        click.echo("  onepassword: not available (install op CLI: https://developer.1password.com/docs/cli/)")
+
 
 # ── owb audit ────────────────────────────────────────────────────────────
 

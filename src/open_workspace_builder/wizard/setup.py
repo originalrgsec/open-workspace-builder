@@ -94,7 +94,17 @@ def _step_secrets_backend() -> SecretsConfig:
     click.echo("  [2] OS keyring (macOS Keychain, GNOME Keyring, etc.)")
     click.echo("  [3] Age encryption (file-based, encrypted at rest)")
 
-    choice = click.prompt("Selection", type=click.Choice(["1", "2", "3"]), default="1")
+    bw_status = _check_bitwarden_available()
+    bw_suffix = "" if bw_status else " [not found — https://bitwarden.com/help/cli/]"
+    click.echo(f"  [4] Bitwarden CLI{bw_suffix}")
+
+    op_status = _check_onepassword_available()
+    op_suffix = "" if op_status else " [not found — https://developer.1password.com/docs/cli/]"
+    click.echo(f"  [5] 1Password CLI{op_suffix}")
+
+    choice = click.prompt(
+        "Selection", type=click.Choice(["1", "2", "3", "4", "5"]), default="1"
+    )
 
     if choice == "1":
         return SecretsConfig(backend="env")
@@ -114,21 +124,56 @@ def _step_secrets_backend() -> SecretsConfig:
             return SecretsConfig(backend="env")
         return SecretsConfig(backend="keyring")
 
-    # choice == "3" — age
-    try:
-        from open_workspace_builder.secrets.age_backend import AgeBackend
+    if choice == "3":
+        try:
+            from open_workspace_builder.secrets.age_backend import AgeBackend
 
-        if not AgeBackend.is_available():
-            click.echo("Warning: neither pyrage nor age CLI found.")
-            click.echo("Install with: pip install 'open-workspace-builder[age]'")
+            if not AgeBackend.is_available():
+                click.echo("Warning: neither pyrage nor age CLI found.")
+                click.echo("Install with: pip install 'open-workspace-builder[age]'")
+                click.echo("Falling back to env.")
+                return SecretsConfig(backend="env")
+        except ImportError:
+            click.echo("Warning: age backend not available. Falling back to env.")
+            return SecretsConfig(backend="env")
+        identity = click.prompt("Identity file path", default="~/.config/owb/key.txt")
+        return SecretsConfig(backend="age", age_identity=identity)
+
+    if choice == "4":
+        if not bw_status:
+            click.echo("Warning: bw CLI not found or not functional.")
+            click.echo("Install from: https://bitwarden.com/help/cli/")
             click.echo("Falling back to env.")
             return SecretsConfig(backend="env")
-    except ImportError:
-        click.echo("Warning: age backend not available. Falling back to env.")
-        return SecretsConfig(backend="env")
+        item_name = click.prompt("Bitwarden item name", default="OWB API Keys")
+        return SecretsConfig(backend="bitwarden", bitwarden_item=item_name)
 
-    identity = click.prompt("Identity file path", default="~/.config/owb/key.txt")
-    return SecretsConfig(backend="age", age_identity=identity)
+    # choice == "5" — 1Password
+    if not op_status:
+        click.echo("Warning: op CLI not found or not authenticated.")
+        click.echo("Install from: https://developer.1password.com/docs/cli/")
+        click.echo("Falling back to env.")
+        return SecretsConfig(backend="env")
+    vault_name = click.prompt("1Password vault name", default="Development")
+    return SecretsConfig(backend="onepassword", onepassword_vault=vault_name)
+
+
+def _check_bitwarden_available() -> bool:
+    """Check if Bitwarden CLI is available."""
+    try:
+        from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+        return BitwardenBackend.is_available()
+    except Exception:
+        return False
+
+
+def _check_onepassword_available() -> bool:
+    """Check if 1Password CLI is available."""
+    try:
+        from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+        return OnePasswordBackend.is_available()
+    except Exception:
+        return False
 
 
 def _step_api_key(provider: str, secrets_cfg: SecretsConfig) -> None:
@@ -284,6 +329,10 @@ def _write_config_yaml(config: Config, config_path: Path) -> None:
             secrets_data["age_secrets_dir"] = config.secrets.age_secrets_dir
         if config.secrets.keyring_service != "open-workspace-builder":
             secrets_data["keyring_service"] = config.secrets.keyring_service
+        if config.secrets.bitwarden_item != "OWB API Keys":
+            secrets_data["bitwarden_item"] = config.secrets.bitwarden_item
+        if config.secrets.onepassword_vault != "Development":
+            secrets_data["onepassword_vault"] = config.secrets.onepassword_vault
         data["secrets"] = secrets_data
 
     config_path.parent.mkdir(parents=True, exist_ok=True)

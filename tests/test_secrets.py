@@ -407,6 +407,30 @@ class TestGetBackend:
         )
         assert backend.backend_name() == "age"
 
+    def test_bitwarden_backend(self) -> None:
+        from open_workspace_builder.config import SecretsConfig
+
+        backend = get_backend(SecretsConfig(backend="bitwarden"))
+        assert backend.backend_name() == "bitwarden"
+
+    def test_onepassword_backend(self) -> None:
+        from open_workspace_builder.config import SecretsConfig
+
+        backend = get_backend(SecretsConfig(backend="onepassword"))
+        assert backend.backend_name() == "onepassword"
+
+    def test_bitwarden_custom_item(self) -> None:
+        from open_workspace_builder.config import SecretsConfig
+
+        backend = get_backend(SecretsConfig(backend="bitwarden", bitwarden_item="Custom"))
+        assert backend._item_name == "Custom"
+
+    def test_onepassword_custom_vault(self) -> None:
+        from open_workspace_builder.config import SecretsConfig
+
+        backend = get_backend(SecretsConfig(backend="onepassword", onepassword_vault="Prod"))
+        assert backend._vault == "Prod"
+
     def test_unknown_backend_raises(self) -> None:
         from open_workspace_builder.config import SecretsConfig
 
@@ -436,6 +460,8 @@ class TestSecretsConfig:
         assert sc.age_identity == "~/.config/owb/key.txt"
         assert sc.age_secrets_dir == ""
         assert sc.keyring_service == "open-workspace-builder"
+        assert sc.bitwarden_item == "OWB API Keys"
+        assert sc.onepassword_vault == "Development"
 
     def test_frozen(self) -> None:
         from open_workspace_builder.config import SecretsConfig
@@ -470,3 +496,265 @@ class TestSecretsConfig:
         config = load_config(str(cfg_file), cli_name="owb")
         assert config.secrets.backend == "age"
         assert config.secrets.keyring_service == "open-workspace-builder"
+
+    def test_bitwarden_yaml_overlay(self, tmp_path: Path) -> None:
+        from open_workspace_builder.config import load_config
+
+        cfg_file = tmp_path / "config.yaml"
+        cfg_file.write_text(
+            "secrets:\n  backend: bitwarden\n  bitwarden_item: My Keys\n",
+            encoding="utf-8",
+        )
+        config = load_config(str(cfg_file), cli_name="owb")
+        assert config.secrets.backend == "bitwarden"
+        assert config.secrets.bitwarden_item == "My Keys"
+
+    def test_onepassword_yaml_overlay(self, tmp_path: Path) -> None:
+        from open_workspace_builder.config import load_config
+
+        cfg_file = tmp_path / "config.yaml"
+        cfg_file.write_text(
+            "secrets:\n  backend: onepassword\n  onepassword_vault: Production\n",
+            encoding="utf-8",
+        )
+        config = load_config(str(cfg_file), cli_name="owb")
+        assert config.secrets.backend == "onepassword"
+        assert config.secrets.onepassword_vault == "Production"
+
+
+# ── BitwardenBackend ─────────────────────────────────────────────────────
+
+
+class TestBitwardenBackend:
+    def _make_bw_item_json(self, fields: list[tuple[str, str]], item_id: str = "abc123") -> str:
+        data = {
+            "id": item_id,
+            "name": "OWB API Keys",
+            "fields": [{"name": k, "value": v, "type": 0} for k, v in fields],
+        }
+        return json.dumps(data)
+
+    def test_get_returns_value(self) -> None:
+        item_json = self._make_bw_item_json([("MY_KEY", "secret")])
+        run_result = MagicMock(returncode=0, stdout=item_json, stderr="")
+        with patch("open_workspace_builder.secrets.bitwarden_backend.subprocess.run", return_value=run_result):
+            from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+            assert BitwardenBackend().get("MY_KEY") == "secret"
+
+    def test_get_returns_none_when_not_found(self) -> None:
+        run_result = MagicMock(returncode=1, stdout="", stderr="Not found")
+        with patch("open_workspace_builder.secrets.bitwarden_backend.subprocess.run", return_value=run_result):
+            from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+            assert BitwardenBackend().get("MISSING") is None
+
+    def test_get_returns_none_for_missing_field(self) -> None:
+        item_json = self._make_bw_item_json([("OTHER", "val")])
+        run_result = MagicMock(returncode=0, stdout=item_json, stderr="")
+        with patch("open_workspace_builder.secrets.bitwarden_backend.subprocess.run", return_value=run_result):
+            from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+            assert BitwardenBackend().get("MISSING") is None
+
+    def test_set_creates_item_when_missing(self) -> None:
+        fetch_fail = MagicMock(returncode=1, stdout="", stderr="Not found")
+        create_ok = MagicMock(returncode=0, stdout="{}", stderr="")
+        with patch("open_workspace_builder.secrets.bitwarden_backend.subprocess.run", side_effect=[fetch_fail, create_ok]):
+            from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+            BitwardenBackend().set("NEW_KEY", "new_val")
+
+    def test_set_updates_existing_item(self) -> None:
+        item_json = self._make_bw_item_json([("OLD", "old_val")])
+        fetch_ok = MagicMock(returncode=0, stdout=item_json, stderr="")
+        edit_ok = MagicMock(returncode=0, stdout="{}", stderr="")
+        with patch("open_workspace_builder.secrets.bitwarden_backend.subprocess.run", side_effect=[fetch_ok, fetch_ok, edit_ok]):
+            from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+            BitwardenBackend().set("NEW_KEY", "new_val")
+
+    def test_delete_removes_field(self) -> None:
+        item_json = self._make_bw_item_json([("DEL_KEY", "val"), ("KEEP", "v")])
+        fetch_ok = MagicMock(returncode=0, stdout=item_json, stderr="")
+        edit_ok = MagicMock(returncode=0, stdout="{}", stderr="")
+        with patch("open_workspace_builder.secrets.bitwarden_backend.subprocess.run", side_effect=[fetch_ok, fetch_ok, edit_ok]):
+            from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+            BitwardenBackend().delete("DEL_KEY")
+
+    def test_delete_noop_when_item_missing(self) -> None:
+        fetch_fail = MagicMock(returncode=1, stdout="", stderr="Not found")
+        with patch("open_workspace_builder.secrets.bitwarden_backend.subprocess.run", return_value=fetch_fail):
+            from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+            BitwardenBackend().delete("MISSING")
+
+    def test_delete_noop_when_field_missing(self) -> None:
+        item_json = self._make_bw_item_json([("OTHER", "val")])
+        fetch_ok = MagicMock(returncode=0, stdout=item_json, stderr="")
+        with patch("open_workspace_builder.secrets.bitwarden_backend.subprocess.run", return_value=fetch_ok):
+            from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+            BitwardenBackend().delete("MISSING")
+
+    def test_list_keys(self) -> None:
+        item_json = self._make_bw_item_json([("A", "1"), ("B", "2")])
+        run_result = MagicMock(returncode=0, stdout=item_json, stderr="")
+        with patch("open_workspace_builder.secrets.bitwarden_backend.subprocess.run", return_value=run_result):
+            from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+            assert BitwardenBackend().list_keys() == ["A", "B"]
+
+    def test_list_keys_empty_when_no_item(self) -> None:
+        run_result = MagicMock(returncode=1, stdout="", stderr="Not found")
+        with patch("open_workspace_builder.secrets.bitwarden_backend.subprocess.run", return_value=run_result):
+            from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+            assert BitwardenBackend().list_keys() == []
+
+    def test_backend_name(self) -> None:
+        from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+        assert BitwardenBackend().backend_name() == "bitwarden"
+
+    def test_is_available_true(self) -> None:
+        status_result = MagicMock(returncode=0, stdout='{"status":"unlocked"}', stderr="")
+        with patch("shutil.which", return_value="/usr/bin/bw"):
+            with patch("open_workspace_builder.secrets.bitwarden_backend.subprocess.run", return_value=status_result):
+                from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+                assert BitwardenBackend.is_available() is True
+
+    def test_is_available_false_no_binary(self) -> None:
+        with patch("shutil.which", return_value=None):
+            from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+            assert BitwardenBackend.is_available() is False
+
+    def test_is_available_false_bad_status(self) -> None:
+        status_result = MagicMock(returncode=1, stdout="not json", stderr="")
+        with patch("shutil.which", return_value="/usr/bin/bw"):
+            with patch("open_workspace_builder.secrets.bitwarden_backend.subprocess.run", return_value=status_result):
+                from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+                assert BitwardenBackend.is_available() is False
+
+    def test_session_env_var_used(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("BW_SESSION", "test-session-token")
+        item_json = self._make_bw_item_json([("K", "V")])
+        run_result = MagicMock(returncode=0, stdout=item_json, stderr="")
+        with patch("open_workspace_builder.secrets.bitwarden_backend.subprocess.run", return_value=run_result) as mock_run:
+            from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+            BitwardenBackend().get("K")
+            cmd = mock_run.call_args[0][0]
+            assert "--session" in cmd
+            assert "test-session-token" in cmd
+
+    def test_custom_item_name(self) -> None:
+        item_json = self._make_bw_item_json([("K", "V")])
+        run_result = MagicMock(returncode=0, stdout=item_json, stderr="")
+        with patch("open_workspace_builder.secrets.bitwarden_backend.subprocess.run", return_value=run_result) as mock_run:
+            from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+            BitwardenBackend(item_name="Custom Item").get("K")
+            cmd = mock_run.call_args[0][0]
+            assert "Custom Item" in cmd
+
+
+# ── OnePasswordBackend ───────────────────────────────────────────────────
+
+
+class TestOnePasswordBackend:
+    def test_get_returns_value(self) -> None:
+        run_result = MagicMock(returncode=0, stdout="secret_value\n", stderr="")
+        with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", return_value=run_result):
+            from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+            assert OnePasswordBackend().get("MY_KEY") == "secret_value"
+
+    def test_get_returns_none_when_not_found(self) -> None:
+        run_result = MagicMock(returncode=1, stdout="", stderr="not found")
+        with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", return_value=run_result):
+            from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+            assert OnePasswordBackend().get("MISSING") is None
+
+    def test_get_returns_none_for_empty_output(self) -> None:
+        run_result = MagicMock(returncode=0, stdout="", stderr="")
+        with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", return_value=run_result):
+            from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+            assert OnePasswordBackend().get("EMPTY") is None
+
+    def test_set_edits_existing(self) -> None:
+        run_result = MagicMock(returncode=0, stdout="{}", stderr="")
+        with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", return_value=run_result) as mock_run:
+            from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+            OnePasswordBackend().set("KEY", "VAL")
+            cmd = mock_run.call_args[0][0]
+            assert "item" in cmd and "edit" in cmd and "KEY=VAL" in cmd
+
+    def test_set_creates_when_not_found(self) -> None:
+        edit_fail = MagicMock(returncode=1, stdout="", stderr="item not found")
+        create_ok = MagicMock(returncode=0, stdout="{}", stderr="")
+        with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", side_effect=[edit_fail, create_ok]):
+            from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+            OnePasswordBackend().set("NEW", "VAL")
+
+    def test_delete_calls_edit(self) -> None:
+        run_result = MagicMock(returncode=0, stdout="{}", stderr="")
+        with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", return_value=run_result) as mock_run:
+            from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+            OnePasswordBackend().delete("DEL_KEY")
+            cmd = mock_run.call_args[0][0]
+            assert "DEL_KEY[delete]" in cmd
+
+    def test_delete_noop_on_failure(self) -> None:
+        run_result = MagicMock(returncode=1, stdout="", stderr="not found")
+        with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", return_value=run_result):
+            from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+            OnePasswordBackend().delete("MISSING")
+
+    def test_list_keys(self) -> None:
+        item_data = {"fields": [{"label": "notesPlain", "value": "", "purpose": "NOTES"}, {"label": "KEY_A", "value": "a"}, {"label": "KEY_B", "value": "b"}]}
+        run_result = MagicMock(returncode=0, stdout=json.dumps(item_data), stderr="")
+        with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", return_value=run_result):
+            from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+            assert OnePasswordBackend().list_keys() == ["KEY_A", "KEY_B"]
+
+    def test_list_keys_empty_on_failure(self) -> None:
+        run_result = MagicMock(returncode=1, stdout="", stderr="not found")
+        with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", return_value=run_result):
+            from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+            assert OnePasswordBackend().list_keys() == []
+
+    def test_backend_name(self) -> None:
+        from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+        assert OnePasswordBackend().backend_name() == "onepassword"
+
+    def test_is_available_true(self) -> None:
+        account_result = MagicMock(returncode=0, stdout='[{"account_uuid": "abc"}]', stderr="")
+        with patch("shutil.which", return_value="/usr/bin/op"):
+            with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", return_value=account_result):
+                from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+                assert OnePasswordBackend.is_available() is True
+
+    def test_is_available_false_no_binary(self) -> None:
+        with patch("shutil.which", return_value=None):
+            from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+            assert OnePasswordBackend.is_available() is False
+
+    def test_is_available_false_no_accounts(self) -> None:
+        account_result = MagicMock(returncode=0, stdout="[]", stderr="")
+        with patch("shutil.which", return_value="/usr/bin/op"):
+            with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", return_value=account_result):
+                from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+                assert OnePasswordBackend.is_available() is False
+
+    def test_is_available_false_on_error(self) -> None:
+        account_result = MagicMock(returncode=1, stdout="", stderr="error")
+        with patch("shutil.which", return_value="/usr/bin/op"):
+            with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", return_value=account_result):
+                from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+                assert OnePasswordBackend.is_available() is False
+
+    def test_custom_vault_name(self) -> None:
+        run_result = MagicMock(returncode=0, stdout="val\n", stderr="")
+        with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", return_value=run_result) as mock_run:
+            from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+            OnePasswordBackend(vault_name="Production").get("K")
+            cmd = mock_run.call_args[0][0]
+            assert "Production" in cmd
+
+    def test_service_account_token_in_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("OP_SERVICE_ACCOUNT_TOKEN", "test-token")
+        run_result = MagicMock(returncode=0, stdout="val\n", stderr="")
+        with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", return_value=run_result) as mock_run:
+            from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+            OnePasswordBackend().get("K")
+            env = mock_run.call_args[1].get("env", {})
+            assert env.get("OP_SERVICE_ACCOUNT_TOKEN") == "test-token"
+

@@ -38,7 +38,19 @@ def get_backend(config: object) -> SecretsBackend:
         secrets_dir = getattr(config, "age_secrets_dir", "") or "~/.owb/secrets"
         return AgeBackend(identity_path=identity, secrets_dir=secrets_dir)
 
+    if backend_name == "bitwarden":
+        from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+
+        item_name = getattr(config, "bitwarden_item", "OWB API Keys")
+        return BitwardenBackend(item_name=item_name)
+
+    if backend_name == "onepassword":
+        from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+
+        vault_name = getattr(config, "onepassword_vault", "Development")
+        return OnePasswordBackend(vault_name=vault_name)
+
     raise ValueError(
         f"Unknown secrets backend '{backend_name}'. "
-        f"Valid backends: env, keyring, age"
+        f"Valid backends: env, keyring, age, bitwarden, onepassword"
     )

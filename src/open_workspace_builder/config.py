@@ -177,10 +177,12 @@ class SourcesConfig:
 class SecretsConfig:
     """Secrets backend configuration."""
 
-    backend: str = "env"  # env | keyring | age
+    backend: str = "env"  # env | keyring | age | bitwarden | onepassword
     age_identity: str = "~/.config/owb/key.txt"
     age_secrets_dir: str = ""  # empty = derive from paths.config_dir
     keyring_service: str = "open-workspace-builder"
+    bitwarden_item: str = "OWB API Keys"
+    onepassword_vault: str = "Development"
 
 
 @dataclass(frozen=True)
