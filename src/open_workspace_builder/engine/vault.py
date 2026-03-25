@@ -436,6 +436,39 @@ class VaultBuilder:
             for name, content in sorted(templates.items()):
                 self._write(vault_root / "_templates" / name, content)
 
+        # Deploy cross-project policies from content/policies/ to code/
+        self._deploy_policies(vault_root)
+
+    def _deploy_policies(self, vault_root: Path) -> None:
+        """Copy policy files from content/policies/ into the vault code/ directory.
+
+        Gracefully skips if the source directory does not exist or is empty.
+        """
+        policies_dir = self._content_root / "content" / "policies"
+        if not policies_dir.is_dir():
+            return
+
+        policy_files = sorted(
+            f for f in policies_dir.iterdir()
+            if f.is_file() and f.suffix == ".md"
+        )
+        if not policy_files:
+            return
+
+        code_dir = vault_root / "code"
+        print("  Installing cross-project policies...")
+        for policy_file in policy_files:
+            dest = code_dir / policy_file.name
+            if self._dry_run:
+                print(f"  [copy]  {policy_file.name} -> {dest}")
+            else:
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_text(
+                    policy_file.read_text(encoding="utf-8"),
+                    encoding="utf-8",
+                )
+            self.created_files.append(dest)
+
     def _mkdir(self, path: Path) -> None:
         if self._dry_run:
             print(f"  [mkdir] {path}")
