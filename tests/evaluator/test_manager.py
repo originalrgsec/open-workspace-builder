@@ -57,7 +57,11 @@ def _make_skill_file(tmp_path: Path, name: str = "test-skill", content: str = ""
     skill_dir = tmp_path / "skills" / name
     skill_dir.mkdir(parents=True, exist_ok=True)
     skill_file = skill_dir / "SKILL.md"
-    skill_file.write_text(content or f"# {name}\n\nA test skill for evaluation.", encoding="utf-8")
+    default_content = (
+        f"---\nname: {name}\ndescription: Use this when evaluating test skills.\n---\n\n"
+        f"# {name}\n\nA test skill for evaluation."
+    )
+    skill_file.write_text(content or default_content, encoding="utf-8")
     return skill_file
 
 
