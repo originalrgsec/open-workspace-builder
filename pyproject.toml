@@ -28,12 +28,16 @@ dependencies = [
 yaml = [
     "pyyaml>=6.0",
 ]
+# litellm upper bound: versions 1.82.7 and 1.82.8 were compromised in a supply
+# chain attack on 2026-03-24 (Snyk SNYK-PYTHON-LITELLM-15762713). Do not remove
+# the upper bound until LiteLLM publishes a post-incident report confirming CI
+# hardening.
 llm = [
-    "litellm>=1.40.0",
+    "litellm>=1.40.0,<=1.82.6",
 ]
 security = [
     "pyyaml>=6.0",
-    "litellm>=1.40.0",
+    "litellm>=1.40.0,<=1.82.6",
 ]
 keyring = [
     "keyring>=24.0",
