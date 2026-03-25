@@ -799,3 +799,199 @@ def auth_backends() -> None:
             click.echo("  age       : not available (install pyrage or age CLI)")
     except ImportError:
         click.echo("  age       : not installed (pip install 'open-workspace-builder[age]')")
+
+
+# ── owb audit ────────────────────────────────────────────────────────────
+
+
+@owb.group()
+def audit() -> None:
+    """Dependency supply-chain scanning (pip-audit + GuardDog)."""
+
+
+@audit.command("deps")
+@click.option("--fix", is_flag=True, default=False, help="Include fix-version suggestions.")
+@click.option(
+    "--format",
+    "fmt",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format (default: text).",
+)
+@click.option(
+    "--output",
+    "-o",
+    "output_file",
+    default=None,
+    type=click.Path(),
+    help="Write report to file.",
+)
+@click.option("--deep", is_flag=True, default=False, help="Also run GuardDog malware scan.")
+@click.option(
+    "--suppressions",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to guarddog suppressions YAML.",
+)
+def audit_deps(
+    fix: bool,
+    fmt: str,
+    output_file: str | None,
+    deep: bool,
+    suppressions: str | None,
+) -> None:
+    """Scan installed dependencies for known vulnerabilities and malicious code.
+
+    By default runs pip-audit (Layer A) only. Use --deep to add GuardDog
+    heuristic scanning (Layer B). Exit code 0 if clean, 2 if findings.
+    """
+    from open_workspace_builder.security.dep_audit import run_full_audit
+
+    suppressions_path = Path(suppressions) if suppressions else None
+
+    try:
+        report = run_full_audit(deep=deep, fix=fix, suppressions_file=suppressions_path)
+    except ImportError as exc:
+        click.echo(f"Error: {exc}")
+        sys.exit(1)
+    except RuntimeError as exc:
+        click.echo(f"Error: {exc}")
+        sys.exit(1)
+
+    report_data = _format_full_report(report, include_fix=fix)
+    has_findings = bool(report.vuln_report.findings or report.guarddog_report.flagged)
+
+    if fmt == "json":
+        click.echo(json.dumps(report_data, indent=2))
+    else:
+        _print_audit_text(report, include_fix=fix)
+
+    if output_file:
+        Path(output_file).write_text(
+            json.dumps(report_data, indent=2) + "\n", encoding="utf-8"
+        )
+        click.echo(f"Report written to {output_file}")
+
+    sys.exit(2 if has_findings else 0)
+
+
+@audit.command("package")
+@click.argument("name")
+@click.option("--version", "version", default=None, help="Version to scan.")
+@click.option(
+    "--format",
+    "fmt",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format (default: text).",
+)
+@click.option(
+    "--output",
+    "-o",
+    "output_file",
+    default=None,
+    type=click.Path(),
+    help="Write report to file.",
+)
+def audit_package(
+    name: str,
+    version: str | None,
+    fmt: str,
+    output_file: str | None,
+) -> None:
+    """Scan a single package for vulnerabilities and malicious code.
+
+    Runs both pip-audit (Layer A) and GuardDog (Layer B) against NAME.
+    Use before adding a new dependency or bumping a version.
+    """
+    from open_workspace_builder.security.dep_audit import audit_single_package
+
+    try:
+        report = audit_single_package(name, version=version)
+    except (ImportError, RuntimeError) as exc:
+        click.echo(f"Error: {exc}")
+        sys.exit(1)
+
+    report_data = _format_full_report(report, include_fix=False)
+    has_findings = bool(report.vuln_report.findings or report.guarddog_report.flagged)
+
+    if fmt == "json":
+        click.echo(json.dumps(report_data, indent=2))
+    else:
+        _print_audit_text(report, include_fix=False)
+
+    if output_file:
+        Path(output_file).write_text(
+            json.dumps(report_data, indent=2) + "\n", encoding="utf-8"
+        )
+        click.echo(f"Report written to {output_file}")
+
+    sys.exit(2 if has_findings else 0)
+
+
+def _format_full_report(report: object, *, include_fix: bool) -> dict:
+    """Serialize a FullAuditReport to a JSON-compatible dict."""
+    vuln = report.vuln_report  # type: ignore[union-attr]
+    gd = report.guarddog_report  # type: ignore[union-attr]
+    data: dict = {
+        "vulnerabilities": [
+            {
+                "package": f.package,
+                "installed_version": f.installed_version,
+                "vuln_id": f.vuln_id,
+                "fix_version": f.fix_version,
+                "description": f.description,
+            }
+            for f in vuln.findings
+        ],
+        "skipped": list(vuln.skipped),
+        "guarddog_flagged": [
+            {
+                "package": f.package,
+                "rule_name": f.rule_name,
+                "severity": f.severity,
+                "file_path": f.file_path,
+                "evidence": f.evidence,
+            }
+            for f in gd.flagged
+        ],
+        "guarddog_clean": list(gd.clean),
+    }
+    if include_fix:
+        data["fix_suggestions"] = list(vuln.fix_suggestions)
+    return data
+
+
+def _print_audit_text(report: object, *, include_fix: bool) -> None:
+    """Print a FullAuditReport as human-readable text."""
+    vuln = report.vuln_report  # type: ignore[union-attr]
+    gd = report.guarddog_report  # type: ignore[union-attr]
+
+    if vuln.findings:
+        click.echo(f"\n[VULN] {len(vuln.findings)} known vulnerabilities found:")
+        for f in vuln.findings:
+            fix_str = f" (fix: {f.fix_version})" if f.fix_version else ""
+            click.echo(f"  {f.package}=={f.installed_version}  {f.vuln_id}{fix_str}")
+            click.echo(f"    {f.description}")
+    else:
+        click.echo("\n[OK] No known vulnerabilities found.")
+
+    if vuln.skipped:
+        click.echo(f"\n[SKIP] {len(vuln.skipped)} packages skipped: {', '.join(vuln.skipped)}")
+
+    if include_fix and vuln.fix_suggestions:
+        click.echo("\n[FIX] Suggested version pins:")
+        for s in vuln.fix_suggestions:
+            click.echo(f"  {s}")
+
+    if gd.flagged:
+        click.echo(f"\n[MALWARE] {len(gd.flagged)} guarddog findings:")
+        for f in gd.flagged:
+            click.echo(f"  [{f.severity}] {f.package} — {f.rule_name}")
+            click.echo(f"    file: {f.file_path}")
+            click.echo(f"    evidence: {f.evidence[:200]}")
+    elif gd.clean:
+        click.echo(f"\n[OK] GuardDog: {len(gd.clean)} packages clean.")
+
+    if not vuln.findings and not gd.flagged:
+        click.echo("\nAll checks passed.")

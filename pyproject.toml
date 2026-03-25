@@ -47,10 +47,14 @@ secrets = [
     "keyring>=24.0",
     "pyrage>=1.0",
 ]
+audit = [
+    "pip-audit>=2.7.0",
+]
 dev = [
     "pytest>=7.0",
     "ruff>=0.1.0",
     "build",
+    "pip-audit>=2.7.0",
 ]
 
 [project.urls]

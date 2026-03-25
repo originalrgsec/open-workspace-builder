@@ -1,0 +1,28 @@
+suppressions:
+  - package: packaging
+    rule: dll-hijacking
+    reason: "ctypes.CDLL(None) is Linux glibc detection, not DLL hijacking"
+  - package: py-serializable
+    rule: code-execution
+    reason: "eval() used for type deserialization in serialization library"
+  - package: rich
+    rule: api-obfuscation
+    reason: "Lazy __import__('pydoc') for pager functionality"
+  - package: pip
+    rule: dll-hijacking
+    reason: "ctypes.CDLL(None) is glibc detection; CDLL calls in vendored truststore/urllib3 are legitimate"
+  - package: pip
+    rule: api-obfuscation
+    reason: "Vendored six.py compatibility layer uses getattr dispatch"
+  - package: pip
+    rule: bundled_binary
+    reason: "Windows bootstrapper executables ship in every pip release"
+  - package: pip-api
+    rule: dll-hijacking
+    reason: "Vendored packaging._manylinux glibc detection"
+  - package: pygments
+    rule: unicode
+    reason: "Unicode in Lean theorem prover lexer regex patterns"
+  - package: pygments
+    rule: shady-links
+    reason: "URLs to .ac.uk and .tk domains are legitimate project homepages"
