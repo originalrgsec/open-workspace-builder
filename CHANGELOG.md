@@ -19,6 +19,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Wizard API key storage now routes through the configured secrets backend
 - `keyring`, `age`, and `secrets` optional dependency groups in pyproject.toml
 - 88 new tests (625 → 713)
+- Dependency supply chain scanning with two-layer architecture (OWB-S053):
+  - Layer A: pip-audit Python API wrapper for known vulnerability scanning against OSV database
+  - Layer B: GuardDog subprocess wrapper (`uvx guarddog`) for heuristic malware detection
+- `owb audit deps` CLI command with `--deep`, `--fix`, `--format json|text`, `--output FILE` options
+- `owb audit package <name>` CLI command for pre-addition single-package vetting with `--version` option
+- Bundled suppressions YAML for acknowledged GuardDog false positives
+- Makefile with `check-deps`, `audit-deps`, `audit-deps-deep` targets
+- GitHub Actions CI workflow: pip-audit on every push, GuardDog on pyproject.toml changes
+- `audit` optional dependency group in pyproject.toml
+- 42 new tests (713 → 755)
+
+### Changed
+- pyyaml promoted from optional to core dependency — evaluator and security modules import it unconditionally
 
 ## [0.3.0] - 2026-03-24
 
