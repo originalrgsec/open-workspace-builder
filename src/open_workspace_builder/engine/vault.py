@@ -259,10 +259,16 @@ def _code_index() -> str:
 
         Cross-project code patterns, architecture notes, and policies.
 
-        ## Contents
+        ## Policies
 
-        - OSS health policy (scoring thresholds for dependency evaluation)
-        - Allowed licenses list
+        - [[product-development-workflow]] — End-to-end product lifecycle
+        - [[development-process]] — Sprint mechanics and completion checklist
+        - [[integration-verification-policy]] — Quality gates and acceptance criteria
+        - [[oss-health-policy]] — Dependency health evaluation
+        - [[allowed-licenses]] — Permitted open source licenses
+
+        ## Other Contents
+
         - Shared patterns and architecture notes
     """)
 
