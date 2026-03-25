@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "owb": {
+      "command": "owb",
+      "args": ["mcp", "serve"],
+      "env": {}
+    }
+  }
+}
