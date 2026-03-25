@@ -995,3 +995,83 @@ def _print_audit_text(report: object, *, include_fix: bool) -> None:
 
     if not vuln.findings and not gd.flagged:
         click.echo("\nAll checks passed.")
+
+
+# ── owb context ──────────────────────────────────────────────────────────
+
+
+@owb.group()
+@click.pass_context
+def context(ctx: click.Context) -> None:
+    """Manage workspace context files (about-me, brand-voice, working-style)."""
+    ctx.ensure_object(dict)
+
+
+@context.command("migrate")
+@click.argument("target", type=click.Path(exists=True))
+@click.option(
+    "--config",
+    "-c",
+    "config_path",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to YAML config file.",
+)
+@click.option(
+    "--accept-all",
+    is_flag=True,
+    default=False,
+    help="Accept all reformatting without prompting.",
+)
+@click.pass_context
+def context_migrate(
+    ctx: click.Context,
+    target: str,
+    config_path: str | None,
+    accept_all: bool,
+) -> None:
+    """Reformat existing context files to match current templates.
+
+    Compares each context file against the template, identifies missing sections,
+    and offers to append them interactively.
+    """
+    from open_workspace_builder.engine.context import ContextMigrator
+
+    config = load_config(config_path, cli_name=ctx.obj.get("cli_name"))
+    content_root = _find_content_root()
+    migrator = ContextMigrator(content_root, config.context_templates, config.vault)
+    migrator.migrate(Path(target), accept_all=accept_all)
+
+
+@context.command("status")
+@click.argument("target", type=click.Path(exists=True))
+@click.option(
+    "--config",
+    "-c",
+    "config_path",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to YAML config file.",
+)
+@click.pass_context
+def context_status(
+    ctx: click.Context,
+    target: str,
+    config_path: str | None,
+) -> None:
+    """Check context file status: filled, stub, or missing."""
+    from open_workspace_builder.engine.context import has_todo_markers
+
+    config = load_config(config_path, cli_name=ctx.obj.get("cli_name"))
+    parent = config.vault.parent_dir
+    context_dir = Path(target) / parent if parent else Path(target)
+
+    files = [f.replace(".template", "") for f in config.context_templates.files]
+    for f in files:
+        path = context_dir / f
+        if not path.exists():
+            click.echo(f"  [missing]  {f}")
+        elif has_todo_markers(path):
+            click.echo(f"  [stub]     {f} — needs filling")
+        else:
+            click.echo(f"  [filled]   {f}")

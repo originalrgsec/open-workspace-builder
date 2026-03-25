@@ -324,6 +324,12 @@ def run_setup_wizard(cli_name: str = "owb") -> Config:
     # Step 6 — Trust policy
     trust = _step_trust_policy()
 
+    # Context files notice
+    click.echo("\nContext files (about-me.md, brand-voice.md, working-style.md) will be")
+    click.echo("created as stubs during the first build. Your assistant will help you")
+    click.echo("fill them out on first session. You can also run 'owb context migrate'")
+    click.echo("to reformat existing files against the templates.")
+
     # Build Config
     config = Config(
         models=models,
