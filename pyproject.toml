@@ -53,6 +53,9 @@ audit = [
 sast = [
     "semgrep>=1.50.0",
 ]
+mcp = [
+    "mcp>=1.0.0",
+]
 dev = [
     "pytest>=7.0",
     "ruff>=0.1.0",

@@ -1570,3 +1570,28 @@ def validate(path: str) -> None:
         click.echo("  No issues found.")
 
     sys.exit(0 if result.valid else 1)
+
+
+@owb.group()
+def mcp() -> None:
+    """MCP (Model Context Protocol) server commands."""
+
+
+@mcp.command()
+def serve() -> None:
+    """Start the OWB MCP server for AI desktop clients.
+
+    Exposes security scan, dependency audit, and license audit as MCP tools.
+    Requires the [mcp] extra: uv pip install open-workspace-builder[mcp]
+    """
+    try:
+        from open_workspace_builder.mcp_server import run_server
+    except ImportError:
+        click.echo(
+            "Error: MCP server requires the 'mcp' package.\n"
+            "Install it with: uv pip install open-workspace-builder[mcp]"
+        )
+        sys.exit(1)
+
+    click.echo("Starting OWB MCP server...")
+    run_server()
