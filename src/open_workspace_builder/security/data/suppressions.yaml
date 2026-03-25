@@ -1,0 +1,11 @@
+# CVE Suppression Registry
+# Each entry represents a known vulnerability suppressed in CI because no fix is available.
+# Run `owb audit check-suppressions` to check if fixes have landed.
+
+suppressions:
+  - cve: CVE-2026-4539
+    package: pygments
+    pinned_version: "2.19.2"
+    suppressed_date: "2026-03-24"
+    reason: "ReDoS in AdlLexer regex (local-only attack vector), no upstream fix available"
+    ci_flag: "--ignore-vuln CVE-2026-4539"

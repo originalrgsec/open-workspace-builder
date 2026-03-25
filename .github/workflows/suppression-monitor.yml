@@ -1,0 +1,60 @@
+name: Suppression Monitor
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 9am UTC
+  workflow_dispatch:
+
+jobs:
+  check-suppressions:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Check suppressions
+        id: check
+        continue-on-error: true
+        run: |
+          uv run owb audit check-suppressions --format json > suppression-report.json
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: Create or update issue if fixes available
+        if: steps.check.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPORT=$(uv run owb audit check-suppressions --format text)
+          EXISTING=$(gh issue list --label "suppression-review" --state open --json number -q '.[0].number')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "## Weekly Suppression Check — $(date +%Y-%m-%d)
+
+          $REPORT
+
+          Run \`owb audit check-suppressions\` locally for details."
+          else
+            gh issue create \
+              --title "CVE suppression fix available — action needed" \
+              --label "suppression-review" \
+              --body "## Suppression Monitor Report — $(date +%Y-%m-%d)
+
+          $REPORT
+
+          ### Next steps
+          1. Upgrade the package to the fixed version
+          2. Remove the \`--ignore-vuln\` flag from \`.github/workflows/ci.yml\`
+          3. Remove the entry from \`security/data/suppressions.yaml\`
+          4. Close this issue
+
+          Run \`owb audit check-suppressions\` locally for details."
+          fi

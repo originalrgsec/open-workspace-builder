@@ -1178,6 +1178,82 @@ def audit_package(
     sys.exit(2 if has_findings else 0)
 
 
+@audit.command("check-suppressions")
+@click.option(
+    "--registry",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to suppressions YAML (default: bundled registry).",
+)
+@click.option(
+    "--format",
+    "fmt",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format (default: text).",
+)
+def check_suppressions(registry: str | None, fmt: str) -> None:
+    """Check if suppressed CVEs have upstream fixes available.
+
+    Queries the OSV API for each entry in the suppression registry.
+    Exit code 0 = no fixes available (all suppressions still valid).
+    Exit code 1 = at least one fix available (action needed).
+    """
+    from open_workspace_builder.security.suppression_monitor import check_all_suppressions
+
+    registry_path = Path(registry) if registry else None
+
+    try:
+        statuses = check_all_suppressions(registry_path)
+    except FileNotFoundError as exc:
+        click.echo(f"Error: {exc}")
+        sys.exit(1)
+
+    fixes_available = sum(1 for s in statuses if s.fix_available)
+
+    if fmt == "json":
+        data = [
+            {
+                "cve": s.suppression.cve,
+                "package": s.suppression.package,
+                "pinned_version": s.suppression.pinned_version,
+                "fix_available": s.fix_available,
+                "fixed_version": s.fixed_version,
+                "current_version": s.current_version,
+                "days_suppressed": s.days_suppressed,
+                "error": s.error,
+            }
+            for s in statuses
+        ]
+        click.echo(json.dumps(data, indent=2))
+    else:
+        click.echo("CVE Suppression Status Report")
+        click.echo("=" * 30)
+        for s in statuses:
+            pinned = f"pinned {s.suppression.pinned_version}" if s.suppression.pinned_version else "unpinned"
+            if s.fix_available:
+                status_str = f"FIX AVAILABLE: {s.fixed_version}"
+            elif s.error:
+                status_str = f"ERROR: {s.error}"
+            else:
+                status_str = "NO FIX"
+            click.echo(
+                f"{s.suppression.cve} | {s.suppression.package} | {pinned} "
+                f"| {status_str} | {s.days_suppressed} day(s) suppressed"
+            )
+            if s.fix_available:
+                click.echo(
+                    f"  → Action: upgrade {s.suppression.package} to >={s.fixed_version}, "
+                    f"remove {s.suppression.ci_flag or s.suppression.cve} from CI"
+                )
+        click.echo("-" * 30)
+        click.echo(
+            f"Summary: {len(statuses)} suppression(s), {fixes_available} fix(es) available"
+        )
+
+    sys.exit(1 if fixes_available else 0)
+
+
 def _format_full_report(report: object, *, include_fix: bool) -> dict:
     """Serialize a FullAuditReport to a JSON-compatible dict."""
     vuln = report.vuln_report  # type: ignore[union-attr]

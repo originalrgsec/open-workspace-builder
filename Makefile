@@ -1,4 +1,4 @@
-.PHONY: check-deps audit-deps audit-deps-deep test lint sast sast-json
+.PHONY: check-deps audit-deps audit-deps-deep test lint sast sast-json check-suppressions
 
 check-deps:
 	uv run pip-audit --desc --skip-editable
@@ -20,3 +20,6 @@ sast:			## Run Semgrep SAST scan on source code
 
 sast-json:		## Run Semgrep with JSON output
 	semgrep --config auto --json --output sast-results.json src/
+
+check-suppressions:	## Check if suppressed CVEs have fixes available
+	uv run owb audit check-suppressions

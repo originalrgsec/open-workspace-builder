@@ -72,7 +72,7 @@ jobs:
         run: uv sync --all-extras
 
       - name: Dependency vulnerability scan (pip-audit)
-        # CVE-2026-4539: pygments ReDoS in AdlLexer (no fix available yet, local-only attack)
+        # Suppression tracked in security/data/suppressions.yaml — monitored by suppression-monitor.yml
         run: uv run pip-audit --desc --skip-editable --ignore-vuln CVE-2026-4539
 
       - name: Dependency malware scan (GuardDog)
