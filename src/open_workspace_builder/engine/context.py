@@ -45,7 +45,8 @@ class ContextDeployer:
             return
 
         print("=== Deploying Context File Templates ===")
-        context_dir = target / self._vault_config.parent_dir
+        parent = self._vault_config.parent_dir
+        context_dir = target / parent if parent else target
 
         for filename in self._context_config.files:
             content = _load_context_template(self._content_root, filename)

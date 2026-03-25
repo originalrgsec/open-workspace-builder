@@ -63,7 +63,7 @@ class TestLoadConfigWithYaml:
     def test_unspecified_fields_keep_defaults(self, sample_yaml_config: Path) -> None:
         config = load_config(sample_yaml_config)
         # parent_dir not in YAML, should keep default
-        assert config.vault.parent_dir == "Context"
+        assert config.vault.parent_dir == ""
         # ecc not in YAML, should keep all defaults
         assert len(config.ecc.agents) > 0
 
@@ -83,7 +83,7 @@ class TestLoadConfigPartialYaml:
         cfg.write_text("vault:\n  name: CustomVault\n", encoding="utf-8")
         config = load_config(cfg)
         assert config.vault.name == "CustomVault"
-        assert config.vault.parent_dir == "Context"
+        assert config.vault.parent_dir == ""
         assert config.vault.create_bootstrap is True
 
     def test_empty_yaml(self, tmp_path: Path) -> None:

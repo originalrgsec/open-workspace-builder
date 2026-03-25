@@ -21,7 +21,7 @@ def built_workspace(tmp_target: Path, content_root: Path) -> Path:
 
 
 def _vault_root(workspace: Path) -> Path:
-    return workspace / "Context" / "Obsidian"
+    return workspace / "Obsidian"
 
 
 class TestStatusMdGeneration:
@@ -98,7 +98,7 @@ class TestTemplatesReadme:
         config = load_config(sample_yaml_config)
         builder = WorkspaceBuilder(config, content_root)
         builder.build(tmp_target)
-        vault = tmp_target / "Context" / "TestVault"
+        vault = tmp_target / "TestVault"
         readme = vault / "_templates" / "readme.md"
         assert readme.is_file()
         content = readme.read_text(encoding="utf-8")
@@ -111,7 +111,7 @@ class TestTemplatesReadme:
         config = load_config(sample_yaml_config)
         builder = WorkspaceBuilder(config, content_root)
         builder.build(tmp_target)
-        vault = tmp_target / "Context" / "TestVault"
+        vault = tmp_target / "TestVault"
         templates_dir = vault / "_templates"
         files = [f.name for f in templates_dir.iterdir() if f.is_file()]
         assert files == ["readme.md"]

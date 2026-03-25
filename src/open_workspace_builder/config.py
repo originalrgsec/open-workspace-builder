@@ -12,7 +12,7 @@ from typing import Any
 @dataclass(frozen=True)
 class VaultConfig:
     name: str = "Obsidian"
-    parent_dir: str = "Context"
+    parent_dir: str = ""
     assistant_name: str = "AI assistant"
     create_bootstrap: bool = True
     create_templates: bool = True

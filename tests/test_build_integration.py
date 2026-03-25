@@ -33,7 +33,7 @@ class TestVaultStructure:
     """Verify the vault directory tree is created correctly."""
 
     def test_vault_root_exists(self, built_workspace: Path) -> None:
-        vault = built_workspace / "Context" / "Obsidian"
+        vault = built_workspace / "Obsidian"
         assert vault.is_dir()
 
     @pytest.mark.parametrize(
@@ -57,7 +57,7 @@ class TestVaultStructure:
         ],
     )
     def test_vault_directories(self, built_workspace: Path, subdir: str) -> None:
-        vault = built_workspace / "Context" / "Obsidian"
+        vault = built_workspace / "Obsidian"
         assert (vault / subdir).is_dir()
 
     @pytest.mark.parametrize(
@@ -77,18 +77,18 @@ class TestVaultStructure:
         ],
     )
     def test_vault_structural_files(self, built_workspace: Path, filename: str) -> None:
-        vault = built_workspace / "Context" / "Obsidian"
+        vault = built_workspace / "Obsidian"
         path = vault / filename
         assert path.is_file()
         assert path.read_text(encoding="utf-8").strip() != ""
 
     def test_vault_index_content(self, built_workspace: Path) -> None:
-        vault = built_workspace / "Context" / "Obsidian"
+        vault = built_workspace / "Obsidian"
         content = (vault / "_index.md").read_text(encoding="utf-8")
         assert "# Vault Index" in content
 
     def test_vault_bootstrap_content(self, built_workspace: Path) -> None:
-        vault = built_workspace / "Context" / "Obsidian"
+        vault = built_workspace / "Obsidian"
         content = (vault / "_bootstrap.md").read_text(encoding="utf-8")
         assert "# Bootstrap" in content
         assert "Project Manifest" in content
@@ -123,13 +123,13 @@ class TestTemplates:
 
     @pytest.mark.parametrize("template", EXPECTED_TEMPLATES)
     def test_template_exists(self, built_workspace: Path, template: str) -> None:
-        templates_dir = built_workspace / "Context" / "Obsidian" / "_templates"
+        templates_dir = built_workspace / "Obsidian" / "_templates"
         path = templates_dir / template
         assert path.is_file(), f"Template {template} not found"
         assert path.read_text(encoding="utf-8").strip() != ""
 
     def test_template_count(self, built_workspace: Path) -> None:
-        templates_dir = built_workspace / "Context" / "Obsidian" / "_templates"
+        templates_dir = built_workspace / "Obsidian" / "_templates"
         actual = sorted(f.name for f in templates_dir.iterdir() if f.is_file())
         assert actual == sorted(self.EXPECTED_TEMPLATES)
 
@@ -195,17 +195,17 @@ class TestContextFiles:
     """Verify context file templates and workspace config are deployed."""
 
     def test_about_me_deployed(self, built_workspace: Path) -> None:
-        path = built_workspace / "Context" / "about-me.md"
+        path = built_workspace / "about-me.md"
         assert path.is_file()
         assert "About Me" in path.read_text(encoding="utf-8")
 
     def test_brand_voice_deployed(self, built_workspace: Path) -> None:
-        path = built_workspace / "Context" / "brand-voice.md"
+        path = built_workspace / "brand-voice.md"
         assert path.is_file()
         assert "Brand Voice" in path.read_text(encoding="utf-8")
 
     def test_working_style_deployed(self, built_workspace: Path) -> None:
-        path = built_workspace / "Context" / "working-style.md"
+        path = built_workspace / "working-style.md"
         assert path.is_file()
         assert "Working Style" in path.read_text(encoding="utf-8")
 
@@ -247,7 +247,7 @@ class TestAssistantNameInContent:
     """Verify vault bootstrap uses configured assistant_name."""
 
     def test_default_assistant_name(self, built_workspace: Path) -> None:
-        vault = built_workspace / "Context" / "Obsidian"
+        vault = built_workspace / "Obsidian"
         bootstrap = (vault / "_bootstrap.md").read_text(encoding="utf-8")
         assert "AI assistant" in bootstrap
 
@@ -258,7 +258,7 @@ class TestAssistantNameInContent:
         config = Config(vault=VaultConfig(assistant_name="Claude"))
         builder = WorkspaceBuilder(config, content_root)
         builder.build(target)
-        vault = target / "Context" / "Obsidian"
+        vault = target / "Obsidian"
         bootstrap = (vault / "_bootstrap.md").read_text(encoding="utf-8")
         assert "Claude" in bootstrap
         index = (vault / "_index.md").read_text(encoding="utf-8")
@@ -298,7 +298,7 @@ class TestYamlConfigBuild:
         config = load_config(sample_yaml_config)
         builder = WorkspaceBuilder(config, content_root)
         builder.build(tmp_target)
-        vault = tmp_target / "Context" / "TestVault"
+        vault = tmp_target / "TestVault"
         assert vault.is_dir()
         assert (vault / "_index.md").is_file()
 
@@ -308,7 +308,7 @@ class TestYamlConfigBuild:
         config = load_config(sample_yaml_config)
         builder = WorkspaceBuilder(config, content_root)
         builder.build(tmp_target)
-        templates_dir = tmp_target / "Context" / "TestVault" / "_templates"
+        templates_dir = tmp_target / "TestVault" / "_templates"
         # readme.md is always generated; no other templates should exist
         template_files = (
             sorted(f.name for f in templates_dir.iterdir()) if templates_dir.exists() else []

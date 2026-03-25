@@ -72,6 +72,7 @@ def _vault_index(assistant_name: str) -> str:
 
 
 def _vault_bootstrap(assistant_name: str, parent_dir: str) -> str:
+    prefix = f"{parent_dir}/" if parent_dir else ""
     return textwrap.dedent(f"""\
         ---
         type: bootstrap
@@ -89,9 +90,9 @@ def _vault_bootstrap(assistant_name: str, parent_dir: str) -> str:
 
         | File | Location | Purpose |
         |------|----------|---------|
-        | Working Style | `{parent_dir}/working-style.md` | Behavioral instructions, output calibration, tool preferences |
-        | Brand Voice | `{parent_dir}/brand-voice.md` | Writing voice, register tiers, vocabulary, anti-patterns |
-        | About Me | `{parent_dir}/about-me.md` | Professional background, domain expertise, project details |
+        | Working Style | `{prefix}working-style.md` | Behavioral instructions, output calibration, tool preferences |
+        | Brand Voice | `{prefix}brand-voice.md` | Writing voice, register tiers, vocabulary, anti-patterns |
+        | About Me | `{prefix}about-me.md` | Professional background, domain expertise, project details |
 
         ## Project Manifest
 
@@ -137,6 +138,8 @@ def _vault_bootstrap(assistant_name: str, parent_dir: str) -> str:
 
 
 def _self_index(parent_dir: str, assistant_name: str) -> str:
+    prefix = f"{parent_dir}/" if parent_dir else ""
+    location = f"in the workspace root (`{parent_dir}/`)" if parent_dir else "in the workspace root"
     return textwrap.dedent(f"""\
         ---
         type: index
@@ -146,13 +149,13 @@ def _self_index(parent_dir: str, assistant_name: str) -> str:
         # Self
 
         Identity context files. These are stubs that point to the canonical source files
-        in the workspace root (`{parent_dir}/`).
+        {location}.
 
         ## Context Files
 
-        - Working Style → `{parent_dir}/working-style.md`
-        - Brand Voice → `{parent_dir}/brand-voice.md`
-        - About Me → `{parent_dir}/about-me.md`
+        - Working Style → `{prefix}working-style.md`
+        - Brand Voice → `{prefix}brand-voice.md`
+        - About Me → `{prefix}about-me.md`
 
         ## Tool Inventory
 
@@ -337,7 +340,7 @@ _CONTENT_GENERATORS: dict[str, str | None] = {}
 def vault_file_content(
     rel_path: str,
     assistant_name: str = "AI assistant",
-    parent_dir: str = "Context",
+    parent_dir: str = "",
 ) -> str:
     """Return the content for a vault structural file based on its path."""
     generators = {
@@ -390,7 +393,7 @@ class VaultBuilder:
         print("=== Building Obsidian Vault ===")
         parent = self._config.parent_dir
         vault_name = self._config.name
-        vault_root = target / parent / vault_name
+        vault_root = target / parent / vault_name if parent else target / vault_name
 
         for d in VAULT_DIRS:
             self._mkdir(vault_root / d)

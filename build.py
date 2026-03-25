@@ -34,7 +34,7 @@ DEFAULT_CONFIG = {
     # Vault settings
     "vault": {
         "name": "Obsidian",
-        "parent_dir": "Claude Context",
+        "parent_dir": "",
         "create_bootstrap": True,
         "create_templates": True,
     },
@@ -236,9 +236,9 @@ def _vault_bootstrap():
 
         | File | Location | Purpose |
         |------|----------|---------|
-        | Working Style | `Claude Context/working-style.md` | Behavioral instructions, output calibration, tool preferences |
-        | Brand Voice | `Claude Context/brand-voice.md` | Writing voice, register tiers, vocabulary, anti-patterns |
-        | About Me | `Claude Context/about-me.md` | Professional background, domain expertise, project details |
+        | Working Style | `working-style.md` | Behavioral instructions, output calibration, tool preferences |
+        | Brand Voice | `brand-voice.md` | Writing voice, register tiers, vocabulary, anti-patterns |
+        | About Me | `about-me.md` | Professional background, domain expertise, project details |
 
         ## Project Manifest
 
@@ -293,13 +293,13 @@ def _self_index():
         # Self
 
         Identity context files. These are stubs that point to the canonical source files
-        in the workspace root (`Claude Context/`).
+        in the workspace root.
 
         ## Context Files
 
-        - Working Style → `Claude Context/working-style.md`
-        - Brand Voice → `Claude Context/brand-voice.md`
-        - About Me → `Claude Context/about-me.md`
+        - Working Style → `working-style.md`
+        - Brand Voice → `brand-voice.md`
+        - About Me → `about-me.md`
 
         ## Tool Inventory
 
@@ -1424,9 +1424,9 @@ CLAUDE_MD_TEMPLATE = textwrap.dedent("""\
 
     ## Obsidian Knowledge Vault
 
-    An Obsidian vault at `Claude Context/Obsidian/` serves as persistent project memory.
+    An Obsidian vault at `Obsidian/` serves as persistent project memory.
 
-    **Session startup:** Read `Claude Context/Obsidian/_bootstrap.md` first. It contains a
+    **Session startup:** Read `Obsidian/_bootstrap.md` first. It contains a
     compact manifest of all projects with current phases and next actions.
 
     **Project work:** After bootstrap, read the specific project's `_index.md` and `status.md`.
@@ -1435,7 +1435,7 @@ CLAUDE_MD_TEMPLATE = textwrap.dedent("""\
     **Research lookup:** Processed research notes have a `projects:` frontmatter field for
     targeted retrieval.
 
-    **Decision checks:** Read `Claude Context/Obsidian/decisions/_index.md` before recommending
+    **Decision checks:** Read `Obsidian/decisions/_index.md` before recommending
     technology or architecture choices.
 
     The vault structure:
@@ -1528,9 +1528,9 @@ class WorkspaceBuilder:
     def _build_vault(self, target: Path):
         print("=== Building Obsidian Vault ===")
         vault_cfg = self.config.get("vault", {})
-        parent = vault_cfg.get("parent_dir", "Claude Context")
+        parent = vault_cfg.get("parent_dir", "")
         vault_name = vault_cfg.get("name", "Obsidian")
-        vault_root = target / parent / vault_name
+        vault_root = target / parent / vault_name if parent else target / vault_name
 
         # Create directory structure
         for d in VAULT_DIRS:
@@ -1623,7 +1623,8 @@ class WorkspaceBuilder:
             return
 
         print("=== Deploying Context File Templates ===")
-        context_dir = target / "Claude Context"
+        parent = self.config.get("vault", {}).get("parent_dir", "")
+        context_dir = target / parent if parent else target
 
         for filename in ctx_cfg.get("files", []):
             # Write template version

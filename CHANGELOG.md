@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 42 new tests (713 → 755)
 
 ### Changed
+- `VaultConfig.parent_dir` default changed from `"Context"` to `""` — vault deploys directly under workspace root instead of an intermediate folder
 - pyyaml promoted from optional to core dependency — evaluator and security modules import it unconditionally
 
 ## [0.3.0] - 2026-03-24

@@ -21,7 +21,7 @@ The user triggers this explicitly ("process my mobile inbox", "triage inbox", et
 
 ## Vault Location
 
-The Obsidian vault (named "Vault") lives at `Claude Context/Obsidian/` relative to the workspace root. The mobile inbox is at `Claude Context/Obsidian/research/mobile-inbox/`. Processed notes get moved to `Claude Context/Obsidian/research/mobile-inbox/archive/`.
+The Obsidian vault (named "Vault") lives at `Obsidian/` relative to the workspace root. The mobile inbox is at `Obsidian/research/mobile-inbox/`. Processed notes get moved to `Obsidian/research/mobile-inbox/archive/`.
 
 ## Processing Steps
 
