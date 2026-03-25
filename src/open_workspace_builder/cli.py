@@ -1049,6 +1049,28 @@ def auth_backends() -> None:
     except ImportError:
         click.echo("  age       : not installed (pip install 'open-workspace-builder[age]')")
 
+    # bitwarden
+    try:
+        from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+
+        if BitwardenBackend.is_available():
+            click.echo("  bitwarden : available")
+        else:
+            click.echo("  bitwarden : not available (install bw CLI: https://bitwarden.com/help/cli/)")
+    except ImportError:
+        click.echo("  bitwarden : not available (install bw CLI: https://bitwarden.com/help/cli/)")
+
+    # onepassword
+    try:
+        from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+
+        if OnePasswordBackend.is_available():
+            click.echo("  onepassword: available")
+        else:
+            click.echo("  onepassword: not available (install op CLI: https://developer.1password.com/docs/cli/)")
+    except ImportError:
+        click.echo("  onepassword: not available (install op CLI: https://developer.1password.com/docs/cli/)")
+
 
 # ── owb audit ────────────────────────────────────────────────────────────
 
@@ -1400,3 +1422,32 @@ def context_status(
             click.echo(f"  [stub]     {f} — needs filling")
         else:
             click.echo(f"  [filled]   {f}")
+
+
+@owb.command()
+@click.argument("path", type=click.Path(exists=True))
+def validate(path: str) -> None:
+    """Validate a skill directory against the Agent Skills spec."""
+    from open_workspace_builder.evaluator.spec_validator import validate_skill
+
+    result = validate_skill(path)
+
+    if result.valid:
+        click.echo(f"[PASS] {path}")
+    else:
+        click.echo(f"[FAIL] {path}")
+
+    if result.errors:
+        click.echo("\nErrors:")
+        for error in result.errors:
+            click.echo(f"  - {error}")
+
+    if result.warnings:
+        click.echo("\nWarnings:")
+        for warning in result.warnings:
+            click.echo(f"  - {warning}")
+
+    if not result.errors and not result.warnings:
+        click.echo("  No issues found.")
+
+    sys.exit(0 if result.valid else 1)

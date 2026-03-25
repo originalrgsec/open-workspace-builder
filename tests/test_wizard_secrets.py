@@ -72,6 +72,41 @@ class TestStepSecretsBackend:
                 assert result.backend == "env"
 
 
+    def test_bitwarden_when_available(self) -> None:
+        prompts = iter(["4", "OWB API Keys"])
+        with patch("click.prompt", side_effect=lambda *a, **kw: next(prompts)):
+            with patch("open_workspace_builder.wizard.setup._check_bitwarden_available", return_value=True):
+                with patch("open_workspace_builder.wizard.setup._check_onepassword_available", return_value=False):
+                    from open_workspace_builder.wizard.setup import _step_secrets_backend
+                    result = _step_secrets_backend()
+                    assert result.backend == "bitwarden"
+
+    def test_bitwarden_fallback_when_unavailable(self) -> None:
+        with patch("click.prompt", return_value="4"):
+            with patch("open_workspace_builder.wizard.setup._check_bitwarden_available", return_value=False):
+                with patch("open_workspace_builder.wizard.setup._check_onepassword_available", return_value=False):
+                    from open_workspace_builder.wizard.setup import _step_secrets_backend
+                    result = _step_secrets_backend()
+                    assert result.backend == "env"
+
+    def test_onepassword_when_available(self) -> None:
+        prompts = iter(["5", "Development"])
+        with patch("click.prompt", side_effect=lambda *a, **kw: next(prompts)):
+            with patch("open_workspace_builder.wizard.setup._check_bitwarden_available", return_value=False):
+                with patch("open_workspace_builder.wizard.setup._check_onepassword_available", return_value=True):
+                    from open_workspace_builder.wizard.setup import _step_secrets_backend
+                    result = _step_secrets_backend()
+                    assert result.backend == "onepassword"
+
+    def test_onepassword_fallback_when_unavailable(self) -> None:
+        with patch("click.prompt", return_value="5"):
+            with patch("open_workspace_builder.wizard.setup._check_bitwarden_available", return_value=False):
+                with patch("open_workspace_builder.wizard.setup._check_onepassword_available", return_value=False):
+                    from open_workspace_builder.wizard.setup import _step_secrets_backend
+                    result = _step_secrets_backend()
+                    assert result.backend == "env"
+
+
 class TestStepApiKeyWithBackend:
     """Tests for _step_api_key using secrets backend."""
 
@@ -194,3 +229,45 @@ class TestWriteConfigYamlSecrets:
         _write_config_yaml(config, cfg_path)
         data = yaml.safe_load(cfg_path.read_text())
         assert "age_identity" not in data["secrets"]
+
+    def test_bitwarden_backend_written(self, tmp_path: Path) -> None:
+        import yaml
+        from open_workspace_builder.config import Config
+        from open_workspace_builder.wizard.setup import _write_config_yaml
+        config = Config(secrets=SecretsConfig(backend="bitwarden"))
+        cfg_path = tmp_path / "config.yaml"
+        _write_config_yaml(config, cfg_path)
+        data = yaml.safe_load(cfg_path.read_text())
+        assert data["secrets"]["backend"] == "bitwarden"
+        assert "bitwarden_item" not in data["secrets"]
+
+    def test_bitwarden_custom_item_written(self, tmp_path: Path) -> None:
+        import yaml
+        from open_workspace_builder.config import Config
+        from open_workspace_builder.wizard.setup import _write_config_yaml
+        config = Config(secrets=SecretsConfig(backend="bitwarden", bitwarden_item="Custom Keys"))
+        cfg_path = tmp_path / "config.yaml"
+        _write_config_yaml(config, cfg_path)
+        data = yaml.safe_load(cfg_path.read_text())
+        assert data["secrets"]["bitwarden_item"] == "Custom Keys"
+
+    def test_onepassword_backend_written(self, tmp_path: Path) -> None:
+        import yaml
+        from open_workspace_builder.config import Config
+        from open_workspace_builder.wizard.setup import _write_config_yaml
+        config = Config(secrets=SecretsConfig(backend="onepassword"))
+        cfg_path = tmp_path / "config.yaml"
+        _write_config_yaml(config, cfg_path)
+        data = yaml.safe_load(cfg_path.read_text())
+        assert data["secrets"]["backend"] == "onepassword"
+        assert "onepassword_vault" not in data["secrets"]
+
+    def test_onepassword_custom_vault_written(self, tmp_path: Path) -> None:
+        import yaml
+        from open_workspace_builder.config import Config
+        from open_workspace_builder.wizard.setup import _write_config_yaml
+        config = Config(secrets=SecretsConfig(backend="onepassword", onepassword_vault="Production"))
+        cfg_path = tmp_path / "config.yaml"
+        _write_config_yaml(config, cfg_path)
+        data = yaml.safe_load(cfg_path.read_text())
+        assert data["secrets"]["onepassword_vault"] == "Production"
