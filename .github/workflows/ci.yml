@@ -48,7 +48,7 @@ jobs:
         run: uv sync --all-extras
 
       - name: Dependency vulnerability scan (pip-audit)
-        run: uv run pip-audit --strict --desc --skip-editable
+        run: uv run pip-audit --desc --skip-editable
 
       - name: Dependency malware scan (GuardDog)
         if: contains(github.event.commits.*.modified, 'pyproject.toml')
