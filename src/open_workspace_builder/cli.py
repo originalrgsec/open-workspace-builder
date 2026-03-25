@@ -1400,3 +1400,32 @@ def context_status(
             click.echo(f"  [stub]     {f} — needs filling")
         else:
             click.echo(f"  [filled]   {f}")
+
+
+@owb.command()
+@click.argument("path", type=click.Path(exists=True))
+def validate(path: str) -> None:
+    """Validate a skill directory against the Agent Skills spec."""
+    from open_workspace_builder.evaluator.spec_validator import validate_skill
+
+    result = validate_skill(path)
+
+    if result.valid:
+        click.echo(f"[PASS] {path}")
+    else:
+        click.echo(f"[FAIL] {path}")
+
+    if result.errors:
+        click.echo("\nErrors:")
+        for error in result.errors:
+            click.echo(f"  - {error}")
+
+    if result.warnings:
+        click.echo("\nWarnings:")
+        for warning in result.warnings:
+            click.echo(f"  - {warning}")
+
+    if not result.errors and not result.warnings:
+        click.echo("  No issues found.")
+
+    sys.exit(0 if result.valid else 1)

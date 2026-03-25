@@ -8,6 +8,17 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from open_workspace_builder.config import SkillsConfig
+    from open_workspace_builder.evaluator.spec_validator import SpecValidationResult
+
+
+def _validate_skill_safe(skill_path: Path) -> SpecValidationResult | None:
+    """Run spec validation, returning None if the validator is unavailable."""
+    try:
+        from open_workspace_builder.evaluator.spec_validator import validate_skill
+
+        return validate_skill(str(skill_path))
+    except Exception:  # noqa: BLE001
+        return None
 
 
 class SkillsInstaller:
@@ -39,6 +50,14 @@ class SkillsInstaller:
         for skill_name in self._config.install:
             skill_src = source / skill_name
             if skill_src.exists():
+                validation = _validate_skill_safe(skill_src)
+                if validation is not None and not validation.valid:
+                    print(f"  [warn]  Skill {skill_name} has validation errors:")
+                    for err in validation.errors:
+                        print(f"           - {err}")
+                if validation is not None:
+                    for warn in validation.warnings:
+                        print(f"  [warn]  {skill_name}: {warn}")
                 print(f"  Installing skill: {skill_name}")
                 self._copy_tree(skill_src, skills_dst / skill_name)
             else:

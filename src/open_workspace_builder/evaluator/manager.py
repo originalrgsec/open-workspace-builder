@@ -113,9 +113,35 @@ class EvaluationManager:
     def evaluate_new(self, skill_path: str, source: str = "default") -> EvaluationResult:
         """Evaluate a brand-new skill (UC-1).
 
-        Pipeline: classify -> generate tests -> execute baseline -> execute with skill
-        -> score both -> compare -> decide.
+        Pipeline: validate -> classify -> generate tests -> execute baseline
+        -> execute with skill -> score both -> compare -> decide.
         """
+        from open_workspace_builder.evaluator.spec_validator import validate_skill
+
+        skill_dir = Path(skill_path)
+        if skill_dir.is_file():
+            skill_dir = skill_dir.parent
+        validation = validate_skill(str(skill_dir))
+        if not validation.valid:
+            return EvaluationResult(
+                skill_name=skill_dir.name,
+                skill_type="unknown",
+                decision=EvaluationDecision.REJECT,
+                candidate_scores=ScoringResult(
+                    skill_name=skill_dir.name,
+                    dimension_scores=(),
+                    composite_score=0.0,
+                    weight_vector={},
+                    scored_at="",
+                ),
+                baseline_scores=None,
+                delta_vs_baseline=0.0,
+                existing_scores=None,
+                delta_vs_existing=None,
+                reasoning=f"Spec validation failed: {'; '.join(validation.errors)}",
+                evaluated_at=datetime.now(timezone.utc).isoformat(),
+            )
+
         skill_content = Path(skill_path).read_text(encoding="utf-8")
 
         classification = self._classifier.classify(skill_content)
