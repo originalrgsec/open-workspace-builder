@@ -1104,17 +1104,27 @@ def audit() -> None:
     type=click.Path(exists=True),
     help="Path to guarddog suppressions YAML.",
 )
+@click.option("--licenses", is_flag=True, default=False, help="Also run license compliance check.")
+@click.option(
+    "--policy",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to allowed-licenses.md (used with --licenses).",
+)
 def audit_deps(
     fix: bool,
     fmt: str,
     output_file: str | None,
     deep: bool,
     suppressions: str | None,
+    licenses: bool,
+    policy: str | None,
 ) -> None:
     """Scan installed dependencies for known vulnerabilities and malicious code.
 
     By default runs pip-audit (Layer A) only. Use --deep to add GuardDog
-    heuristic scanning (Layer B). Exit code 0 if clean, 2 if findings.
+    heuristic scanning (Layer B). Use --licenses to include license compliance
+    checking. Exit code 0 if clean, 2 if findings.
     """
     from open_workspace_builder.security.dep_audit import run_full_audit
 
@@ -1137,6 +1147,9 @@ def audit_deps(
     else:
         _print_audit_text(report, include_fix=fix)
 
+    if licenses:
+        _run_license_check_inline(policy, fmt)
+
     if output_file:
         Path(output_file).write_text(
             json.dumps(report_data, indent=2) + "\n", encoding="utf-8"
@@ -1144,6 +1157,27 @@ def audit_deps(
         click.echo(f"Report written to {output_file}")
 
     sys.exit(2 if has_findings else 0)
+
+
+def _run_license_check_inline(policy_flag: str | None, fmt: str) -> None:
+    """Run license check as part of audit deps --licenses."""
+    from open_workspace_builder.security.license_audit import (
+        audit_licenses,
+        format_license_report,
+        print_license_report,
+    )
+
+    policy_path = Path(policy_flag) if policy_flag else _find_policy_file()
+    try:
+        report = audit_licenses(policy_path)
+    except (ValueError, RuntimeError) as exc:
+        click.echo(f"License check error: {exc}")
+        return
+
+    if fmt == "json":
+        click.echo(json.dumps(format_license_report(report), indent=2))
+    else:
+        print_license_report(report)
 
 
 @audit.command("package")
@@ -1274,6 +1308,91 @@ def check_suppressions(registry: str | None, fmt: str) -> None:
         )
 
     sys.exit(1 if fixes_available else 0)
+
+
+@audit.command("licenses")
+@click.option(
+    "--policy",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to allowed-licenses.md policy file.",
+)
+@click.option(
+    "--format",
+    "fmt",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format (default: text).",
+)
+@click.option(
+    "--output",
+    "-o",
+    "output_file",
+    default=None,
+    type=click.Path(),
+    help="Write report to file.",
+)
+def audit_licenses_cmd(
+    policy: str | None,
+    fmt: str,
+    output_file: str | None,
+) -> None:
+    """Check dependency licenses against the allowed-licenses policy.
+
+    Parses the policy file to build allow/conditional/deny lists, then runs
+    pip-licenses and classifies each dependency. Exit code: 0 = all pass,
+    1 = any fail or unknown, 2 = only conditional findings.
+    """
+    from open_workspace_builder.security.license_audit import (
+        audit_licenses,
+        format_license_report,
+        print_license_report,
+    )
+
+    policy_path = Path(policy) if policy else _find_policy_file()
+
+    try:
+        report = audit_licenses(policy_path)
+    except (ValueError, RuntimeError) as exc:
+        click.echo(f"Error: {exc}")
+        sys.exit(1)
+
+    if fmt == "json":
+        report_data = format_license_report(report)
+        click.echo(json.dumps(report_data, indent=2))
+    else:
+        print_license_report(report)
+
+    if output_file:
+        report_data = format_license_report(report)
+        Path(output_file).write_text(
+            json.dumps(report_data, indent=2) + "\n", encoding="utf-8"
+        )
+        click.echo(f"Report written to {output_file}")
+
+    has_fail = any(f.status in ("fail", "unknown") for f in report.findings)
+    has_conditional = any(f.status == "conditional" for f in report.findings)
+    if has_fail:
+        sys.exit(1)
+    elif has_conditional:
+        sys.exit(2)
+    sys.exit(0)
+
+
+def _find_policy_file() -> Path:
+    """Locate the allowed-licenses policy file relative to content root."""
+    # Try common locations
+    candidates = [
+        Path("content/policies/allowed-licenses.md"),
+        Path("Obsidian/code/allowed-licenses.md"),
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    raise ValueError(
+        "Could not find allowed-licenses.md policy file. "
+        "Use --policy to specify the path."
+    )
 
 
 def _format_full_report(report: object, *, include_fix: bool) -> dict:
