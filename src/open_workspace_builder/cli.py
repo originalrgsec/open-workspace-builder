@@ -505,6 +505,18 @@ def security() -> None:
     type=click.Path(),
     help="Write JSON report to file.",
 )
+@click.option(
+    "--sca",
+    is_flag=True,
+    default=False,
+    help="Run SCA (pip-audit + GuardDog) on discovered dependencies.",
+)
+@click.option(
+    "--sast",
+    is_flag=True,
+    default=False,
+    help="Run SAST (Semgrep) on source code.",
+)
 @click.pass_context
 def scan(
     ctx: click.Context,
@@ -512,12 +524,15 @@ def scan(
     layers: str | None,
     config_path: str | None,
     output_file: str | None,
+    sca: bool,
+    sast: bool,
 ) -> None:
     """Scan a file or directory for security issues.
 
     Runs a three-layer scanner: structural validation, pattern matching, and
     (optionally) semantic analysis via LLM. Use --layers to select which
-    layers to run. Returns exit code 2 if any issues are found.
+    layers to run. Use --sca for dependency scanning and --sast for Semgrep
+    static analysis. Returns exit code 2 if any issues are found.
     """
     from open_workspace_builder.security.scanner import Scanner
 
@@ -527,6 +542,10 @@ def scan(
         if layers is not None
         else None
     )
+
+    # Resolve SCA/SAST from flags or config defaults
+    run_sca = sca or config.security.sca_enabled
+    run_sast = sast or config.security.sast_enabled
 
     # Construct ModelBackend for Layer 3 if requested.
     backend = None
@@ -544,7 +563,7 @@ def scan(
     target = Path(path)
     if target.is_file():
         verdict = scanner.scan_file(target)
-        report_data = {
+        report_data: dict = {
             "file": verdict.file_path,
             "verdict": verdict.verdict,
             "flags": [
@@ -590,6 +609,20 @@ def scan(
         click.echo(f"\nSummary: {report.summary}")
         has_issues = any(v.verdict in ("flagged", "malicious") for v in report.verdicts)
 
+    # SCA scanning
+    if run_sca:
+        sca_data = _run_sca_scan(target)
+        report_data["sca"] = sca_data
+        if sca_data.get("vulnerabilities") or sca_data.get("guarddog_flagged"):
+            has_issues = True
+
+    # SAST scanning
+    if run_sast:
+        sast_data = _run_sast_scan(target)
+        report_data["sast"] = sast_data
+        if any(f.get("severity") == "ERROR" for f in sast_data.get("findings", [])):
+            has_issues = True
+
     if output_file:
         Path(output_file).write_text(json.dumps(report_data, indent=2) + "\n", encoding="utf-8")
         click.echo(f"Report written to {output_file}")
@@ -597,10 +630,226 @@ def scan(
     sys.exit(2 if has_issues else 0)
 
 
+def _run_sca_scan(target: Path) -> dict:
+    """Run SCA scanning on discovered dependencies and return JSON-compatible dict."""
+    from open_workspace_builder.security.dep_audit import audit_single_package
+    from open_workspace_builder.security.dep_discovery import discover_dependencies
+
+    packages = discover_dependencies(target)
+    if not packages:
+        click.echo("\n--- SCA: No dependencies discovered ---")
+        return {"vulnerabilities": [], "guarddog_flagged": [], "packages_scanned": []}
+
+    click.echo(f"\n--- SCA: Scanning {len(packages)} discovered dependencies ---")
+
+    all_vulns: list[dict] = []
+    all_flagged: list[dict] = []
+    scanned: list[str] = []
+
+    for pkg in packages:
+        try:
+            report = audit_single_package(pkg)
+            scanned.append(pkg)
+            for f in report.vuln_report.findings:
+                all_vulns.append({
+                    "package": f.package,
+                    "installed_version": f.installed_version,
+                    "vuln_id": f.vuln_id,
+                    "fix_version": f.fix_version,
+                    "description": f.description,
+                })
+            for f in report.guarddog_report.flagged:
+                all_flagged.append({
+                    "package": f.package,
+                    "rule_name": f.rule_name,
+                    "severity": f.severity,
+                    "file_path": f.file_path,
+                    "evidence": f.evidence,
+                })
+        except (ImportError, RuntimeError) as exc:
+            click.echo(f"  [skip] {pkg}: {exc}")
+
+    if all_vulns:
+        click.echo(f"\n[SCA-VULN] {len(all_vulns)} vulnerabilities found:")
+        for v in all_vulns:
+            fix_str = f" (fix: {v['fix_version']})" if v.get("fix_version") else ""
+            click.echo(f"  {v['package']}  {v['vuln_id']}{fix_str}")
+    else:
+        click.echo("\n[SCA-OK] No known vulnerabilities in discovered dependencies.")
+
+    if all_flagged:
+        click.echo(f"\n[SCA-MALWARE] {len(all_flagged)} guarddog findings:")
+        for f in all_flagged:
+            click.echo(f"  [{f['severity']}] {f['package']} — {f['rule_name']}")
+    elif scanned:
+        click.echo("[SCA-OK] GuardDog: all scanned packages clean.")
+
+    return {
+        "vulnerabilities": all_vulns,
+        "guarddog_flagged": all_flagged,
+        "packages_scanned": scanned,
+    }
+
+
+def _run_sast_scan(target: Path) -> dict:
+    """Run SAST scanning via Semgrep and return JSON-compatible dict."""
+    from open_workspace_builder.security.sast import run_semgrep
+
+    click.echo(f"\n--- SAST: Running Semgrep on {target} ---")
+    try:
+        report = run_semgrep(target)
+    except ImportError:
+        click.echo("  [skip] semgrep not installed")
+        return {"findings": [], "errors": ["semgrep not installed"], "rules_run": 0}
+    except RuntimeError as exc:
+        click.echo(f"  [error] {exc}")
+        return {"findings": [], "errors": [str(exc)], "rules_run": 0}
+
+    findings_data = [
+        {
+            "rule_id": f.rule_id,
+            "severity": f.severity,
+            "message": f.message,
+            "file": f.file,
+            "line": f.line,
+            "code": f.code,
+        }
+        for f in report.findings
+    ]
+
+    errors_by_severity = {"ERROR": 0, "WARNING": 0, "INFO": 0}
+    for f in report.findings:
+        errors_by_severity[f.severity] = errors_by_severity.get(f.severity, 0) + 1
+
+    if report.findings:
+        click.echo(f"\n[SAST] {len(report.findings)} findings:")
+        for f in report.findings:
+            click.echo(f"  [{f.severity}] {f.rule_id}")
+            click.echo(f"    {f.file}:{f.line}")
+    else:
+        click.echo("\n[SAST-OK] No findings.")
+
+    return {
+        "findings": findings_data,
+        "errors": list(report.errors),
+        "rules_run": report.rules_run,
+    }
+
+
 def _print_verdict(file_path: str, verdict: str, flag_count: int) -> None:
     """Print a single file verdict line."""
     icon = {"clean": "OK", "flagged": "WARN", "malicious": "FAIL", "error": "ERR"}
     click.echo(f"[{icon.get(verdict, '??')}] {file_path} — {verdict} ({flag_count} flags)")
+
+
+@security.command("sast")
+@click.argument("path", type=click.Path(exists=True))
+@click.option(
+    "--config",
+    "semgrep_config",
+    default="auto",
+    help="Semgrep config (auto, p/python, p/owasp-top-ten, or file path).",
+)
+@click.option(
+    "--format",
+    "fmt",
+    type=click.Choice(["text", "json", "sarif"]),
+    default="text",
+    help="Output format.",
+)
+@click.option(
+    "--output",
+    "-o",
+    "output_file",
+    default=None,
+    type=click.Path(),
+    help="Write output to file.",
+)
+def security_sast(
+    path: str,
+    semgrep_config: str,
+    fmt: str,
+    output_file: str | None,
+) -> None:
+    """Run SAST scan (Semgrep) against source code."""
+    from open_workspace_builder.security.sast import run_semgrep
+
+    target = Path(path)
+
+    try:
+        result = run_semgrep(target, config=semgrep_config, sarif=(fmt == "sarif"))
+    except ImportError as exc:
+        click.echo(f"Error: {exc}", err=True)
+        sys.exit(1)
+    except RuntimeError as exc:
+        click.echo(f"Error: {exc}", err=True)
+        sys.exit(1)
+
+    if fmt == "sarif":
+        output = result if isinstance(result, str) else ""
+    elif fmt == "json":
+        output = json.dumps(
+            {
+                "findings": [
+                    {
+                        "rule_id": f.rule_id,
+                        "severity": f.severity,
+                        "message": f.message,
+                        "file": f.file,
+                        "line": f.line,
+                        "code": f.code,
+                    }
+                    for f in result.findings
+                ],
+                "errors": list(result.errors),
+                "rules_run": result.rules_run,
+            },
+            indent=2,
+        )
+    else:
+        output = _format_sast_text(result)
+
+    if output_file:
+        Path(output_file).write_text(output + "\n", encoding="utf-8")
+        click.echo(f"Report written to {output_file}")
+    else:
+        click.echo(output)
+
+    # Exit 2 if any ERROR-severity findings
+    if isinstance(result, str):
+        return
+    if any(f.severity == "ERROR" for f in result.findings):
+        sys.exit(2)
+
+
+def _format_sast_text(report) -> str:  # noqa: ANN001
+    """Format a SastReport as human-readable text."""
+    from open_workspace_builder.security.sast import SastReport
+
+    if not isinstance(report, SastReport):
+        return str(report)
+
+    lines = [
+        "=== SAST Scan (Semgrep) ===",
+        f"Rules run: {report.rules_run}",
+        "",
+    ]
+
+    counts = {"ERROR": 0, "WARNING": 0, "INFO": 0}
+    for f in report.findings:
+        severity_tag = f.severity if f.severity in counts else "INFO"
+        counts[severity_tag] = counts.get(severity_tag, 0) + 1
+        lines.append(f"[{f.severity}] {f.rule_id}")
+        lines.append(f"  {f.file}:{f.line}")
+        lines.append(f"  {f.message}")
+        if f.code:
+            lines.append(f"  > {f.code}")
+        lines.append("")
+
+    lines.append(
+        f"Summary: {counts['ERROR']} error, {counts['WARNING']} warning, {counts['INFO']} info"
+    )
+    return "\n".join(lines)
 
 
 # ── owb auth ─────────────────────────────────────────────────────────────────

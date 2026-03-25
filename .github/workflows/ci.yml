@@ -33,6 +33,30 @@ jobs:
       - name: Run tests
         run: uv run pytest tests/ -x
 
+  sast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      - name: Run SAST scan
+        run: semgrep --config auto --json --output results.json src/ || true
+
+      - name: Check for errors
+        run: |
+          python3 -c "
+          import json, sys
+          data = json.load(open('results.json'))
+          errors = [r for r in data.get('results', []) if r.get('extra', {}).get('severity') == 'ERROR']
+          if errors:
+              for e in errors:
+                  print(f\"ERROR: {e['check_id']} in {e['path']}:{e['start']['line']}\")
+              sys.exit(1)
+          print(f\"SAST clean: {len(data.get('results', []))} findings, 0 errors\")
+          "
+
   dep-scan:
     runs-on: ubuntu-latest
     steps:

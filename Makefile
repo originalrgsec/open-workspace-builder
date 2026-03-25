@@ -1,4 +1,4 @@
-.PHONY: check-deps audit-deps audit-deps-deep test lint
+.PHONY: check-deps audit-deps audit-deps-deep test lint sast sast-json
 
 check-deps:
 	uv run pip-audit --desc --skip-editable
@@ -14,3 +14,9 @@ test:
 
 lint:
 	uv run ruff check src/ tests/
+
+sast:			## Run Semgrep SAST scan on source code
+	semgrep --config auto src/
+
+sast-json:		## Run Semgrep with JSON output
+	semgrep --config auto --json --output sast-results.json src/

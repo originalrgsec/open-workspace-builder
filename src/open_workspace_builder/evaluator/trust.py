@@ -59,6 +59,8 @@ class TrustTierAssigner:
         security_passed: bool = False,
         evaluation_passed: bool = False,
         owner_approved: bool = False,
+        sca_critical: bool = False,
+        sast_error: bool = False,
     ) -> TrustTierResult:
         """Assign a trust tier based on content path, source, and verification status.
 
@@ -66,6 +68,10 @@ class TrustTierAssigner:
         Tier 0: Owner-authored content matching source_prefixes with no upstream.
         Tier 1: Passed security + evaluation + owner approval.
         Tier 2: Default for unverified content.
+
+        SCA/SAST overrides:
+        - ``sca_critical=True``: blocks Tier 0 assignment, forces manual review.
+        - ``sast_error=True``: blocks Tier 0, reduces to Tier 1 at best.
         """
         criteria = {
             "source_prefix_match": False,
@@ -73,10 +79,14 @@ class TrustTierAssigner:
             "security_passed": security_passed,
             "evaluation_passed": evaluation_passed,
             "owner_approved": owner_approved,
+            "sca_clean": not sca_critical,
+            "sast_clean": not sast_error,
         }
 
+        has_sca_sast_block = sca_critical or sast_error
+
         tier_0 = self._get_tier(0)
-        if tier_0 is not None:
+        if tier_0 is not None and not has_sca_sast_block:
             t0_criteria = tier_0.get("criteria", {})
             prefixes = t0_criteria.get("source_prefixes", [])
             if prefixes and _matches_source_prefix(content_path, prefixes) and source is None:
@@ -89,6 +99,21 @@ class TrustTierAssigner:
                     ),
                     criteria_met=criteria,
                 )
+
+        if has_sca_sast_block:
+            blockers: list[str] = []
+            if sca_critical:
+                blockers.append("critical SCA finding")
+            if sast_error:
+                blockers.append("SAST error-level finding")
+            return TrustTierResult(
+                tier=2,
+                reasoning=(
+                    f"Blocked by supply-chain/SAST findings: {', '.join(blockers)}. "
+                    f"Manual review required."
+                ),
+                criteria_met=criteria,
+            )
 
         if security_passed and evaluation_passed and owner_approved:
             return TrustTierResult(

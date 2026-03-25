@@ -136,6 +136,8 @@ class SecurityConfig:
 
     active_patterns: tuple[str, ...] = ("owb-default",)
     scanner_layers: tuple[int, ...] = (1, 2, 3)
+    sca_enabled: bool = False
+    sast_enabled: bool = False
 
 
 @dataclass(frozen=True)

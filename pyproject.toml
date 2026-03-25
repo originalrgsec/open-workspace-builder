@@ -50,11 +50,15 @@ secrets = [
 audit = [
     "pip-audit>=2.7.0",
 ]
+sast = [
+    "semgrep>=1.50.0",
+]
 dev = [
     "pytest>=7.0",
     "ruff>=0.1.0",
     "build",
     "pip-audit>=2.7.0",
+    "semgrep>=1.50.0",
 ]
 
 [project.urls]
