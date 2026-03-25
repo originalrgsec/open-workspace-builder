@@ -16,8 +16,10 @@ A typical layout looks like this:
 │   └── rules/
 ├── .skills/                      <-- custom skills (Cowork only)
 │   └── skills/
-├── Context/                      <-- vault parent_dir (configurable)
-│   └── Obsidian/                 <-- your vault
+├── Obsidian/                     <-- your vault (directly under workspace root)
+├── about-me.md                   <-- context files (deployed by OWB)
+├── brand-voice.md
+├── working-style.md
 ├── code-project-a/               <-- CLI sessions here find .claude/ above
 └── code-project-b/
 ```
@@ -63,7 +65,7 @@ If using a CLI wrapper (e.g., CWB), verify that too:
 cwb --version
 ```
 
-If not installed:
+If not installed, activate your project venv first (e.g., `source ~/projects/Code/.venv/bin/activate` for the shared workspace venv), then:
 
 ```bash
 cd /path/to/open-workspace-builder && pip install -e .
@@ -150,7 +152,9 @@ ls "$WORK_DIR/test-workspace/.skills/skills/"
 head -20 "$WORK_DIR/test-workspace/<config_dir>/<config_filename>"
 ```
 
-Replace `<vault_parent_dir>`, `<vault_name>`, `<config_dir>`, and `<config_filename>` with values from your config (defaults: `Context`, `Obsidian`, `.ai`, `WORKSPACE.md`; CWB overrides: `Claude Context`, `Obsidian`, `.claude`, `CLAUDE.md`).
+Replace `<vault_name>`, `<config_dir>`, and `<config_filename>` with values from your config (defaults: `Obsidian`, `.ai`, `WORKSPACE.md`; CWB overrides: `Obsidian`, `.claude`, `CLAUDE.md`). The vault deploys directly under the workspace root (no intermediate parent directory).
+
+**Note:** Context files (about-me.md, brand-voice.md, working-style.md) are deployed as stubs if they do not already exist. If they exist, `owb init` skips them. Run `owb context status <target>` to check their fill state, or `owb context migrate <target>` to add missing template sections.
 
 ## Step 5: Diff
 

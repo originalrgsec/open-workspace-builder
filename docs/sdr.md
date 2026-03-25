@@ -32,8 +32,15 @@ open-workspace-builder/
 │       │   ├── patterns.py          # Layer 2: regex/keyword matching
 │       │   ├── semantic.py          # Layer 3: sandboxed Claude API analysis
 │       │   ├── reputation.py        # Reputation ledger management
+│       │   ├── dep_audit.py         # SCA: pip-audit + GuardDog wrapper
+│       │   ├── dep_discovery.py     # Dependency discovery from source files
+│       │   ├── sast.py              # SAST: Semgrep CLI wrapper
+│       │   ├── suppression_monitor.py # CVE suppression OSV API checker
+│       │   ├── suppressions_schema.py # Suppression registry dataclass/loader
 │       │   └── data/
-│       │       └── patterns.yaml    # Pattern library for Layer 2
+│       │       ├── patterns.yaml    # Pattern library for Layer 2
+│       │       ├── dep_audit_suppressions.yaml  # GuardDog false positives
+│       │       └── suppressions.yaml # CVE suppression registry
 │       ├── evaluator/
 │       │   ├── __init__.py
 │       │   ├── types.py              # TestExecutionResult shared dataclass
@@ -219,7 +226,7 @@ def scan(path, layers, output):
 @dataclass
 class VaultConfig:
     name: str = "Obsidian"
-    parent_dir: str = "Claude Context"
+    parent_dir: str = ""
     create_bootstrap: bool = True
     create_templates: bool = True
     tiers: list[str] = field(default_factory=lambda: ["Work", "Personal", "Open Source"])
@@ -541,7 +548,7 @@ class ReputationLedger:
 |----------|---------|---------|----------|
 | target | Output directory for workspace | `"output"` | No |
 | vault.name | Vault directory name | `"Obsidian"` | No |
-| vault.parent_dir | Parent directory for vault | `"Claude Context"` | No |
+| vault.parent_dir | Parent directory for vault | `""` (vault at workspace root) | No |
 | vault.tiers | Project tier directory names | `["Work", "Personal", "Open Source"]` | No |
 | ecc.agents | List of agent names to install | Full curated list (16) | No |
 | ecc.commands | List of command names to install | Full curated list (15) | No |
@@ -632,6 +639,21 @@ class ReputationLedger:
 - Stories: S022, S023, S024, S028, S029, S035, S036, S037
 - Goal: Full skill evaluation pipeline (scorer, judge, manager), organizational layer and trust tier classification, multi-source content infrastructure. 251 new tests.
 - Tests: 625 passing
+
+### Sprint 7: Secrets Backend
+- Story: S050
+- Goal: Pluggable secrets backend with three implementations (OS keyring, age encryption, env var), `owb auth` CLI group, wizard integration. 88 new tests.
+- Tests: 713 passing
+
+### Sprint 8: Supply Chain and Context Lifecycle
+- Stories: S053, context lifecycle
+- Goal: Two-layer dependency scanning (pip-audit + GuardDog), `owb audit deps`/`owb audit package` CLI, CI workflow, suppressions YAML. Context file detect/skip/migrate with first-session fill. parent_dir default changed to empty string. 58 new tests.
+- Tests: 771 passing
+
+### Sprint 8.5: Security Hardening
+- Stories: S055, S056, S057, S058, S059
+- Goal: Pre-install SCA gate (ECC rule), Semgrep SAST integration, SCA/SAST wired into evaluator trust tier scoring, automated CVE suppression monitoring (registry, OSV API, weekly CI job), documentation sweep. 57 new tests.
+- Tests: 828 passing
 
 ## Open Questions
 

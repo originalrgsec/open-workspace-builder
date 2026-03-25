@@ -217,6 +217,12 @@ Risk scoring follows NIST SP 800-30 Rev. 1. Each identified threat is rated on l
 | T-025 | Setup scripts with host modification in upstream | T | P-3 | Moderate (5) | Very High (10) | High | M-018 |
 | T-026 | Resource exhaustion via malicious source content | D | P-3 | Low (2) | Low (2) | Low | M-017 |
 | T-027 | Host system modification via upstream hooks/scripts | E | P-3 | Moderate (5) | Very High (10) | High | M-018 |
+| T-028 | Malicious package injection via typosquatted or compromised PyPI package | T | DF-1 | Moderate (5) | Very High (10) | High | M-019 |
+| T-029 | Vulnerable transitive dependency pulled in by direct dependency | T | DF-1 | High (8) | High (8) | High | M-020 |
+| T-030 | Insecure code patterns in evaluated components (SQL injection, path traversal) | T | P-2 | Moderate (5) | High (8) | High | M-021 |
+| T-031 | Stale CVE suppression masking a known vulnerability after upstream fix ships | T | DS-1 | Moderate (5) | High (8) | High | M-022 |
+| T-032 | Malicious content injected into context files preserved during interactive migrate | T | TB-5 | Low (2) | High (8) | Moderate | M-023 |
+
 ## Mitigations
 
 ### M-001: Pinned Vendoring with Commit Hash Tracking
@@ -381,6 +387,51 @@ Risk scoring follows NIST SP 800-30 Rev. 1. Each identified threat is rated on l
 - **Status:** implemented
 - **Residual risk:** Novel attack vectors (e.g., content that instructs the AI to create hooks post-installation) are not caught by static audit. The security scanner (M-006) is the compensating control.
 
+### M-019: Pre-Install SCA Gate (pip-audit + GuardDog)
+
+- **Threat(s) addressed:** T-028
+- **Description:** Before any package installation, the `owb audit package <name>` command runs pip-audit (known CVE check against OSV) and GuardDog (heuristic malware detection via Semgrep/YARA rules). An ECC rule (`dependency-security.md`) instructs Claude Code to invoke this scan before any pip/uv install command. CI runs pip-audit on every push as a backstop.
+- **NIST 800-53 Control:** SA-12 Supply Chain Protection, RA-5 Vulnerability Monitoring and Scanning
+- **Implementation:** `security/dep_audit.py` (audit_single_package), `vendor/ecc/rules/common/dependency-security.md`, `.github/workflows/ci.yml` (dep-scan job)
+- **Status:** implemented
+- **Residual risk:** Zero-day supply chain attacks not yet in the OSV database will not be caught by pip-audit. GuardDog's heuristic detection provides partial coverage for novel attacks but is not guaranteed.
+
+### M-020: Full Dependency Tree Scanning in CI
+
+- **Threat(s) addressed:** T-029
+- **Description:** pip-audit resolves the full dependency tree (including transitive dependencies) and checks all packages against OSV. The CI dep-scan job runs on every push to main, catching vulnerable transitive deps introduced by direct dependency updates.
+- **NIST 800-53 Control:** RA-5 Vulnerability Monitoring and Scanning, SA-12 Supply Chain Protection
+- **Implementation:** `.github/workflows/ci.yml` dep-scan job, `owb audit deps` CLI command
+- **Status:** implemented
+- **Residual risk:** Vulnerabilities disclosed between CI runs remain undetected until the next push. The weekly suppression monitor (M-022) provides an additional check for known suppressed CVEs.
+
+### M-021: SAST Integration in Evaluator Trust Scoring
+
+- **Threat(s) addressed:** T-030
+- **Description:** Semgrep SAST scanning runs on source code via `owb security scan --sast`. Findings feed into the trust tier scoring: ERROR-severity SAST findings block T0 assignment and force Tier 2 with manual review required. The evaluator's `TrustTierAssigner.assign()` accepts `sast_error` as an input parameter.
+- **NIST 800-53 Control:** SA-11 Developer Testing and Evaluation, SI-3 Malicious Code Protection
+- **Implementation:** `security/sast.py` (Semgrep wrapper), `evaluator/trust.py` (sast_error parameter), `cli.py` (--sast flag)
+- **Status:** implemented
+- **Residual risk:** Custom or novel vulnerability patterns not covered by Semgrep's rule database will not be detected. Rule coverage depends on Semgrep community and registry updates.
+
+### M-022: Automated CVE Suppression Monitoring
+
+- **Threat(s) addressed:** T-031
+- **Description:** A YAML registry (`security/data/suppressions.yaml`) tracks every suppressed CVE with package name, pinned version, suppression date, and reason. `owb audit check-suppressions` queries the OSV API for each entry and reports whether a fix version has been published. A weekly GitHub Actions cron job (`suppression-monitor.yml`) runs this check and opens a GitHub issue with the `suppression-review` label when fixes are available.
+- **NIST 800-53 Control:** RA-5 Vulnerability Monitoring and Scanning, SI-2 Flaw Remediation
+- **Implementation:** `security/suppressions_schema.py`, `security/suppression_monitor.py`, `.github/workflows/suppression-monitor.yml`
+- **Status:** implemented
+- **Residual risk:** OSV database lag between upstream fix release and database entry means the monitor may not detect fixes immediately. Typical lag is hours to days.
+
+### M-023: Interactive Diff Review for Context File Migration
+
+- **Threat(s) addressed:** T-032
+- **Description:** `owb context migrate` shows a unified diff of proposed changes before overwriting any file. Each file requires explicit user approval. The ContextMigrator only appends missing template sections; it does not modify existing content. Dry-run mode is available for preview.
+- **NIST 800-53 Control:** CM-3 Configuration Change Control
+- **Implementation:** `engine/context.py` (ContextMigrator), `cli.py` (owb context migrate)
+- **Status:** implemented
+- **Residual risk:** Subtle prompt injection that looks benign in a diff review could be preserved. The three-layer content scanner (M-006) is the compensating control for content injected into context files.
+
 ## Residual Risk Summary
 
 | Threat ID | Original Risk | Mitigation | Residual Risk | Accepted? | Accepted By |
@@ -394,6 +445,12 @@ Risk scoring follows NIST SP 800-30 Rev. 1. Each identified threat is rated on l
 | T-021 | High | M-016, M-006 | Moderate | Yes | Owner — system/user separation raises the bar; novel injection remains possible |
 | T-025 | High | M-018 | Low | Yes | Owner — repo audit gate catches known patterns; static analysis is comprehensive |
 | T-027 | High | M-018 | Low | Yes | Owner — same as T-025 |
+| T-028 | High | M-019 | Moderate | Yes | Owner — zero-day supply chain attacks are inherent; heuristic detection provides partial coverage |
+| T-029 | High | M-020 | Moderate | Yes | Owner — inter-CI-run gap is acceptable; weekly suppression monitor adds coverage |
+| T-030 | High | M-021 | Moderate | Yes | Owner — Semgrep rule coverage is extensive but not exhaustive |
+| T-031 | High | M-022 | Low | Yes | Owner — OSV lag is typically hours, weekly check frequency is acceptable |
+| T-032 | Moderate | M-023 | Low | Yes | Owner — interactive review + content scanner provides defense in depth |
+
 ## Assumptions and Dependencies
 
 - Claude API provides adequate isolation between separate API calls. A malicious file analyzed in one call cannot influence the response of a subsequent call.

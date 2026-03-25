@@ -63,8 +63,8 @@ Claude Code and Cowork power users who want a structured, repeatable workspace w
 
 - **Actor:** Any user, CI pipeline, or pre-commit hook
 - **Trigger:** User runs `owb security scan <path>`, or a PR triggers the CI scan, or a pre-commit hook fires
-- **Flow:** The scanner runs three layers on the target files: structural validation (file type, size, encoding), pattern matching (URLs, shell commands, sensitive paths, stealth keywords), and sandboxed semantic analysis (Claude reviews content for prompt injection, behavioral manipulation, and social engineering). Results are returned as a structured report with per-file verdicts: clean, flagged (with specific concerns), or malicious (with evidence).
-- **Outcome:** A security report. Flagged or malicious files block the triggering operation (merge, update, migration) until resolved by forking to a safe edit or marking as malicious.
+- **Flow:** The scanner runs three layers on the target files: structural validation (file type, size, encoding), pattern matching (URLs, shell commands, sensitive paths, stealth keywords), and sandboxed semantic analysis (Claude reviews content for prompt injection, behavioral manipulation, and social engineering). Optional `--sca` flag adds dependency vulnerability scanning (pip-audit + GuardDog). Optional `--sast` flag adds Semgrep static analysis on source code. Results are returned as a structured report with per-file verdicts: clean, flagged (with specific concerns), or malicious (with evidence). SCA and SAST findings appear in separate report sections.
+- **Outcome:** A security report. Flagged or malicious files block the triggering operation (merge, update, migration) until resolved by forking to a safe edit or marking as malicious. Critical SCA findings or SAST errors block trust tier T0 assignment.
 
 ### UC-6: Skill Evaluation — New Skill
 
@@ -86,6 +86,20 @@ Claude Code and Cowork power users who want a structured, repeatable workspace w
 - **Trigger:** User runs `owb update <source>` to pull updates from a named upstream source
 - **Flow:** The updater discovers files in the source according to configured glob patterns, runs a repo-level security audit (checking for hooks dirs, setup scripts, event triggers), presents results for review, and applies accepted changes. Each source is independently configured with its own repo URL, pin, and discovery rules.
 - **Outcome:** The local copy of the source is updated with reviewed, security-audited changes. Backward-compatible: `owb ecc update` still works as an alias.
+
+### UC-9: Context File Lifecycle
+
+- **Actor:** Solo Power User or New Adopter
+- **Trigger:** User runs `owb init` (deploys stubs), `owb context status` (checks fill state), or `owb context migrate` (reformats existing files)
+- **Flow:** During `owb init`, the builder checks if context files (about-me.md, brand-voice.md, working-style.md) already exist at the target. Existing files are skipped with a message. Missing files receive template stubs with placeholder text. The workspace config file includes a "First Session Tasks" section that instructs the assistant to check for unfilled context stubs and initiate a guided dialogue. `owb context status` reports whether each file is missing, a stub, or filled. `owb context migrate` compares existing files against the latest template, identifies missing sections, and offers interactive reformatting.
+- **Outcome:** Context files are never overwritten without consent. Stubs are filled collaboratively during the first assistant session. Existing files can be reformatted to match new template sections without losing content.
+
+### UC-10: Dependency Supply Chain Audit
+
+- **Actor:** Any user, CI pipeline
+- **Trigger:** User runs `owb audit deps`, `owb audit package <name>`, or `owb audit check-suppressions`
+- **Flow:** `owb audit deps` scans installed packages against the OSV vulnerability database via pip-audit, with optional `--deep` flag to add GuardDog heuristic malware detection. `owb audit package <name>` runs both pip-audit and GuardDog against a single package before installation. An ECC rule enforces running this scan before any pip/uv install command in Claude Code sessions. `owb audit check-suppressions` queries the OSV API to check whether upstream fixes have landed for suppressed CVEs. A weekly CI job (suppression-monitor.yml) opens GitHub issues when fixes become available.
+- **Outcome:** Known vulnerabilities and malicious code patterns are detected before dependencies enter the environment. Suppressed CVEs are automatically tracked and flagged for action when patches ship.
 
 ## Goals
 

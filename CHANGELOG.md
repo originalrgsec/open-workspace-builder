@@ -30,9 +30,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `audit` optional dependency group in pyproject.toml
 - 42 new tests (713 → 755)
 
+- Context file lifecycle management:
+  - `ContextDeployer` detects existing files and skips instead of overwriting
+  - `owb context migrate` command for interactive reformatting against current templates
+  - `owb context status` command reports filled/stub/missing state per file
+  - Workspace config template includes "First Session Tasks" for assistant-guided fill
+  - Wizard informational notice about context file stubs
+- 16 new tests for context lifecycle (755 → 771)
+- Pre-install SCA gate ECC rule (`dependency-security.md`) — instructs Claude Code to run `owb audit package` before any pip/uv install (OWB-S055)
+- Semgrep SAST integration (OWB-S056):
+  - `security/sast.py` module wrapping Semgrep CLI with JSON output parsing
+  - `owb security sast` CLI command with `--config`, `--sarif`, `--format` options
+  - `sast` optional dependency group in pyproject.toml
+  - GitHub Actions SAST CI job, Makefile `sast` and `sast-json` targets
+  - `sast-scanning.md` ECC rule for evaluated component scanning
+- SCA and SAST wired into evaluator and security scan (OWB-S057):
+  - `--sca` and `--sast` flags on `owb security scan` for combined reporting
+  - Dependency discovery from requirements.txt, pyproject.toml, and import statements
+  - `SecurityConfig.sca_enabled` and `sast_enabled` fields for config-driven activation
+  - Trust tier scoring: critical SCA findings or SAST errors block T0, force manual review
+- Automated CVE suppression monitoring (OWB-S059):
+  - Suppression registry (`security/data/suppressions.yaml`) with CVE-2026-4539 entry
+  - `owb audit check-suppressions` CLI command querying OSV API for fix availability
+  - Weekly CI job (`suppression-monitor.yml`) opens GitHub issues when fixes land
+  - `suppressions_schema.py` dataclass and YAML loader with validation
+- 57 new tests for S055-S059 (771 → 828)
+
 ### Changed
 - `VaultConfig.parent_dir` default changed from `"Context"` to `""` — vault deploys directly under workspace root instead of an intermediate folder
 - pyyaml promoted from optional to core dependency — evaluator and security modules import it unconditionally
+
+### Fixed
+- CI: pip-audit `--skip-editable` for local package, `--ignore-vuln CVE-2026-4539` for pygments ReDoS (no upstream fix)
+- CI: removed 3 unused imports caught by ruff lint on Python 3.13 matrix
+- Stale `Claude Context/` path references in workspace config template and SKILL.md
 
 ## [0.3.0] - 2026-03-24
 

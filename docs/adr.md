@@ -222,6 +222,36 @@ This is a CLI tool, not a distributed system. The "containers" are logical modul
 - **Alternatives considered:** Extending the existing ECC-specific code with flags for different sources was rejected because it would create an ever-growing switch statement. A plugin system was considered but rejected as over-engineering for the current need.
 - **Consequences:** Adding a new upstream source requires only a config entry, not code changes. The audit stage (checking for hooks dirs, setup scripts) runs before any content is accepted, providing a security gate for new sources.
 
+### AD-10: Semgrep as SAST Engine
+
+- **Context:** OWB needs static analysis for user source code and evaluated components to detect insecure patterns (SQL injection, path traversal, shell injection) beyond what the content scanner covers. The SAST engine must work as an optional dependency and integrate into the existing security scan CLI.
+- **Decision:** Semgrep with `--config auto` (default Python rulesets). Invoked as a subprocess (not imported as a library) to keep the dependency boundary clean. Results are parsed from JSON output into a `SastReport` dataclass. Semgrep is an optional dependency (`[sast]` extra).
+- **Alternatives considered:** Bandit (Python-only, less extensible to other languages), CodeQL (heavy GitHub-coupled dependency, requires database build), Pylint security plugins (limited scope, no OWASP coverage).
+- **Consequences:** Users without Semgrep installed get a graceful skip. The `--sast` flag on `owb security scan` is opt-in. CI runs Semgrep in a separate job with ERROR-severity findings as the blocking threshold.
+- **License check:** Semgrep OSS — LGPL-2.1. Allowed (subprocess invocation, not linked).
+- **OSS health check:** Maintained by Semgrep Inc. (formerly r2c). Active development, large community.
+
+### AD-11: ECC Rule-Based Pre-Install Enforcement
+
+- **Context:** The SCA gate (`owb audit package`) is only useful if it runs before every package installation. In Claude Code sessions, package installs happen interactively and cannot be intercepted by git hooks or shell aliases.
+- **Decision:** Deploy an ECC rule file (`vendor/ecc/rules/common/dependency-security.md`) that instructs Claude Code to run `owb audit package <name>` before any pip/uv install command. The rule is installed during `owb init` alongside other ECC rules. Enforcement is behavioral (the rule is a system prompt instruction), not technical (no hook or wrapper).
+- **Alternatives considered:** Git pre-commit hook (does not cover interactive installs in Claude sessions), shell alias wrapper (fragile, platform-dependent, easily bypassed), pip constraint files (catches version conflicts but not malware).
+- **Consequences:** Enforcement depends on Claude following the rule. A user or Claude session that ignores the rule bypasses the gate. This is acceptable because the SCA scan also runs in CI as a backstop.
+
+### AD-12: Automated CVE Suppression Monitoring
+
+- **Context:** When pip-audit finds a vulnerability with no upstream fix, the CVE is suppressed in CI via `--ignore-vuln`. These suppressions can go stale indefinitely — the fix ships, but the suppression remains, leaving the vulnerability unpatched.
+- **Decision:** A YAML registry (`security/data/suppressions.yaml`) is the single source of truth for all suppressed CVEs. `owb audit check-suppressions` queries the OSV API for each entry and reports whether a fix is available. A weekly GitHub Actions cron job (`suppression-monitor.yml`) runs this check and opens a GitHub issue with the `suppression-review` label when fixes land.
+- **Alternatives considered:** Manual periodic review (unreliable, no alerts), Dependabot-only (does not cover the suppression lifecycle or registry tracking), re-running pip-audit without `--ignore-vuln` (no structured tracking, no issue automation).
+- **Consequences:** Every suppressed CVE must have a registry entry. The registry is the audit trail for why each CVE is suppressed. The weekly cron job creates operational overhead (one issue per week when fixes land) but prevents stale suppressions.
+
+### AD-13: Context File Lifecycle (Detect/Skip/Migrate)
+
+- **Context:** `owb init` previously overwrote context files (about-me.md, brand-voice.md, working-style.md) on every run. Users who had already filled out these files would lose their customizations.
+- **Decision:** ContextDeployer detects existing files and skips them with a message. A new `owb context migrate` command compares existing files against the current template, identifies missing sections, and offers interactive reformatting (append missing sections with placeholder content). The workspace config template includes a "First Session Tasks" section that instructs the assistant to check for unfilled stubs and initiate a guided dialogue. `owb context status` reports each file as missing, stub, or filled.
+- **Alternatives considered:** Always overwrite (destructive, unacceptable for filled files), prompt before each file during init (tedious for repeat runs), version-stamped merge with three-way diff (over-engineered for markdown content files).
+- **Consequences:** Re-running `owb init` is safe for existing workspaces. The migrate command provides a non-destructive path to adopt new template sections. The first-session fill is delegated to the assistant, not the builder CLI.
+
 ## Technology Stack
 
 | Layer | Technology | Rationale |
