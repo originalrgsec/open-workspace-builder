@@ -63,6 +63,7 @@ class EccConfig:
             "common": (
                 "agents",
                 "coding-style",
+                "dependency-security",
                 "development-workflow",
                 "git-workflow",
                 "patterns",

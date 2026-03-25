@@ -166,6 +166,16 @@ class TestEccInstallation:
         assert (rules_dir / "python" / "coding-style.md").is_file()
         assert (rules_dir / "golang" / "coding-style.md").is_file()
 
+    def test_dependency_security_rule_deployed(self, built_workspace_with_ecc: Path) -> None:
+        rule = built_workspace_with_ecc / ".claude" / "rules" / "common" / "dependency-security.md"
+        assert rule.is_file()
+
+    def test_dependency_security_rule_content(self, built_workspace_with_ecc: Path) -> None:
+        rule = built_workspace_with_ecc / ".claude" / "rules" / "common" / "dependency-security.md"
+        content = rule.read_text(encoding="utf-8")
+        assert "owb audit package" in content
+        assert "MANDATORY" in content
+
 
 class TestEccTargetDirConfigurable:
     """Verify ECC installs to custom target_dir."""
