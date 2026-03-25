@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Inline policy enforcement rules deployed to workspace rules directory (OWB-S066):
+  - Replaced pointer-style vault-policies.md with compact enforceable checklist
+  - Conditional policy compliance preamble in generated agent config
+  - Privacy scrubbing enforced via blocklist test
+  - 20 new tests across test_policy_deployment.py and test_agent_config.py
+- License audit command checking deps against allowed-licenses policy (OWB-S068):
+  - `owb audit licenses` CLI command with `--policy`, `--format json|text`, `--output`
+  - Runtime parsing of allowed-licenses.md into allow/conditional/deny categories
+  - Case-insensitive license matching with common alias support
+  - `--licenses` flag on `owb audit deps` for combined audit
+  - Exit codes: 0 (all pass), 1 (fail/unknown), 2 (conditional only)
+  - 32 new tests in tests/security/test_license_audit.py
+- Agent Skills spec validation with CLI and evaluator integration (OWB-S051):
+  - `owb validate <path>` CLI command for SKILL.md validation
+  - Spec validator checking frontmatter, structure, and optional subdirectories
+  - Evaluator integration for automated skill quality assessment
+  - 508 tests in tests/evaluator/test_spec_validator.py
+- Bitwarden and 1Password secrets backends (OWB-S052):
+  - `bitwarden_backend.py` wrapping Bitwarden CLI (`bw`)
+  - `onepassword_backend.py` wrapping 1Password CLI (`op`)
+  - Wizard integration with availability detection and graceful fallback
+  - 365 new tests across test_secrets.py and test_wizard_secrets.py
+- MCP server exposing security scan, dep audit, and license audit tools (OWB-S065):
+  - `owb mcp serve` CLI command for Model Context Protocol server
+  - Three tool endpoints: security_scan, dep_audit, license_audit
+  - 509 tests in tests/test_mcp_server.py
+- Sprint-complete, retro, write-story skills (CSK-S003, S004, S005):
+  - Sprint completion checklist orchestration skill
+  - Retrospective scaffolding skill with sequential ID management
+  - Story writer skill with workflow-level acceptance criteria
+- Enhanced tdd-guide agent for Claude Code CLI parity (CSK-S006)
+- Updated oss-health-check skill with GitHub API integration (CSK-S002)
+- Sprint planning orchestration skill for open and close workflows (CSK-S007)
+
+### Changed
+- Genericized Claude-specific remnants in OWB core (TD-001):
+  - Renamed `claude-md.template.md` to `agent-config.template.md`
+  - Updated all docstrings and comments to generic language
+  - Broadened security patterns to match both CLAUDE.md and WORKSPACE.md
+  - Wizard model prompt no longer defaults to Anthropic
+  - `generic.yaml` marketplace uses `.ai` and `Context` defaults
+  - Added deprecation note to `ClaudeMdConfig` alias (removal target: v0.6.0)
+- `vault-policies` added to default ECC common rules deployment list
+
 ## [0.4.0] - 2026-03-25
 
 ### Added
