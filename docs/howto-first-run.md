@@ -152,6 +152,8 @@ Replace `<vault_name>`, `<config_dir>`, and `<config_filename>` with values from
 
 **Note:** Context files (about-me.md, brand-voice.md, working-style.md) are deployed as stubs if they do not already exist. If they exist, `owb init` skips them. Run `owb context status <target>` to check their fill state, or `owb context migrate <target>` to add missing template sections.
 
+**Note:** Cross-project policies (product-development-workflow, development-process, integration-verification-policy, oss-health-policy, allowed-licenses) are deployed to `Obsidian/code/`. These are process guidance documents consumed by ECC agents. If `content/policies/` is empty or missing, this step is skipped gracefully.
+
 ## Step 5: Diff
 
 Compare your existing vault against the reference state OWB would produce.

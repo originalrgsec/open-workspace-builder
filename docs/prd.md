@@ -36,7 +36,7 @@ Claude Code and Cowork power users who want a structured, repeatable workspace w
 - **Actor:** Solo Power User or New Adopter
 - **Trigger:** User installs the tool and runs `owb init` (or `owb init --interactive` for guided setup)
 - **Flow:** The builder reads the config (defaults or user-provided), generates the full workspace structure (vault, ECC catalog, skills, context templates, CLAUDE.md), and writes it to the target directory. If `--interactive`, the user is prompted for tier names, which ECC components to include, and which skills to install.
-- **Outcome:** A fully structured workspace ready for use. Context template files contain placeholder content with instructions for population.
+- **Outcome:** A fully structured workspace ready for use. Five cross-project development policies are installed to Obsidian/code/. Context template files contain placeholder content with instructions for population.
 
 ### UC-2: Drift Detection
 

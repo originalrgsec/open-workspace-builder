@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Cross-project policy deployment during vault build (OWB-S064):
+  - VaultBuilder deploys content/policies/*.md to Obsidian/code/ during init
+  - Migrator automatically detects missing/outdated policies via reference diff
+  - Graceful skip when content/policies/ is missing or empty
+  - 8 new tests in test_policy_deployment.py
 - Pluggable secrets backend with `SecretsBackend` protocol and three implementations (OWB-S050):
   - OS keyring (macOS Keychain, GNOME Keyring, Windows Credential Manager) via `keyring` package
   - Age encryption with pyrage/CLI fallback and automatic key generation

@@ -252,6 +252,28 @@ This is a CLI tool, not a distributed system. The "containers" are logical modul
 - **Alternatives considered:** Always overwrite (destructive, unacceptable for filled files), prompt before each file during init (tedious for repeat runs), version-stamped merge with three-way diff (over-engineered for markdown content files).
 - **Consequences:** Re-running `owb init` is safe for existing workspaces. The migrate command provides a non-destructive path to adopt new template sections. The first-session fill is delegated to the assistant, not the builder CLI.
 
+### AD-14: Policy Content Deployed by Vault Engine
+
+**Context:** Five cross-project policy documents (product lifecycle, sprint mechanics,
+quality gates, dependency health, license compliance) are shipped in content/policies/.
+ECC agents reference these policies at Obsidian/code/*.md paths. The policies need to
+be deployed to the vault during init and tracked by diff/migrate.
+
+**Decision:** The VaultBuilder deploys content/policies/*.md to Obsidian/code/ during
+build(). The migrator detects drift automatically because it builds a reference workspace
+and diffs it. Wrapper repos (like CWB) override the generic policies with their own
+content/policies/ because the content_root resolves to the wrapper's directory.
+
+**Alternatives considered:** (1) PolicyInstaller as a separate engine module — rejected
+because the vault engine already handles all vault content creation and adding a separate
+module fragments responsibility. (2) Config-driven policy selection — deferred; CWB
+already implements this via PoliciesConfig.install, and OWB deploys all files from the
+directory unconditionally which is simpler and correct for the generic case.
+
+**Consequences:** Wrapper repos must run their own policy installation step after
+OWB's engine to override generic policies. This is documented in the CWB Override
+Architecture section of the S064 story.
+
 ## Technology Stack
 
 | Layer | Technology | Rationale |

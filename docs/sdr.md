@@ -87,6 +87,13 @@ open-workspace-builder/
 │   │   ├── sdr.md
 │   │   ├── threat-model.md
 │   │   └── ... (14 more)
+│   ├── policies/                    # Cross-project development policies
+│   │   ├── _index.md
+│   │   ├── product-development-workflow.md
+│   │   ├── development-process.md
+│   │   ├── integration-verification-policy.md
+│   │   ├── oss-health-policy.md
+│   │   └── allowed-licenses.md
 │   └── context/                     # Context file templates
 │       ├── about-me.template.md
 │       ├── brand-voice.template.md
@@ -99,7 +106,8 @@ open-workspace-builder/
 │   │   ├── test_ecc.py
 │   │   ├── test_skills.py
 │   │   ├── test_differ.py
-│   │   └── test_migrator.py
+│   │   ├── test_migrator.py
+│   │   └── test_policy_deployment.py
 │   ├── integration/
 │   │   ├── test_full_build.py       # End-to-end build + validate
 │   │   ├── test_diff_migrate.py     # Diff and migrate against fixtures
@@ -276,6 +284,29 @@ def build_workspace(config: Config, dry_run: bool = False) -> BuildReport:
 ```
 
 **Dependencies:** engine/vault, engine/ecc, engine/skills, engine/context, security/scanner (for integrity check)
+
+### Module: engine/vault
+
+**Purpose:** Generates the Obsidian vault directory structure, structural files, templates,
+and cross-project policy documents.
+**Location:** `src/open_workspace_builder/engine/vault.py`
+
+| File/Class | Responsibility |
+|-----------|---------------|
+| VaultBuilder | Creates vault directories, structural files, templates, and policies |
+| vault_file_content() | Returns generated content for each structural file |
+| _load_templates() | Reads template files from content/templates/ |
+
+**Key behaviors:**
+- Creates vault directory tree (research, projects, decisions, code, business, self)
+- Generates structural _index.md files with content appropriate to each section
+- Deploys templates from content/templates/ to _templates/
+- Deploys cross-project policies from content/policies/ to code/ (S064)
+- Gracefully skips policy deployment when content/policies/ is missing or empty
+- Supports dry_run mode (reports actions without writing)
+- Tracks all created files in created_files for build summary reporting
+
+**Dependencies:** pathlib, textwrap, content/templates/, content/policies/
 
 ### Module: engine/differ
 

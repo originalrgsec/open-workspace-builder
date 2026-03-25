@@ -99,7 +99,7 @@ This threat model uses STRIDE per element applied to the data flow diagrams defi
 | STRIDE Category | Applicable? | Threat Description | Threat ID |
 |----------------|-------------|-------------------|-----------|
 | **S**poofing | No | Local filesystem | -- |
-| **T**ampering | Yes | Post-installation, a malicious agent/rule instructs Claude to modify other installed content files, establishing persistence. For example, an agent that appends instructions to CLAUDE.md or modifies other agent definitions | T-011 |
+| **T**ampering | Yes | Post-installation, a malicious agent/rule instructs Claude to modify other installed content files, establishing persistence. For example, an agent that appends instructions to CLAUDE.md or modifies other agent definitions. Policy documents (content/policies/) deployed to Obsidian/code/ — process guidance consumed by ECC agents; no secrets, no executable code | T-011 |
 | **R**epudiation | Yes | Claude-initiated file modifications may not be logged or attributed to the originating agent/rule | T-012 |
 | **I**nformation Disclosure | Yes | A malicious agent instructs Claude to read sensitive files (context files with PII, SSH keys, credentials, env files) and exfiltrate them via curl, clipboard, or by embedding them in code output | T-013 |
 | **D**enial of Service | Yes | A malicious rule degrades Claude's performance by injecting conflicting instructions, wasting tokens on hidden processing, or instructing Claude to refuse legitimate user requests | T-014 |
