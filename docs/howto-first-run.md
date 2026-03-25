@@ -98,23 +98,19 @@ cp -R "$LIVE_VAULT" "$TEST_VAULT"
 
 **Verify:** `ls "$TEST_VAULT/_bootstrap.md"` returns the file.
 
-## Step 2: Generate Config
+## Step 2: Review Config
 
-Scan the existing vault and generate a config file. The config is written to `~/.<cli_name>/config.yaml` (e.g., `~/.owb/config.yaml` or `~/.cwb/config.yaml`).
+OWB reads its config from `~/.<cli_name>/config.yaml`. If you are using a CLI wrapper (like CWB),
+the wrapper installs pre-baked defaults on first invocation.
 
-```bash
-owb init --from-vault "$TEST_VAULT"
-```
+If no config exists yet, run any `owb` command (e.g., `owb --version`) to generate the default,
+then edit `~/.owb/config.yaml` to set:
 
-This detects project tier directories (any directory containing subdirectories with `_index.md` or `status.md`) and vault metadata.
+- `vault.name` to your vault directory name (e.g., `Obsidian`)
+- `vault.parent_dir` to empty (vault sits directly under workspace root)
+- `ecc.enabled` to `true` if you want ECC deployed
 
-**Verify:** `cat ~/.<cli_name>/config.yaml` shows your vault structure reflected in the config. If using a CWB wrapper, confirm `ecc: enabled: true` and `models:` are populated.
-
-**Note:** If the config file already exists, the wizard loads the existing config instead of scanning. Rename or delete it to force a fresh scan:
-
-```bash
-mv ~/.<cli_name>/config.yaml ~/.<cli_name>/config.yaml.bak
-```
+**Verify:** `cat ~/.owb/config.yaml` shows your vault structure reflected in the config.
 
 ## Step 3: Dry Run
 
@@ -242,7 +238,30 @@ owb security scan "$LIVE_VAULT"   # confirm clean
 
 **Verify:** Diff returns exit code 0. Obsidian opens with no broken links.
 
-## Step 9: Confirm ECC in Claude Code CLI
+## Step 9: Build to Workspace Root
+
+The migrate steps (5-8) update vault content but do not deploy ECC to the workspace root.
+This step deploys `.claude/` (or `.ai/`) so CLI sessions pick it up.
+
+**Important:** The target MUST be the workspace root, NOT the vault directory. See
+Troubleshooting if you are unsure which directory to use.
+
+```bash
+owb init -t /path/to/workspace --dry-run    # preview first
+owb init -t /path/to/workspace               # deploy
+```
+
+**Verify:**
+
+```bash
+ls /path/to/workspace/<config_dir>/agents/
+ls /path/to/workspace/<config_dir>/commands/
+ls /path/to/workspace/<config_dir>/rules/
+```
+
+Replace `<config_dir>` with `.claude` (CWB) or `.ai` (OWB default).
+
+## Step 10: Confirm ECC in Claude Code CLI
 
 Start a new Claude Code CLI session from within the workspace:
 
@@ -259,7 +278,7 @@ Inside the session:
 
 If ECC is not visible, the session was likely started from outside the workspace tree. See Troubleshooting.
 
-## Step 10: Clean Up
+## Step 11: Clean Up
 
 ```bash
 rm -rf "$WORK_DIR"
@@ -278,3 +297,21 @@ Keep the backup until you have completed at least one full sprint on the managed
 **Migrate exits with code 2.** At least one file was blocked by security. Review and investigate before proceeding.
 
 **CLI session does not find `.claude/`.** Claude Code traverses upward to find `.claude/`. If code projects are outside the workspace tree, the traversal will not reach it. Options: (a) move code projects under the workspace root, (b) target the build at a common parent directory, (c) symlink `.claude/` into the code project root.
+
+**Migrate blocked by security scanner false positives.** First-party ECC content (agents,
+shell scripts) can trigger heuristic flags. If this happens: (a) accept files you recognize
+as shipped ECC content, (b) reject anything unrecognized, (c) use `owb migrate --accept-all`
+to accept missing files and skip modified ones. Do NOT fall back to `owb init -t <vault>`
+as a workaround — see next entry.
+
+**Nested Obsidian/Obsidian/ directory appeared.** This happens when `owb init` targets the
+vault directory instead of the workspace root. The `init` command always creates an
+`Obsidian/` subdirectory under the target. If the target IS the vault, you get nesting.
+Fix: `rm -rf /path/to/vault/Obsidian /path/to/vault/.claude /path/to/vault/.skills /path/to/vault/.cwb`.
+The correct `init` target is always the workspace root, never the vault. Step 9 uses `init`
+for the workspace root; Steps 5-8 use `migrate` for the vault. These are not interchangeable.
+
+**Context files overwritten.** `owb init` detects existing context files (about-me.md,
+brand-voice.md, working-style.md) and skips them. However, vault scaffold files
+(`_bootstrap.md`, `_templates/`) are currently overwritten without checking. Back up your
+vault before any `init` run. Tracked as OWB-S060.
