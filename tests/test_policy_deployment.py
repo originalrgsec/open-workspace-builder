@@ -1,4 +1,4 @@
-"""Tests for cross-project policy deployment from content/policies/ (Story S064)."""
+"""Tests for cross-project policy deployment from content/policies/ (Stories S064, S066)."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from open_workspace_builder.config import Config, VaultConfig
+from open_workspace_builder.config import Config, EccConfig, VaultConfig
 from open_workspace_builder.engine.builder import WorkspaceBuilder
 from open_workspace_builder.engine.vault import VaultBuilder
 
@@ -161,3 +161,118 @@ class TestPolicyDeploymentWithRealContent:
                 assert (code_dir / policy_file.name).is_file(), (
                     f"Policy {policy_file.name} not deployed to code/"
                 )
+
+
+# ── Story S066: Inline Policy Enforcement Rules ──────────────────────────
+
+
+@pytest.fixture
+def ecc_workspace_with_policies(tmp_path: Path, content_root: Path) -> Path:
+    """Build a workspace with ECC enabled, returning the target path."""
+    target = tmp_path / "workspace"
+    config = Config(ecc=EccConfig(enabled=True, target_dir=".claude"))
+    builder = WorkspaceBuilder(config, content_root)
+    builder.build(target)
+    return target
+
+
+def _rules_file(workspace: Path) -> Path:
+    return workspace / ".claude" / "rules" / "common" / "vault-policies.md"
+
+
+class TestInlineRulesDeployment:
+    """AC-1: owb init deploys inline rules to .claude/rules/common/vault-policies.md."""
+
+    def test_inline_rules_deployed_on_init(
+        self, ecc_workspace_with_policies: Path
+    ) -> None:
+        rules_path = _rules_file(ecc_workspace_with_policies)
+        assert rules_path.is_file(), "vault-policies.md not deployed to rules dir"
+
+    def test_inline_rules_contain_enforcement_items(
+        self, ecc_workspace_with_policies: Path
+    ) -> None:
+        content = _rules_file(ecc_workspace_with_policies).read_text(encoding="utf-8")
+        assert "- [ ]" in content or "- [" in content
+
+    def test_inline_rules_not_pointer_file(
+        self, ecc_workspace_with_policies: Path
+    ) -> None:
+        content = _rules_file(ecc_workspace_with_policies).read_text(encoding="utf-8")
+        assert "Read these from the vault" not in content
+        assert "Obsidian/code/" not in content
+
+
+class TestInlineRulesReplacePointer:
+    """AC-2: owb migrate replaces old pointer file with new inline rules."""
+
+    def test_inline_rules_replace_pointer_on_migrate(
+        self, tmp_path: Path, content_root: Path
+    ) -> None:
+        target = tmp_path / "workspace"
+        config = Config(ecc=EccConfig(enabled=True, target_dir=".claude"))
+        builder = WorkspaceBuilder(config, content_root)
+        builder.build(target)
+
+        # Simulate old pointer content
+        rules_path = _rules_file(target)
+        rules_path.write_text(
+            "# Vault Policy Documents\n\nRead these from the vault.\n",
+            encoding="utf-8",
+        )
+
+        # Rebuild (simulates migrate)
+        builder2 = WorkspaceBuilder(config, content_root)
+        builder2.build(target)
+
+        content = rules_path.read_text(encoding="utf-8")
+        assert "Read these from the vault" not in content
+
+
+class TestInlineRulesLineCount:
+    """AC-5: Deployed rules file is under 100 lines."""
+
+    def test_rules_file_under_100_lines(
+        self, ecc_workspace_with_policies: Path
+    ) -> None:
+        content = _rules_file(ecc_workspace_with_policies).read_text(encoding="utf-8")
+        line_count = len(content.splitlines())
+        assert line_count < 100, f"Rules file has {line_count} lines (limit: 100)"
+
+
+class TestInlineRulesPrivacyScrubbing:
+    """AC-6: No private references in deployed content."""
+
+    BLOCKLIST = [
+        "Volcanix",
+        "ingest-pipeline",
+        "shekel-stacker",
+        "Claude Code",
+        "Cowork",
+        "Claude Desktop",
+        "iOS Shortcut",
+        "Obsidian Sync",
+        "launchd",
+    ]
+
+    def test_no_private_references_in_deployed_content(
+        self, ecc_workspace_with_policies: Path
+    ) -> None:
+        content = _rules_file(ecc_workspace_with_policies).read_text(encoding="utf-8")
+        for term in self.BLOCKLIST:
+            assert term not in content, (
+                f"Private reference '{term}' found in vault-policies.md"
+            )
+
+    def test_no_private_references_in_source_file(
+        self, content_root: Path
+    ) -> None:
+        """Verify the source file in ecc-curated/ is also clean."""
+        source = content_root / "ecc-curated" / "rules" / "common" / "vault-policies.md"
+        if not source.is_file():
+            pytest.skip("Source vault-policies.md not found")
+        content = source.read_text(encoding="utf-8")
+        for term in self.BLOCKLIST:
+            assert term not in content, (
+                f"Private reference '{term}' found in source vault-policies.md"
+            )

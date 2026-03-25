@@ -70,6 +70,7 @@ class EccConfig:
                 "performance",
                 "security",
                 "testing",
+                "vault-policies",
             ),
             "golang": (
                 "coding-style",

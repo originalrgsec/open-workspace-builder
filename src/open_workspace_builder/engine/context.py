@@ -90,6 +90,31 @@ def _show_diff(old: str, new: str, filename: str) -> None:
     print()
 
 
+_POLICY_COMPLIANCE_PREAMBLE = """\
+## Policy Compliance
+
+Before writing any code, running any implementation skill, or starting a sprint:
+the rules deployed to this workspace's rules directory contain enforceable policy
+requirements extracted from the project's governance documents. These rules are
+loaded automatically and must be followed. The full policy documents are available
+in the project's vault or documentation directory for detailed context when needed.
+
+Do not proceed with implementation if a policy rule conflicts with the current task.
+Escalate to the owner with options and tradeoffs.
+"""
+
+
+def _policy_compliance_preamble(content_root: Path) -> str:
+    """Return the policy compliance preamble if policies exist, empty string otherwise."""
+    policies_dir = content_root / "content" / "policies"
+    if not policies_dir.is_dir():
+        return ""
+    has_policies = any(
+        f.is_file() and f.suffix == ".md" for f in policies_dir.iterdir()
+    )
+    return _POLICY_COMPLIANCE_PREAMBLE if has_policies else ""
+
+
 class ContextDeployer:
     """Deploys context file templates and workspace config."""
 
@@ -147,6 +172,9 @@ class ContextDeployer:
 
         print(f"=== Deploying {self._agent_config.filename} ===")
         content = _load_context_template(self._content_root, "claude-md.template.md")
+        preamble = _policy_compliance_preamble(self._content_root)
+        if preamble:
+            content = content.rstrip("\n") + "\n\n" + preamble
         self._write(dest, content)
 
     def _write(self, path: Path, content: str) -> None:
