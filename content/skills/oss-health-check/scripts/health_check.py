@@ -15,6 +15,7 @@ Usage:
 
 import argparse
 import json
+import subprocess
 import sys
 import os
 from datetime import datetime, timezone, timedelta
@@ -621,16 +622,198 @@ def evaluate(owner, repo, ecosystem=None, package_name=None, token=None):
 
 
 # ---------------------------------------------------------------------------
+# OWB audit integration (CLI agent only)
+# ---------------------------------------------------------------------------
+
+def _run_owb_command(args_list):
+    """Run an owb CLI command and return parsed JSON output.
+
+    Returns None if the command is not available or fails.
+    """
+    try:
+        proc = subprocess.run(
+            args_list,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        if proc.stdout.strip():
+            return json.loads(proc.stdout)
+    except (FileNotFoundError, subprocess.TimeoutExpired, json.JSONDecodeError):
+        pass
+    return None
+
+
+def collect_license_audit(policy_path=None):
+    """Run owb audit licenses and return structured results.
+
+    Returns a dict with rating and findings, or None if unavailable.
+    """
+    cmd = ["owb", "audit", "licenses", "--format", "json"]
+    if policy_path:
+        cmd.extend(["--policy", policy_path])
+
+    data = _run_owb_command(cmd)
+    if data is None:
+        return None
+
+    summary = data.get("summary", {})
+    fail_count = summary.get("fail", 0) + summary.get("unknown", 0)
+    conditional_count = summary.get("conditional", 0)
+
+    if fail_count > 0:
+        rating = "RED"
+    elif conditional_count > 0:
+        rating = "YELLOW"
+    else:
+        rating = "GREEN"
+
+    return {
+        "rating": rating,
+        "signals": {
+            "total": summary.get("total", 0),
+            "pass": summary.get("pass", 0),
+            "conditional": conditional_count,
+            "fail": summary.get("fail", 0),
+            "unknown": summary.get("unknown", 0),
+        },
+        "findings": data.get("findings", []),
+    }
+
+
+def collect_dep_audit():
+    """Run owb audit deps and return structured results.
+
+    Returns a dict with rating and findings, or None if unavailable.
+    """
+    data = _run_owb_command(["owb", "audit", "deps", "--format", "json"])
+    if data is None:
+        return None
+
+    vulns = data.get("vulnerabilities", [])
+    skipped = data.get("skipped", [])
+
+    if vulns:
+        rating = "RED"
+    elif skipped:
+        rating = "YELLOW"
+    else:
+        rating = "GREEN"
+
+    return {
+        "rating": rating,
+        "signals": {
+            "vulnerabilities_found": len(vulns),
+            "packages_skipped": len(skipped),
+        },
+        "findings": vulns,
+    }
+
+
+def evaluate_with_owb(owner, repo, ecosystem=None, package_name=None,
+                      token=None, policy_path=None):
+    """Run full evaluation including OWB audit dimensions.
+
+    Extends the base evaluate() with license_compliance and dependency_health
+    categories sourced from owb audit commands.
+    """
+    report = evaluate(owner, repo, ecosystem=ecosystem,
+                      package_name=package_name, token=token)
+
+    if "error" in report:
+        return report
+
+    # License compliance dimension
+    license_result = collect_license_audit(policy_path)
+    if license_result is not None:
+        report["categories"]["license_compliance"] = license_result
+    else:
+        report["categories"]["license_compliance"] = {
+            "rating": "YELLOW",
+            "signals": {},
+            "note": "owb audit licenses unavailable. Run manually to complete this dimension.",
+        }
+        report["human_review_needed"].append(
+            "License compliance: owb audit licenses was not available. Check manually."
+        )
+
+    # Dependency health dimension
+    dep_result = collect_dep_audit()
+    if dep_result is not None:
+        report["categories"]["dependency_health"] = dep_result
+    else:
+        report["categories"]["dependency_health"] = {
+            "rating": "YELLOW",
+            "signals": {},
+            "note": "owb audit deps unavailable. Run manually to complete this dimension.",
+        }
+        report["human_review_needed"].append(
+            "Dependency health: owb audit deps was not available. Check manually."
+        )
+
+    # Recompute overall rating with new dimensions
+    all_ratings = [cat["rating"] for cat in report["categories"].values()]
+    red_categories = [name for name, cat in report["categories"].items()
+                      if cat["rating"] == "RED"]
+    yellow_categories = [name for name, cat in report["categories"].items()
+                         if cat["rating"] == "YELLOW"]
+
+    critical_cats = ("maintenance", "security")
+    if any(report["categories"].get(c, {}).get("rating") == "RED" for c in critical_cats):
+        report["overall_rating"] = "RED"
+        critical_reds = [c for c in red_categories if c in critical_cats]
+        report["recommendation"] = (
+            f"REJECT. Red flag in critical category: {', '.join(critical_reds)}. "
+            "Find an alternative dependency."
+        )
+    elif red_categories:
+        report["overall_rating"] = "RED"
+        report["recommendation"] = (
+            f"Strong caution. Red flag in: {', '.join(red_categories)}. "
+            "Document justification via ADR if no alternative exists."
+        )
+    elif len(yellow_categories) >= 2:
+        report["overall_rating"] = "YELLOW"
+        report["recommendation"] = (
+            f"Closer evaluation needed. Yellow flags in: {', '.join(yellow_categories)}. "
+            "Document risk assessment before adopting."
+        )
+    elif yellow_categories:
+        report["overall_rating"] = "YELLOW"
+        report["recommendation"] = (
+            f"Generally healthy with minor concerns in: {', '.join(yellow_categories)}. "
+            "Acceptable for adoption with awareness."
+        )
+    else:
+        report["overall_rating"] = "GREEN"
+        report["recommendation"] = "Adopt with confidence. All quantitative signals are healthy."
+
+    return report
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="OSS Health Check")
-    parser.add_argument("--repo", required=True, help="GitHub owner/repo (e.g., pallets/flask)")
-    parser.add_argument("--ecosystem", choices=["npm", "pypi", "crates"], default=None,
+    parser = argparse.ArgumentParser(
+        description="OSS Health Check — evaluate open source project health "
+                    "against the OSS health policy."
+    )
+    parser.add_argument("--repo", required=True,
+                        help="GitHub owner/repo (e.g., pallets/flask)")
+    parser.add_argument("--ecosystem", choices=["npm", "pypi", "crates"],
+                        default=None,
                         help="Package ecosystem for download stats")
-    parser.add_argument("--package", default=None, help="Package name if different from repo name")
-    parser.add_argument("--github-token", default=None, help="GitHub personal access token")
+    parser.add_argument("--package", default=None,
+                        help="Package name if different from repo name")
+    parser.add_argument("--github-token", default=None,
+                        help="GitHub personal access token")
+    parser.add_argument("--owb-audit", action="store_true", default=False,
+                        help="Include license and dependency audits via owb CLI "
+                             "(requires owb to be installed)")
+    parser.add_argument("--policy", default=None,
+                        help="Path to allowed-licenses.md (used with --owb-audit)")
     args = parser.parse_args()
 
     # Also check environment variable
@@ -642,7 +825,23 @@ def main():
         sys.exit(1)
 
     owner, repo = parts
-    result = evaluate(owner, repo, ecosystem=args.ecosystem, package_name=args.package, token=token)
+
+    if args.owb_audit:
+        result = evaluate_with_owb(
+            owner, repo,
+            ecosystem=args.ecosystem,
+            package_name=args.package,
+            token=token,
+            policy_path=args.policy,
+        )
+    else:
+        result = evaluate(
+            owner, repo,
+            ecosystem=args.ecosystem,
+            package_name=args.package,
+            token=token,
+        )
+
     print(json.dumps(result, indent=2))
 
 
