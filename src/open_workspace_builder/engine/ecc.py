@@ -1,4 +1,4 @@
-"""ECC (Everything Claude Code) installation from vendor/ecc/."""
+"""ECC (Everything Code Catalog) installation from vendor/ecc/."""
 
 from __future__ import annotations
 

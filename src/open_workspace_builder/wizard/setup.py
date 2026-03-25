@@ -53,7 +53,7 @@ def _step_models() -> tuple[ModelsConfig, str]:
     for key, (label, _) in _PROVIDER_CHOICES.items():
         click.echo(f"  [{key}] {label}")
 
-    choice = click.prompt("Selection", type=click.Choice(list(_PROVIDER_CHOICES)), default="1")
+    choice = click.prompt("Selection", type=click.Choice(list(_PROVIDER_CHOICES)))
     _, provider = _PROVIDER_CHOICES[choice]
 
     if provider == "anthropic":

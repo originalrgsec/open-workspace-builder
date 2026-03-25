@@ -36,8 +36,8 @@
 
 ## Decision Authority
 
-### Claude's Authority (Implementation)
-(What Claude can decide without asking.)
+### Agent's Authority (Implementation)
+(What the agent can decide without asking.)
 
 ### Owner's Authority (Architectural / Business)
 (What requires your input.)

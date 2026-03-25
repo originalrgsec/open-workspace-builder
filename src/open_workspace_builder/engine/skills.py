@@ -22,7 +22,7 @@ def _validate_skill_safe(skill_path: Path) -> SpecValidationResult | None:
 
 
 class SkillsInstaller:
-    """Installs custom Cowork skills."""
+    """Installs custom skills."""
 
     def __init__(
         self,

@@ -349,7 +349,7 @@ def ecc() -> None:
 def update(accept_all: bool, dry_run: bool) -> None:
     """Fetch latest upstream ECC content and selectively apply updates.
 
-    Diffs the upstream Everything Claude Code catalog against your vendored copy,
+    Diffs the upstream Everything Code Catalog against your vendored copy,
     runs the security scanner on changed files, and lets you accept or reject each
     update. Use --accept-all to auto-accept files that pass scanning.
     """

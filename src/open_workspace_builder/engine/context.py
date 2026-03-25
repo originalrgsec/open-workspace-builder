@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 _TODO_PATTERNS = re.compile(
     r"\(Describe your|\(Fill in|\(List your|\(Years of|\(Do you want"
     r"|\(What is your|\(Any token|\(MCP >|\(Which tools"
-    r"|\(Headers,|\(Anti-patterns|\(What Claude can|\(What requires"
+    r"|\(Headers,|\(Anti-patterns|\(What the agent can|\(What requires"
     r"|\(Domains to|\(Your business|\(Types of work|\(novice/mid/expert\)"
     r"|\(One-sentence description"
 )
@@ -171,7 +171,7 @@ class ContextDeployer:
             return
 
         print(f"=== Deploying {self._agent_config.filename} ===")
-        content = _load_context_template(self._content_root, "claude-md.template.md")
+        content = _load_context_template(self._content_root, "agent-config.template.md")
         preamble = _policy_compliance_preamble(self._content_root)
         if preamble:
             content = content.rstrip("\n") + "\n\n" + preamble

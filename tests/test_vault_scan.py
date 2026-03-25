@@ -143,7 +143,7 @@ class TestScanVault:
 class TestCwbFlavor:
     """CWB init --from-vault applies Claude defaults."""
 
-    def test_cwb_uses_claude_models(self, tmp_path: Path) -> None:
+    def test_cwb_uses_cwb_defaults(self, tmp_path: Path) -> None:
         fake_home = tmp_path / "home"
         fake_home.mkdir()
 
@@ -157,8 +157,8 @@ class TestCwbFlavor:
         ):
             config = scan_vault(tmp_path, cli_name="cwb")
 
-        assert config.models.classify == "anthropic/claude-sonnet-4-20250514"
-        assert config.models.security_scan == "anthropic/claude-haiku-4-5-20251001"
+        # CWB models come from CWB config overlay, not hardcoded in OWB core
+        assert config.models.classify == ""
         assert config.marketplace.format == "anthropic"
 
     def test_owb_uses_empty_models(self, tmp_path: Path) -> None:

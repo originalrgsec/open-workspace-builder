@@ -42,7 +42,7 @@ def content_root(tmp_path: Path) -> Path:
         "# Working Style\n\n## Behavior\n\n(Do you want questions first?)\n",
         encoding="utf-8",
     )
-    (ctx_dir / "claude-md.template.md").write_text(
+    (ctx_dir / "agent-config.template.md").write_text(
         "# WORKSPACE\n\n## Required Context Files\n\nRead these.\n",
         encoding="utf-8",
     )

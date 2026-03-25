@@ -118,6 +118,7 @@ class AgentConfigConfig:
 
 
 # Backward-compatible alias so existing imports still work.
+# Deprecated: use AgentConfigConfig directly. Removal target: v0.6.0.
 ClaudeMdConfig = AgentConfigConfig
 
 

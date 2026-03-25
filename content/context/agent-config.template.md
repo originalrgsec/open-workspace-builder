@@ -1,6 +1,6 @@
-# CLAUDE.md
+# Workspace Config
 
-<!-- This file tells Claude Code and Cowork how to behave in this workspace. -->
+<!-- This file tells the AI agent how to behave in this workspace. -->
 <!-- Fill in the sections below and customize to your needs. -->
 
 (One-sentence description of who you are and what this workspace is for.)

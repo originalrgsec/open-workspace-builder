@@ -18,9 +18,9 @@ payload:
       description: "Instruction to rewrite system prompt"
       false_positive_hint: "Legitimate in prompt engineering guides"
     - id: selfmod-003
-      pattern: "(?i)append.*to.*CLAUDE\\.md"
+      pattern: "(?i)append.*to.*(CLAUDE\\.md|WORKSPACE\\.md|agent.config)"
       severity: warning
-      description: "Instruction to modify CLAUDE.md"
+      description: "Instruction to modify agent config file"
       false_positive_hint: "Legitimate in workspace setup documentation"
     - id: selfmod-004
       pattern: "(?i)overwrite\\s+(the\\s+)?(config|settings|rules)"

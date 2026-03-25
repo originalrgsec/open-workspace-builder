@@ -1,1 +1,1 @@
-"""Security scanner for Claude workspace content files."""
+"""Security scanner for workspace content files."""

@@ -18,13 +18,9 @@ from open_workspace_builder.wizard.setup import _write_config_yaml
 
 
 # ── CWB preset models ───────────────────────────────────────────────────────
+# CWB overlay provides its own model defaults. OWB core leaves them empty.
 
-_CWB_MODELS = ModelsConfig(
-    classify="anthropic/claude-sonnet-4-20250514",
-    generate="anthropic/claude-sonnet-4-20250514",
-    judge="anthropic/claude-sonnet-4-20250514",
-    security_scan="anthropic/claude-haiku-4-5-20251001",
-)
+_CWB_MODELS = ModelsConfig()
 
 
 def _detect_vault_tiers(vault_path: Path) -> tuple[str, ...]:
@@ -65,7 +61,7 @@ def _detect_vault_meta(vault_path: Path) -> dict | None:
 def scan_vault(vault_path: Path, cli_name: str = "owb") -> Config:
     """Scan an existing Obsidian vault and generate a starter Config.
 
-    For cwb, applies Claude model defaults and Anthropic marketplace format.
+    For cwb, applies CWB marketplace format.
     For owb, leaves model strings empty.
     """
     click.echo(f"Scanning vault at {vault_path}...")
@@ -80,7 +76,7 @@ def scan_vault(vault_path: Path, cli_name: str = "owb") -> Config:
     if meta:
         click.echo(f"Found vault metadata: version={meta.get('version', 'unknown')}")
 
-    # CWB flavor: Claude models + Anthropic marketplace
+    # CWB flavor: CWB marketplace format (model defaults come from CWB config overlay)
     is_cwb = cli_name == "cwb"
     models = _CWB_MODELS if is_cwb else ModelsConfig()
     marketplace = MarketplaceConfig(format="anthropic") if is_cwb else MarketplaceConfig()
