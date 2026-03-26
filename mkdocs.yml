@@ -73,14 +73,13 @@ nav:
   - Home: index.md
   - Getting Started:
     - Why OWB: getting-started/why-owb.md
+    - How It Works: getting-started/how-it-works.md
     - Installation: getting-started/install.md
     - First Run: howto-first-run.md
   - Concepts:
     - Architecture: concepts/architecture.md
     - Security Model: concepts/security.md
     - Configuration: concepts/configuration.md
-  - Workflow:
-    - Design to Operate: workflow/design-to-operate.md
   - Guides:
     - Upgrading: howto-upgrade.md
     - Using as a Library: guides/library-usage.md
