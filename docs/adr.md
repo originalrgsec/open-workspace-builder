@@ -8,50 +8,27 @@ This document defines the architecture for the open-workspace-builder CLI tool, 
 
 ## C4 Model
 
+### Level 1: System Context
+
 ```mermaid
 graph TD
-    subgraph context ["System Context (Level 1)"]
-        User["User<br/><i>Runs CLI to scaffold,<br/>diff, migrate workspaces</i>"]:::actor
-        OWB["Open Workspace Builder<br/><i>Python CLI</i>"]:::system
-        ECC["ECC Upstream Repo<br/><i>github.com</i>"]:::external
-        LLM["LLM API<br/><i>Semantic scanner Layer 3</i>"]:::external
-        GitHub["GitHub<br/><i>Source hosting, CI</i>"]:::external
-    end
+    User["<b>User</b><br/><i>Runs CLI to scaffold,<br/>diff, migrate workspaces</i>"]:::actor
+    Collab["<b>Collaborator</b><br/><i>Submits PRs,<br/>reviewed by owner</i>"]:::actor
+    OWB["<b>Open Workspace Builder</b><br/><i>Python CLI</i>"]:::system
+    ECC["<b>ECC Upstream Repo</b><br/><i>github.com — agents,<br/>commands, rules</i>"]:::external
+    LLM["<b>LLM API</b><br/><i>Semantic scanner<br/>Layer 3 analysis</i>"]:::external
+    GH["<b>GitHub</b><br/><i>Source hosting,<br/>CI pipeline</i>"]:::external
 
     User -->|"init, diff, migrate,<br/>update, scan"| OWB
+    Collab -->|"PRs reviewed<br/>and merged"| GH
     OWB -->|"fetch pinned content"| ECC
     OWB -->|"sandboxed analysis"| LLM
-    OWB -->|"CI scans, releases"| GitHub
+    OWB -->|"CI scans, releases"| GH
 
     classDef actor fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
     classDef system fill:#1A1A2E,color:#F5B041,stroke:#E8920D,stroke-width:3px
     classDef external fill:#0F0F1A,color:#A0A0B0,stroke:#555,stroke-width:1px
 ```
-
-```mermaid
-graph TD
-    subgraph containers ["Container Diagram (Level 2)"]
-        CLI["CLI<br/><i>click subcommands</i>"]:::comp
-        Engine["Build Engine<br/><i>vault, ecc, skills,<br/>context, differ, migrator</i>"]:::comp
-        Scanner["Security Scanner<br/><i>structural → pattern → semantic</i>"]:::comp
-        Evaluator["Evaluator<br/><i>classifier, scorer,<br/>judge, manager</i>"]:::comp
-        Content["Content Stores<br/><i>vendor/ecc, content/,<br/>data/registry</i>"]:::store
-        Config["Config Engine<br/><i>3-layer overlay,<br/>name-aware resolution</i>"]:::comp
-    end
-
-    CLI --> Engine
-    CLI --> Scanner
-    CLI --> Evaluator
-    Engine --> Content
-    Engine --> Config
-    Scanner --> Content
-    Evaluator --> Config
-
-    classDef comp fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
-    classDef store fill:#0F0F1A,color:#A0A0B0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
-```
-
-### Level 1: System Context
 
 **Actors:**
 
@@ -66,6 +43,33 @@ graph TD
 
 ### Level 2: Container Diagram
 
+```mermaid
+graph TD
+    CLI["<b>CLI</b><br/><i>click subcommands</i>"]:::comp
+    Engine["<b>Build Engine</b><br/><i>vault, ecc, skills,<br/>context, differ, migrator</i>"]:::comp
+    Scanner["<b>Security Scanner</b><br/><i>structural → pattern<br/>→ semantic</i>"]:::comp
+    Evaluator["<b>Evaluator</b><br/><i>classifier, scorer,<br/>judge, manager</i>"]:::comp
+    Sources["<b>Source Manager</b><br/><i>multi-source update<br/>pipeline</i>"]:::comp
+    Config["<b>Config Engine</b><br/><i>3-layer overlay,<br/>name-aware resolution</i>"]:::comp
+    Content["<b>Content Stores</b><br/><i>vendor/ecc, content/,<br/>data/registry</i>"]:::store
+    Target["<b>Target Workspace</b><br/><i>vault, .claude/,<br/>.skills/</i>"]:::store
+
+    CLI --> Engine
+    CLI --> Scanner
+    CLI --> Evaluator
+    CLI --> Sources
+    Engine --> Config
+    Engine --> Content
+    Engine --> Target
+    Scanner --> Content
+    Sources --> Scanner
+    Sources --> Content
+    Evaluator --> Config
+
+    classDef comp fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
+    classDef store fill:#0F0F1A,color:#A0A0B0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+```
+
 This is a CLI tool, not a distributed system. The "containers" are logical modules within a single Python package.
 
 | Container | Technology | Purpose | Communication |
@@ -76,6 +80,59 @@ This is a CLI tool, not a distributed system. The "containers" are logical modul
 | Content Stores | Filesystem (YAML, Markdown) | ECC vendored content, custom skills, templates, context file templates | Read by build engine; written by ECC update flow |
 
 ### Level 3: Component Diagram
+
+```mermaid
+graph TD
+    subgraph cli_container ["CLI"]
+        cli_main["<b>cli.py</b><br/><i>Subcommand dispatch</i>"]:::comp
+        init_cmd["<b>init</b><br/><i>Fresh workspace<br/>bootstrap</i>"]:::comp
+        diff_cmd["<b>diff</b><br/><i>Drift detection</i>"]:::comp
+        migrate_cmd["<b>migrate</b><br/><i>Interactive<br/>migration</i>"]:::comp
+        update_cmd["<b>update</b><br/><i>Multi-source<br/>content update</i>"]:::comp
+        scan_cmd["<b>security scan</b><br/><i>Standalone scan</i>"]:::comp
+        audit_cmd["<b>audit</b><br/><i>deps, licenses,<br/>suppressions</i>"]:::comp
+    end
+
+    subgraph engine_container ["Build Engine"]
+        builder["<b>builder.py</b><br/><i>Orchestrator</i>"]:::comp
+        config["<b>config.py</b><br/><i>Config loading<br/>and validation</i>"]:::comp
+        vault["<b>vault.py</b><br/><i>Vault structure<br/>generation</i>"]:::comp
+        ecc["<b>ecc.py</b><br/><i>ECC content<br/>installation</i>"]:::comp
+        skills["<b>skills.py</b><br/><i>Skill installation</i>"]:::comp
+        context["<b>context.py</b><br/><i>Context template<br/>deployment</i>"]:::comp
+        differ["<b>differ.py</b><br/><i>Workspace diff</i>"]:::comp
+        migrator["<b>migrator.py</b><br/><i>Content merge<br/>accept/reject</i>"]:::comp
+    end
+
+    subgraph scanner_container ["Security Scanner"]
+        scanner["<b>scanner.py</b><br/><i>Orchestrator</i>"]:::comp
+        structural["<b>structural.py</b><br/><i>Layer 1: file type,<br/>size, encoding</i>"]:::comp
+        patterns["<b>patterns.py</b><br/><i>Layer 2: 42 regex<br/>patterns, 9 categories</i>"]:::comp
+        semantic["<b>semantic.py</b><br/><i>Layer 3: sandboxed<br/>LLM analysis</i>"]:::comp
+        reputation["<b>reputation.py</b><br/><i>Ledger management</i>"]:::comp
+        dep_audit["<b>dep_audit.py</b><br/><i>pip-audit +<br/>GuardDog</i>"]:::comp
+        license_audit["<b>license_audit.py</b><br/><i>License compliance</i>"]:::comp
+    end
+
+    cli_main --> init_cmd & diff_cmd & migrate_cmd & update_cmd & scan_cmd & audit_cmd
+    init_cmd --> builder
+    diff_cmd --> differ
+    migrate_cmd --> migrator
+    scan_cmd --> scanner
+    audit_cmd --> dep_audit & license_audit
+    builder --> vault & ecc & skills & context
+    builder --> config
+    migrator --> differ
+    migrator --> scanner
+    scanner --> structural --> patterns --> semantic
+    update_cmd --> scanner
+
+    classDef comp fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
+
+    style cli_container fill:#0F0F1A,stroke:#E8920D,stroke-width:1px,color:#F5B041
+    style engine_container fill:#0F0F1A,stroke:#B87308,stroke-width:1px,color:#F5B041
+    style scanner_container fill:#0F0F1A,stroke:#E67E22,stroke-width:1px,color:#F5B041
+```
 
 **Container: CLI**
 
@@ -116,6 +173,41 @@ This is a CLI tool, not a distributed system. The "containers" are logical modul
 
 ### DFD-1: ECC Update Flow
 
+```mermaid
+graph LR
+    subgraph TB1 ["TB-1: Upstream — Local"]
+        ECC_Repo["<b>ECC GitHub Repo</b><br/><i>Upstream source</i>"]:::external
+        FetchBuf["<b>Fetch Buffer</b><br/><i>Local git clone</i>"]:::store
+    end
+
+    subgraph local ["Local Processing"]
+        Scanner1["<b>Security Scanner</b><br/><i>L1 → L2 → L3</i>"]:::comp
+        UserReview["<b>User Review</b><br/><i>Accept / Reject</i>"]:::actor
+        VendorStore["<b>Vendored Store</b><br/><i>vendor/ecc/</i>"]:::store
+        UpdateLog["<b>Update Log</b><br/><i>.update-log.jsonl</i>"]:::store
+        RepLedger["<b>Reputation Ledger</b><br/><i>~/.owb/</i>"]:::store
+    end
+
+    LLM_API["<b>LLM API</b><br/><i>Layer 3 analysis</i>"]:::external
+
+    ECC_Repo -->|"DF-1: git fetch<br/>agents, commands, rules"| FetchBuf
+    FetchBuf -->|"DF-2: file content"| Scanner1
+    Scanner1 -->|"DF-3: content +<br/>analysis prompt"| LLM_API
+    LLM_API -->|"DF-4: verdict JSON"| Scanner1
+    Scanner1 -->|"DF-5: scan results"| UserReview
+    UserReview -->|"DF-6: accepted files"| VendorStore
+    UserReview -->|"DF-7: decisions"| UpdateLog
+    Scanner1 -->|"DF-8: flag events"| RepLedger
+
+    classDef external fill:#0F0F1A,color:#A0A0B0,stroke:#555,stroke-width:1px
+    classDef comp fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
+    classDef store fill:#0F0F1A,color:#A0A0B0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+    classDef actor fill:#16213E,color:#F5B041,stroke:#E8920D,stroke-width:2px
+
+    style TB1 fill:none,stroke:#E8920D,stroke-width:2px,stroke-dasharray:8 4,color:#E8920D
+    style local fill:none,stroke:#555,stroke-width:1px,color:#A0A0B0
+```
+
 **Trust Boundaries:**
 
 | Boundary | Inside | Outside | Enforcement |
@@ -146,6 +238,31 @@ This is a CLI tool, not a distributed system. The "containers" are logical modul
 
 ### DFD-2: Build Flow
 
+```mermaid
+graph LR
+    subgraph inputs ["Inputs"]
+        ConfigFile["<b>Config</b><br/><i>YAML + defaults</i>"]:::store
+        VendorECC["<b>Vendored ECC</b><br/><i>vendor/ecc/</i>"]:::store
+        CustomContent["<b>Custom Content</b><br/><i>skills, templates,<br/>policies</i>"]:::store
+    end
+
+    subgraph TB3 ["TB-3: Builder → Target"]
+        BuildEngine["<b>Build Engine</b><br/><i>builder.py orchestrator</i>"]:::comp
+        TargetWS["<b>Target Workspace</b><br/><i>vault, .claude/,<br/>.skills/, context files</i>"]:::store
+    end
+
+    ConfigFile -->|"DF-10: build params"| BuildEngine
+    VendorECC -->|"DF-11: agents,<br/>commands, rules"| BuildEngine
+    CustomContent -->|"DF-12: skills,<br/>templates"| BuildEngine
+    BuildEngine -->|"DF-13: generated<br/>workspace files"| TargetWS
+
+    classDef comp fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
+    classDef store fill:#0F0F1A,color:#A0A0B0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+
+    style inputs fill:none,stroke:#555,stroke-width:1px,color:#A0A0B0
+    style TB3 fill:none,stroke:#E8920D,stroke-width:2px,stroke-dasharray:8 4,color:#E8920D
+```
+
 **Trust Boundaries:**
 
 | Boundary | Inside | Outside | Enforcement |
@@ -170,6 +287,32 @@ This is a CLI tool, not a distributed system. The "containers" are logical modul
 | Target workspace | Generated workspace including vault, .claude/, .skills/ | Mixed | User filesystem permissions |
 
 ### DFD-3: Contribution Flow
+
+```mermaid
+graph LR
+    Contributor["<b>Contributor</b><br/><i>Fork or branch</i>"]:::actor
+
+    subgraph TB2 ["TB-2: PR → Main"]
+        PR["<b>GitHub PR</b><br/><i>Code + content<br/>changes</i>"]:::store
+        CI["<b>CI Scanner</b><br/><i>Security scan<br/>on diff</i>"]:::comp
+        Checks["<b>PR Checks</b><br/><i>Pass / Fail</i>"]:::comp
+    end
+
+    Owner["<b>Owner Review</b><br/><i>Approve / Reject</i>"]:::actor
+    MainBranch["<b>Main Branch</b><br/><i>Protected</i>"]:::store
+
+    Contributor -->|"DF-20: git push"| PR
+    PR -->|"DF-21: changed files"| CI
+    CI -->|"DF-22: results"| Checks
+    Owner -->|"DF-23: approval"| MainBranch
+    Checks --> Owner
+
+    classDef actor fill:#16213E,color:#F5B041,stroke:#E8920D,stroke-width:2px
+    classDef comp fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
+    classDef store fill:#0F0F1A,color:#A0A0B0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+
+    style TB2 fill:none,stroke:#E8920D,stroke-width:2px,stroke-dasharray:8 4,color:#E8920D
+```
 
 **Trust Boundaries:**
 
