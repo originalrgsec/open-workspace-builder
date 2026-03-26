@@ -686,6 +686,11 @@ class ReputationLedger:
 - Goal: Pre-install SCA gate (ECC rule), Semgrep SAST integration, SCA/SAST wired into evaluator trust tier scoring, automated CVE suppression monitoring (registry, OSV API, weekly CI job), documentation sweep. 57 new tests.
 - Tests: 828 passing
 
+### Sprint 9: Interoperability + Skills
+- Stories: OWB-S066, OWB-S068, OWB-S051, OWB-S052, TD-001, CSK-S002, OWB-S065, CSK-S003, CSK-S004, CSK-S005, CSK-S006, CSK-S007, TD-003
+- Goal: Inline policy enforcement, license audit CLI, spec validation, Bitwarden/1Password secrets, MCP server, five Claude Skills for CLI parity, genericized Claude remnants, decisions index populated. Executed via 3 concurrent git worktree rounds.
+- Tests: 992 passing
+
 ## Open Questions
 
 1. Should the CLI use `click` or `argparse`? Click provides a cleaner subcommand model but adds a dependency. Argparse is stdlib but verbose for this many subcommands. Recommendation: click.

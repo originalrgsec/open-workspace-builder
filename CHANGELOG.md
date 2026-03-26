@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-03-25
+
 ### Added
 - Inline policy enforcement rules deployed to workspace rules directory (OWB-S066):
   - Replaced pointer-style vault-policies.md with compact enforceable checklist
@@ -41,6 +43,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced tdd-guide agent for Claude Code CLI parity (CSK-S006)
 - Updated oss-health-check skill with GitHub API integration (CSK-S002)
 - Sprint planning orchestration skill for open and close workflows (CSK-S007)
+
+#### Project
+- PRD Bootstrap Stages framework (Stage 0–3) with 5 new use cases (UC-11–15) and 2 new personas (Persona 4–5)
+- MkDocs Material documentation site with GitHub Pages deployment
+- Research-spike vault template (`content/templates/research-spike.md`)
+- Allowed-licenses policy: CLI tool invocation exemption for copyleft tools (Semgrep LGPL-2.1)
 
 ### Changed
 - Genericized Claude-specific remnants in OWB core (TD-001):
@@ -185,7 +193,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ECC upstream update workflow with fetch, diff, scan, accept/reject
 - 253 tests
 
-[Unreleased]: https://github.com/VolcanixLLC/open-workspace-builder/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/VolcanixLLC/open-workspace-builder/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/VolcanixLLC/open-workspace-builder/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/VolcanixLLC/open-workspace-builder/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/VolcanixLLC/open-workspace-builder/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/VolcanixLLC/open-workspace-builder/compare/v0.1.0...v0.2.0

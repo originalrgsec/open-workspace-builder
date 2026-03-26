@@ -2,7 +2,7 @@
 type: policy
 scope: all-projects
 created: 2026-03-16
-updated: 2026-03-25
+origin: workspace-builder Sprint 4 design discussion (metrics system and release notes conventions)
 tags: [policy, process, sprint, release-notes, metrics]
 ---
 
@@ -10,7 +10,7 @@ tags: [policy, process, sprint, release-notes, metrics]
 
 ## Purpose
 
-This document defines the project lifecycle standards that apply across all managed projects where AI-assisted development handles implementation. It covers the process layer: how to run a sprint end-to-end, what happens at sprint completion, and how to maintain project documentation alongside code.
+This document defines the project lifecycle standards that apply across all Volcanix projects where Claude Code or Cowork handles implementation. It covers the process layer: how to run a sprint end-to-end, what happens at sprint completion, and how to maintain project documentation alongside code.
 
 This sits above two other layers that are already documented:
 
@@ -31,6 +31,8 @@ All stories in the sprint pass their acceptance criteria. Tests are green. The p
 
 Project documents (PRD, ADR, SDR, threat model, specs) are updated to reflect any design changes made during the sprint. This includes new use cases, architectural decisions, module designs, threat analysis for new components, and story additions or modifications. Project docs ship in the same repo as the code and must stay in sync.
 
+The SDR sprint plan section must include an entry for the completing sprint with the stories delivered, goal summary, and final test count. This is a sprint-close gate, not optional. Origin: RETRO-005 identified two sprints of SDR drift; RETRO-006 escalated to a checklist item.
+
 Changes to project docs during a sprint are expected and normal. The goal is not to prevent doc changes but to ensure they are captured before the sprint closes, not left as undocumented drift.
 
 ### 3. Release Notes Updated
@@ -45,7 +47,7 @@ Tag the release after the PR merges.
 
 ### 4. Metrics Recorded (If Pipeline Metrics Are Active)
 
-For projects with an active metrics system, record metrics entries for each pipeline run completed during the sprint. This is not a retroactive data entry exercise; metrics should be recorded as runs complete throughout the sprint.
+For projects with an active metrics system (currently workspace-builder), record metrics entries for each pipeline run completed during the sprint. This is not a retroactive data entry exercise; metrics should be recorded as runs complete throughout the sprint.
 
 ## Project Documentation Standards
 
@@ -74,9 +76,9 @@ The sprint completion checklist (item 2) is the backstop, not the primary update
 
 When a sprint produces a finding that applies beyond the originating project, it becomes a cross-project policy in `code/`. Examples:
 
-- integration-verification-policy — originated from a Phase 1 retrospective identifying module isolation failures
+- integration-verification-policy — originated from ingest-pipeline Phase 1 retro
 - oss-health-policy — originated from dependency evaluation across multiple projects
-- This document — originated from a sprint design discussion on metrics and release notes
+- This document — originated from workspace-builder Sprint 4 design discussion
 
 ## Retrospective Requirements
 
@@ -96,7 +98,7 @@ A retro that identifies problems but links to zero deliverables is incomplete. T
 
 Retros use a global sequential ID: `RETRO-NNN`. The numbering is global across all projects because retros frequently span multiple projects or cover process-level concerns that are not scoped to a single codebase. The next available ID is tracked in the `next_id` frontmatter field of `self/retro-log.md`.
 
-Retro files are named `RETRO-NNN-short-description.md`.
+Retro files are named `RETRO-NNN-short-description.md` (e.g., `RETRO-004-timeline-digest-regression.md`).
 
 ### Retro Log and File Locations
 
@@ -112,16 +114,27 @@ The "Open Items for Next Retro" section in each retro entry creates a verificati
 
 Story IDs use a three-character project prefix followed by a sequential number: `{PREFIX}-S{NNN}`. This prevents ambiguity when referencing stories across projects in session logs, decision records, and the bootstrap file.
 
-Assign a unique three-character prefix per project and maintain a lookup table in this document or in the vault. File names follow the pattern `{PREFIX}-S{NNN}-short-description.md`. The frontmatter `id` field uses the same prefixed format.
+| Project | Prefix |
+|---------|--------|
+| open-workspace-builder | OWB |
+| claude-workspace-builder | CWB |
+| ingest-pipeline | INP |
+| claude-skills | CSK |
+
+File names follow the pattern `{PREFIX}-S{NNN}-short-description.md`. The frontmatter `id` field uses the same prefixed format.
 
 Story numbers are sequential per project. Stories in a later sprint must have higher numbers than stories in the preceding sprint for the same project.
 
+Stories created before this convention (pre-OWB Sprint 7, pre-CWB Sprint 6) retain their unprefixed IDs. When reading an unprefixed story ID, interpret it in the context of the project folder where the story file lives.
+
+When a new project is created, assign a unique three-character prefix and add it to this table.
+
 ## Release Versioning
 
-Projects use Semantic Versioning (https://semver.org/). For projects not yet at 1.0, minor version bumps indicate feature additions (sprint completion) and patch bumps indicate bug fixes.
+Projects use Semantic Versioning (https://semver.org/). For projects not yet at 1.0 (all current Volcanix projects), minor version bumps indicate feature additions (sprint completion) and patch bumps indicate bug fixes.
 
 ## Applying This Policy
 
-This policy applies to all projects with a git repo and sprint-based development. Reference this document in each project's workspace config or SDR sprint plan section rather than duplicating the checklist inline.
+This policy applies to all Volcanix projects with a git repo and sprint-based development. Reference this document in each project's SDR sprint plan section rather than duplicating the checklist inline.
 
-For existing projects, adopt the sprint completion checklist starting with the next sprint. Retroactive release notes for prior sprints are optional but recommended for projects that have shipped code.
+For existing projects, adopt the sprint completion checklist starting with the next sprint. Retroactive release notes for prior sprints are optional but recommended for projects that have shipped code (currently workspace-builder and ingest-pipeline).
