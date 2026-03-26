@@ -8,6 +8,49 @@ This document defines the architecture for the open-workspace-builder CLI tool, 
 
 ## C4 Model
 
+```mermaid
+graph TD
+    subgraph context ["System Context (Level 1)"]
+        User["User<br/><i>Runs CLI to scaffold,<br/>diff, migrate workspaces</i>"]:::actor
+        OWB["Open Workspace Builder<br/><i>Python CLI</i>"]:::system
+        ECC["ECC Upstream Repo<br/><i>github.com</i>"]:::external
+        LLM["LLM API<br/><i>Semantic scanner Layer 3</i>"]:::external
+        GitHub["GitHub<br/><i>Source hosting, CI</i>"]:::external
+    end
+
+    User -->|"init, diff, migrate,<br/>update, scan"| OWB
+    OWB -->|"fetch pinned content"| ECC
+    OWB -->|"sandboxed analysis"| LLM
+    OWB -->|"CI scans, releases"| GitHub
+
+    classDef actor fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
+    classDef system fill:#1A1A2E,color:#F5B041,stroke:#E8920D,stroke-width:3px
+    classDef external fill:#0F0F1A,color:#A0A0B0,stroke:#555,stroke-width:1px
+```
+
+```mermaid
+graph TD
+    subgraph containers ["Container Diagram (Level 2)"]
+        CLI["CLI<br/><i>click subcommands</i>"]:::comp
+        Engine["Build Engine<br/><i>vault, ecc, skills,<br/>context, differ, migrator</i>"]:::comp
+        Scanner["Security Scanner<br/><i>structural → pattern → semantic</i>"]:::comp
+        Evaluator["Evaluator<br/><i>classifier, scorer,<br/>judge, manager</i>"]:::comp
+        Content["Content Stores<br/><i>vendor/ecc, content/,<br/>data/registry</i>"]:::store
+        Config["Config Engine<br/><i>3-layer overlay,<br/>name-aware resolution</i>"]:::comp
+    end
+
+    CLI --> Engine
+    CLI --> Scanner
+    CLI --> Evaluator
+    Engine --> Content
+    Engine --> Config
+    Scanner --> Content
+    Evaluator --> Config
+
+    classDef comp fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
+    classDef store fill:#0F0F1A,color:#A0A0B0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+```
+
 ### Level 1: System Context
 
 **Actors:**

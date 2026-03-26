@@ -41,6 +41,64 @@ This threat model uses STRIDE per element applied to the data flow diagrams defi
 | Internal | Vault structure, project names, template content | Business-sensitive |
 | Public | Builder source code, ECC vendored content (MIT licensed), vault templates (no user data) | Open source |
 
+## Trust Boundary Diagram
+
+```mermaid
+graph TD
+    subgraph TB1 ["TB-1: Upstream → Vendored"]
+        direction LR
+        ECC["ECC Upstream<br/><i>Third-party repo</i>"]:::external
+        Vendor["Vendored Copy<br/><i>vendor/ecc/</i>"]:::store
+        ECC -->|"DF-1: git fetch<br/><b>S</b> T-001 · <b>T</b> T-002<br/><b>R</b> T-003"| Vendor
+    end
+
+    subgraph TB4 ["TB-4: Content → Claude Execution"]
+        direction LR
+        Installed["Installed Content<br/><i>.claude/ agents,<br/>commands, rules</i>"]:::store
+        Claude["AI Agent<br/><i>Interprets as<br/>instructions</i>"]:::external
+        Installed -->|"<b>T</b> T-011 · <b>I</b> T-013<br/><b>E</b> T-015 · <b>D</b> T-014"| Claude
+    end
+
+    subgraph TB3 ["TB-3: Builder → Workspace"]
+        direction LR
+        Builder["Build Engine<br/><i>owb init</i>"]:::process
+        Workspace["User Workspace<br/><i>vault, config, skills</i>"]:::store
+        Builder -->|"DF-13: file writes"| Workspace
+    end
+
+    subgraph Scanner ["Security Scanner (3 layers)"]
+        L1["Layer 1<br/>Structural"]:::process
+        L2["Layer 2<br/>Pattern<br/><i>42 rules</i>"]:::process
+        L3["Layer 3<br/>Semantic<br/><b>T</b> T-007 · <b>I</b> T-008<br/><b>E</b> T-010"]:::process
+        L1 --> L2 --> L3
+    end
+
+    subgraph TB2 ["TB-2: PR → Main"]
+        direction LR
+        Contributor["Contributor<br/><i>Fork/branch</i>"]:::actor
+        Main["Main Branch<br/><i>Protected</i>"]:::store
+        Contributor -->|"DF-20: PR<br/><b>S</b> T-016 · <b>T</b> T-017<br/><b>E</b> T-018"| Main
+    end
+
+    subgraph Sources ["TB-6: Upstream Sources"]
+        direction LR
+        Source["Named Source<br/><i>config-driven</i>"]:::external
+        Local["Local Content"]:::store
+        Source -->|"<b>S</b> T-024 · <b>T</b> T-025<br/><b>E</b> T-027"| Local
+    end
+
+    Vendor --> Scanner
+    Scanner --> Builder
+    Main --> Scanner
+
+    classDef external fill:#0F0F1A,color:#A0A0B0,stroke:#555,stroke-width:1px
+    classDef store fill:#16213E,color:#E0E0E0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+    classDef process fill:#1A1A2E,color:#F5B041,stroke:#E8920D,stroke-width:2px
+    classDef actor fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
+```
+
+STRIDE notation in the diagram: **S** = Spoofing, **T** = Tampering, **R** = Repudiation, **I** = Information Disclosure, **D** = Denial of Service, **E** = Elevation of Privilege. Threat IDs (T-NNN) map to the threat register below.
+
 ## Trust Boundaries
 
 | ID | Boundary | Crosses | Enforcement |
