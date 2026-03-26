@@ -76,6 +76,7 @@
   overflow: hidden;
 }
 
+/* Hero background image — uncomment when a custom background is created
 .rg-hero::before {
   content: "";
   position: absolute;
@@ -86,7 +87,7 @@
   background: url("../images/hero-bg.jpg") center center / cover no-repeat;
   opacity: 0.10;
   z-index: 0;
-}
+} */
 
 .rg-hero > * {
   position: relative;
