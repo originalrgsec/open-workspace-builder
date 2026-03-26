@@ -39,8 +39,23 @@ theme:
   icon:
     repo: fontawesome/brands/github
 
+plugins:
+  - search
+  - glightbox:
+      touchNavigation: true
+      loop: false
+      effect: zoom
+      slide_effect: slide
+      width: "100%"
+      height: auto
+      zoomable: true
+      draggable: true
+
 extra_css:
   - assets/css/extra.css
+
+extra_javascript:
+  - assets/js/mermaid-zoom.js
 
 markdown_extensions:
   - admonition

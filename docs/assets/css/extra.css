@@ -223,9 +223,40 @@
   line-height: 1.6;
 }
 
-/* ---- Architecture Diagram Override ---- */
+/* ---- Mermaid Diagram Styling + Click-to-Zoom ---- */
 .mermaid {
   margin: 2rem 0;
+  cursor: zoom-in;
+  transition: transform 0.3s ease;
+}
+
+/* Fullscreen overlay for Mermaid diagrams */
+.mermaid-fullscreen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.mermaid-fullscreen-overlay .mermaid-clone {
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.mermaid-fullscreen-overlay .mermaid-clone svg {
+  width: 100%;
+  height: auto;
+  min-width: 800px;
 }
 
 /* ---- Comparison Table Styling ---- */
