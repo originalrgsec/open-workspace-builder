@@ -36,7 +36,7 @@ hide:
 <div class="vx-features" markdown>
 
 <div class="vx-feature" markdown>
-<div class="vx-feature__icon">:material-rocket-launch:</div>
+<div class="vx-feature__icon">&#x1F680;</div>
 <div class="vx-feature__title">One-Command Setup</div>
 <div class="vx-feature__desc">
 <code>owb init</code> generates an Obsidian knowledge vault, personal context files, development rules, and custom skills. An interactive wizard guides first-time users through model selection, vault structure, and security settings. Fifteen minutes from install to a working workspace.
@@ -44,7 +44,7 @@ hide:
 </div>
 
 <div class="vx-feature" markdown>
-<div class="vx-feature__icon">:material-shield-lock:</div>
+<div class="vx-feature__icon">&#x1F6E1;</div>
 <div class="vx-feature__title">Three-Layer Security Scanner</div>
 <div class="vx-feature__desc">
 Every file that enters the workspace — upstream updates, third-party skills, migrated content — runs through structural validation, pattern matching against 42 known attack signatures, and optional LLM-powered semantic analysis. Prompt injection gets caught before it reaches your sessions.
@@ -52,7 +52,7 @@ Every file that enters the workspace — upstream updates, third-party skills, m
 </div>
 
 <div class="vx-feature" markdown>
-<div class="vx-feature__icon">:material-sync:</div>
+<div class="vx-feature__icon">&#x1F504;</div>
 <div class="vx-feature__title">Drift Detection and Migration</div>
 <div class="vx-feature__desc">
 <code>owb diff</code> compares your workspace against the reference and tells you exactly what has drifted. <code>owb migrate</code> brings it up to date with interactive file-by-file review. Your customizations are preserved. Nothing overwrites without your consent.
@@ -60,7 +60,7 @@ Every file that enters the workspace — upstream updates, third-party skills, m
 </div>
 
 <div class="vx-feature" markdown>
-<div class="vx-feature__icon">:material-brain:</div>
+<div class="vx-feature__icon">&#x1F9E0;</div>
 <div class="vx-feature__title">Knowledge Vault</div>
 <div class="vx-feature__desc">
 An Obsidian vault with 18 note templates, structured project management, a decision index, research pipeline, and session logging. Claude starts every session by reading a bootstrap file that tells it where each project stands and what to do next. No re-explaining.
@@ -68,7 +68,7 @@ An Obsidian vault with 18 note templates, structured project management, a decis
 </div>
 
 <div class="vx-feature" markdown>
-<div class="vx-feature__icon">:material-puzzle:</div>
+<div class="vx-feature__icon">&#x1F9E9;</div>
 <div class="vx-feature__title">Model-Agnostic, Vendor-Extensible</div>
 <div class="vx-feature__desc">
 OWB works with any LLM provider through LiteLLM — Anthropic, OpenAI, Ollama, or anything else that speaks the protocol. Downstream packages like CWB (Claude Workspace Builder) depend on OWB as a core library and overlay their own vendor-specific defaults.
@@ -76,7 +76,7 @@ OWB works with any LLM provider through LiteLLM — Anthropic, OpenAI, Ollama, o
 </div>
 
 <div class="vx-feature" markdown>
-<div class="vx-feature__icon">:material-test-tube:</div>
+<div class="vx-feature__icon">&#x1F9EA;</div>
 <div class="vx-feature__title">Skill Evaluation Pipeline</div>
 <div class="vx-feature__desc">
 Before a skill enters the workspace, the evaluator classifies it, generates a test suite, runs the tests against both a baseline and the skill-augmented model, and scores across four dimensions. Incorporate/reject decisions are backed by quantitative evidence, not vibes.
