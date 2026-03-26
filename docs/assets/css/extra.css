@@ -248,15 +248,18 @@
 }
 
 .mermaid-fullscreen-overlay .mermaid-clone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   max-width: 95vw;
   max-height: 90vh;
-  overflow: auto;
 }
 
 .mermaid-fullscreen-overlay .mermaid-clone svg {
-  width: 100%;
+  max-width: 95vw;
+  max-height: 85vh;
+  width: auto;
   height: auto;
-  min-width: 800px;
 }
 
 /* ---- Comparison Table Styling ---- */
