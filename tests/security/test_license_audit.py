@@ -9,8 +9,6 @@ from unittest.mock import patch
 import pytest
 
 from open_workspace_builder.security.license_audit import (
-    LicenseAuditReport,
-    LicenseFinding,
     LicensePolicy,
     audit_licenses,
     format_license_report,

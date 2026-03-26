@@ -5,7 +5,6 @@ Requires the ``mcp`` optional dependency: ``uv pip install open-workspace-builde
 
 from __future__ import annotations
 
-import math
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any

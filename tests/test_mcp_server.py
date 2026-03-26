@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -136,7 +136,7 @@ class TestSecurityScanTool:
         with patch("open_workspace_builder.mcp_server.FastMCP") as mock_fmcp:
             from open_workspace_builder.mcp_server import create_server
 
-            server = create_server()
+            create_server()
             # Extract the registered owb_security_scan function
             tool_fn = _extract_tool(mock_fmcp, "owb_security_scan")
 
@@ -335,7 +335,7 @@ class TestAuditLicensesTool:
         mock_report = {"type": "license_audit", "summary": {"total": 0}}
         with patch(
             "open_workspace_builder.security.license_audit.audit_licenses"
-        ) as mock_audit, patch(
+        ), patch(
             "open_workspace_builder.security.license_audit.format_license_report",
             return_value=mock_report,
         ):
@@ -418,7 +418,7 @@ class TestServerStartup:
         with patch("open_workspace_builder.mcp_server.FastMCP") as mock_fmcp:
             from open_workspace_builder.mcp_server import create_server
 
-            server = create_server()
+            create_server()
 
         # FastMCP.tool() is used as a decorator 4 times
         assert mock_fmcp.return_value.tool.call_count == 4
@@ -504,6 +504,3 @@ def _extract_tool(mock_fmcp: MagicMock, tool_name: str) -> Any:
         f"Tool {tool_name!r} not found in mock registrations. "
         f"Registered calls: {decorator_mock.call_args_list}"
     )
-
-
-from typing import Any
