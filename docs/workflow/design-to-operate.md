@@ -4,14 +4,14 @@ The Open Workspace Builder takes you from zero to a fully operational Claude-int
 
 ```mermaid
 graph LR
-    A["Design<br/>(decisions)"] --> B["Build<br/>(owb init)"]
-    B --> C["Operate<br/>(daily use)"]
-    C -->|drift detected| D["Migrate<br/>(owb migrate)"]
+    A["Design<br/>(decisions)"]:::amber --> B["Build<br/>(owb init)"]:::amber
+    B --> C["Operate<br/>(daily use)"]:::dark
+    C -->|drift detected| D["Migrate<br/>(owb migrate)"]:::slate
     D --> C
-    style A fill:#E8920D,color:#0F0F1A,stroke:#B87308
-    style B fill:#E8920D,color:#0F0F1A,stroke:#B87308
-    style C fill:#1A1A2E,color:#E0E0E0,stroke:#E8920D
-    style D fill:#16213E,color:#E0E0E0,stroke:#F5B041
+
+    classDef amber fill:#E8920D,color:#1A1A2E,stroke:#B87308,stroke-width:2px
+    classDef dark fill:#1A1A2E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
+    classDef slate fill:#16213E,color:#E0E0E0,stroke:#F5B041,stroke-width:2px
 ```
 
 ## Phase 1: Design
