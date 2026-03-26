@@ -25,8 +25,8 @@ graph LR
     Deps --> Scanner
     Scanner --> Report
 
-    classDef comp fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
-    classDef store fill:#0F0F1A,color:#A0A0B0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+    classDef comp fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px
+    classDef store fill:#0A0A14,color:#B0B0C0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
 ```
 
 **Policy parsing.** The engine reads `content/policies/allowed-licenses.md` at runtime and extracts three category tables: Allowed, Conditional, and Disallowed. License lists are never hardcoded in source code. If the policy file is updated (a new license added or a category changed), the next audit run reflects the change without a code deployment.

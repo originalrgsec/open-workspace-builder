@@ -47,12 +47,12 @@ graph TD
     D --> E
     E --> F
 
-    classDef input fill:#1A1A2E,stroke:#E8920D,stroke-width:2px,color:#E0E0E0,font-size:14px
-    classDef layer1 fill:#2A1A0A,stroke:#E8920D,stroke-width:2px,color:#F5B041,font-size:14px
-    classDef layer2 fill:#1A2A0A,stroke:#B87308,stroke-width:2px,color:#F5B041,font-size:14px
-    classDef layer3 fill:#0A1A2E,stroke:#E67E22,stroke-width:2px,color:#F5B041,font-size:14px
-    classDef score fill:#16213E,stroke:#E8920D,stroke-width:2px,color:#E0E0E0,font-size:14px
-    classDef decision fill:#0F0F1A,stroke:#E8920D,stroke-width:3px,color:#E8920D,font-size:14px
+    classDef input fill:#12121E,stroke:#D4A017,stroke-width:2px,color:#F0F0F0,font-size:14px
+    classDef layer1 fill:#2A1A0A,stroke:#D4A017,stroke-width:2px,color:#E8B830,font-size:14px
+    classDef layer2 fill:#1A2A0A,stroke:#B87308,stroke-width:2px,color:#E8B830,font-size:14px
+    classDef layer3 fill:#0A1A2E,stroke:#E67E22,stroke-width:2px,color:#E8B830,font-size:14px
+    classDef score fill:#1B2A4A,stroke:#D4A017,stroke-width:2px,color:#F0F0F0,font-size:14px
+    classDef decision fill:#0A0A14,stroke:#D4A017,stroke-width:3px,color:#D4A017,font-size:14px
 ```
 
 Layer 1 catches structural anomalies that indicate suspicious formatting. Layer 2 identifies known attack patterns across code injection, configuration manipulation, and markup-based attacks. Layer 3 uses semantic analysis to detect novel or disguised threats that bypass pattern matching.

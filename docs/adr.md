@@ -25,9 +25,9 @@ graph TD
     OWB -->|"sandboxed analysis"| LLM
     OWB -->|"CI scans, releases"| GH
 
-    classDef actor fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
-    classDef system fill:#1A1A2E,color:#F5B041,stroke:#E8920D,stroke-width:3px
-    classDef external fill:#0F0F1A,color:#A0A0B0,stroke:#555,stroke-width:1px
+    classDef actor fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px
+    classDef system fill:#12121E,color:#E8B830,stroke:#D4A017,stroke-width:3px
+    classDef external fill:#0A0A14,color:#B0B0C0,stroke:#555,stroke-width:1px
 ```
 
 **Actors:**
@@ -39,7 +39,7 @@ graph TD
 
 - ECC Upstream Repo (github.com/affaan-m/everything-claude-code) — Source for agents, commands, rules. Content is fetched during `owb ecc update` and vendored locally.
 - Claude API — Used by the semantic security scanner (Layer 3) for sandboxed content analysis. Optional dependency; Layers 1-2 work offline.
-- GitHub — Hosts the source repo and distribution. Users install via `pip install git+https://github.com/VolcanixLLC/open-workspace-builder.git`. CI pipeline runs tests and security scans on PRs.
+- GitHub — Hosts the source repo and distribution. Users install via `pip install git+https://github.com/originalrgsec/open-workspace-builder.git`. CI pipeline runs tests and security scans on PRs.
 
 ### Level 2: Container Diagram
 
@@ -66,8 +66,8 @@ graph TD
     Sources --> Content
     Evaluator --> Config
 
-    classDef comp fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
-    classDef store fill:#0F0F1A,color:#A0A0B0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+    classDef comp fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px
+    classDef store fill:#0A0A14,color:#B0B0C0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
 ```
 
 This is a CLI tool, not a distributed system. The "containers" are logical modules within a single Python package.
@@ -127,11 +127,11 @@ graph TD
     scanner --> structural --> patterns --> semantic
     update_cmd --> scanner
 
-    classDef comp fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
+    classDef comp fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px
 
-    style cli_container fill:#0F0F1A,stroke:#E8920D,stroke-width:1px,color:#F5B041
-    style engine_container fill:#0F0F1A,stroke:#B87308,stroke-width:1px,color:#F5B041
-    style scanner_container fill:#0F0F1A,stroke:#E67E22,stroke-width:1px,color:#F5B041
+    style cli_container fill:#0A0A14,stroke:#D4A017,stroke-width:1px,color:#E8B830
+    style engine_container fill:#0A0A14,stroke:#B87308,stroke-width:1px,color:#E8B830
+    style scanner_container fill:#0A0A14,stroke:#E67E22,stroke-width:1px,color:#E8B830
 ```
 
 **Container: CLI**
@@ -199,13 +199,13 @@ graph LR
     UserReview -->|"DF-7: decisions"| UpdateLog
     Scanner1 -->|"DF-8: flag events"| RepLedger
 
-    classDef external fill:#0F0F1A,color:#A0A0B0,stroke:#555,stroke-width:1px
-    classDef comp fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
-    classDef store fill:#0F0F1A,color:#A0A0B0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
-    classDef actor fill:#16213E,color:#F5B041,stroke:#E8920D,stroke-width:2px
+    classDef external fill:#0A0A14,color:#B0B0C0,stroke:#555,stroke-width:1px
+    classDef comp fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px
+    classDef store fill:#0A0A14,color:#B0B0C0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+    classDef actor fill:#1B2A4A,color:#E8B830,stroke:#D4A017,stroke-width:2px
 
-    style TB1 fill:none,stroke:#E8920D,stroke-width:2px,stroke-dasharray:8 4,color:#E8920D
-    style local fill:none,stroke:#555,stroke-width:1px,color:#A0A0B0
+    style TB1 fill:none,stroke:#D4A017,stroke-width:2px,stroke-dasharray:8 4,color:#D4A017
+    style local fill:none,stroke:#555,stroke-width:1px,color:#B0B0C0
 ```
 
 **Trust Boundaries:**
@@ -256,11 +256,11 @@ graph LR
     CustomContent -->|"DF-12: skills,<br/>templates"| BuildEngine
     BuildEngine -->|"DF-13: generated<br/>workspace files"| TargetWS
 
-    classDef comp fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
-    classDef store fill:#0F0F1A,color:#A0A0B0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+    classDef comp fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px
+    classDef store fill:#0A0A14,color:#B0B0C0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
 
-    style inputs fill:none,stroke:#555,stroke-width:1px,color:#A0A0B0
-    style TB3 fill:none,stroke:#E8920D,stroke-width:2px,stroke-dasharray:8 4,color:#E8920D
+    style inputs fill:none,stroke:#555,stroke-width:1px,color:#B0B0C0
+    style TB3 fill:none,stroke:#D4A017,stroke-width:2px,stroke-dasharray:8 4,color:#D4A017
 ```
 
 **Trust Boundaries:**
@@ -307,11 +307,11 @@ graph LR
     Owner -->|"DF-23: approval"| MainBranch
     Checks --> Owner
 
-    classDef actor fill:#16213E,color:#F5B041,stroke:#E8920D,stroke-width:2px
-    classDef comp fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
-    classDef store fill:#0F0F1A,color:#A0A0B0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+    classDef actor fill:#1B2A4A,color:#E8B830,stroke:#D4A017,stroke-width:2px
+    classDef comp fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px
+    classDef store fill:#0A0A14,color:#B0B0C0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
 
-    style TB2 fill:none,stroke:#E8920D,stroke-width:2px,stroke-dasharray:8 4,color:#E8920D
+    style TB2 fill:none,stroke:#D4A017,stroke-width:2px,stroke-dasharray:8 4,color:#D4A017
 ```
 
 **Trust Boundaries:**
@@ -372,7 +372,7 @@ graph LR
 ### AD-5: Python Package with CLI Entry Point via GitHub
 
 - **Context:** The current prototype is a single script run via `python build.py`. The target is distribution as an installable package.
-- **Decision:** Package as a standard Python package with a `pyproject.toml` and a CLI entry point (`owb`). Distribute via GitHub: `pip install git+https://github.com/VolcanixLLC/open-workspace-builder.git`. The CLI uses subcommands: `owb init`, `owb diff`, `owb migrate`, `owb ecc update`, `owb security scan`. A PyPI release workflow exists for tagged releases.
+- **Decision:** Package as a standard Python package with a `pyproject.toml` and a CLI entry point (`owb`). Distribute via GitHub: `pip install git+https://github.com/originalrgsec/open-workspace-builder.git`. The CLI uses subcommands: `owb init`, `owb diff`, `owb migrate`, `owb ecc update`, `owb security scan`. A PyPI release workflow exists for tagged releases.
 - **Alternatives considered:** Staying as a single script was rejected because it prevents pip install, makes versioning unclear, and does not scale with the new feature surface.
 - **Consequences:** Requires maintaining `pyproject.toml` and version bumping. Minimal dependencies (click for CLI, pyyaml for config) are acceptable.
 - **License check:** click — BSD-3-Clause, Allowed. pyyaml — MIT, Allowed.

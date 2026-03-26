@@ -6,7 +6,7 @@ Thank you for your interest in contributing! This document covers the developmen
 
 ```bash
 # Clone the repo
-git clone https://github.com/VolcanixLLC/open-workspace-builder.git
+git clone https://github.com/originalrgsec/open-workspace-builder.git
 cd open-workspace-builder
 
 # Create a virtual environment

@@ -284,7 +284,7 @@ Claude Code and Cowork power users who want a structured, repeatable workspace w
 
 ## Success Criteria
 
-- A user with repo access can `pip install git+https://github.com/VolcanixLLC/open-workspace-builder.git && owb init` and have a working workspace.
+- A user with repo access can `pip install git+https://github.com/originalrgsec/open-workspace-builder.git && owb init` and have a working workspace.
 - A user with an existing workspace can run `owb diff` and get an accurate gap report on the first try.
 - The security scanner catches the adversarial test cases in the test suite (prompt injection, data exfiltration instructions, stealth keywords, Unicode tricks).
 - A contributor can submit a PR that passes CI (tests + security scan) without manual intervention from the maintainer for clean content.

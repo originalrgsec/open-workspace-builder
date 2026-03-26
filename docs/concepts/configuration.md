@@ -46,4 +46,4 @@ Supported providers include Anthropic, OpenAI, Ollama, Azure, AWS Bedrock, and a
 
 ## Example Config
 
-See [`config.example.yaml`](https://github.com/VolcanixLLC/open-workspace-builder/blob/main/config.example.yaml) in the repository root for the full schema with inline comments documenting every key.
+See [`config.example.yaml`](https://github.com/originalrgsec/open-workspace-builder/blob/main/config.example.yaml) in the repository root for the full schema with inline comments documenting every key.

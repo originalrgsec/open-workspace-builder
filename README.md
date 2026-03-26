@@ -26,7 +26,7 @@ Key capabilities:
 ## Quick Start
 
 ```bash
-pip install git+https://github.com/VolcanixLLC/open-workspace-builder.git
+pip install git+https://github.com/originalrgsec/open-workspace-builder.git
 
 # First run launches an interactive setup wizard
 owb init
@@ -191,7 +191,7 @@ OWB's config system resolves paths based on the CLI name, so `cwb` loads from `~
 ## Development
 
 ```bash
-git clone https://github.com/VolcanixLLC/open-workspace-builder.git
+git clone https://github.com/originalrgsec/open-workspace-builder.git
 cd open-workspace-builder
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev,security]"

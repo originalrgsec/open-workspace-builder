@@ -22,7 +22,7 @@ graph LR
     P6 -->|"next sprint"| P3
     P7 -->|"new opportunity"| P1
 
-    classDef phase fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
+    classDef phase fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px
 ```
 
 Each phase maps to specific governance documents, agent capabilities, and quality gates:
@@ -57,8 +57,8 @@ graph TD
     CR -.- CR_agent["code-reviewer<br/>security-reviewer<br/>python-reviewer"]:::agent
     G -.- G_agent["doc-updater"]:::agent
 
-    classDef step fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
-    classDef agent fill:#0F0F1A,color:#F5B041,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+    classDef step fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px
+    classDef agent fill:#0A0A14,color:#E8B830,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
 ```
 
 The agents are not called by a central orchestrator. They are triggered naturally by the ECC rules loaded into the AI agent's context. When the rules file says "use **tdd-guide** agent" for new features, the AI agent invokes it because that instruction is part of its active system prompt. The developer does not need to remember which agent to call — the rules make it automatic.
@@ -97,12 +97,12 @@ graph TD
     C2 -.- retro_skill["retro skill"]:::skill
     C3 -.- vault_audit["vault-audit skill"]:::skill
 
-    classDef step fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
-    classDef skill fill:#0F0F1A,color:#F5B041,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+    classDef step fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px
+    classDef skill fill:#0A0A14,color:#E8B830,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
 
-    style open fill:#0F0F1A,stroke:#E8920D,stroke-width:1px,color:#E8920D
-    style build fill:#0F0F1A,stroke:#B87308,stroke-width:1px,color:#B87308
-    style close fill:#0F0F1A,stroke:#E67E22,stroke-width:1px,color:#E67E22
+    style open fill:#0A0A14,stroke:#D4A017,stroke-width:1px,color:#D4A017
+    style build fill:#0A0A14,stroke:#B87308,stroke-width:1px,color:#B87308
+    style close fill:#0A0A14,stroke:#E67E22,stroke-width:1px,color:#E67E22
 ```
 
 ## How Policy Enforcement Works
@@ -129,9 +129,9 @@ graph TD
 
     Agent -->|"consults full docs<br/>when needed"| Policies
 
-    classDef store fill:#0F0F1A,color:#A0A0B0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
-    classDef rules fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
-    classDef agent fill:#1A1A2E,color:#F5B041,stroke:#E8920D,stroke-width:3px
+    classDef store fill:#0A0A14,color:#B0B0C0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+    classDef rules fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px
+    classDef agent fill:#12121E,color:#E8B830,stroke:#D4A017,stroke-width:3px
 ```
 
 The enforcement rules contain checklist items like:

@@ -9,7 +9,7 @@ graph LR
     C -->|drift detected| D["Update<br/>(owb migrate)"]:::node
     D --> C
 
-    classDef node fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
+    classDef node fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px
 ```
 
 ## Step 1: Configure

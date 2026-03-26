@@ -632,7 +632,7 @@ class ReputationLedger:
 14. S014 — Implement workspace diff engine.
 15. S015 — Implement interactive migration with accept/reject and security scanning.
 16. S016 — Implement ECC upstream update workflow (fetch, diff, scan, accept/reject, audit log).
-17. S017 — Finalize pyproject.toml for installable package, GitHub Actions release workflow (dormant until public), version consistency tests. Install via `pip install git+https://github.com/VolcanixLLC/open-workspace-builder.git`.
+17. S017 — Finalize pyproject.toml for installable package, GitHub Actions release workflow (dormant until public), version consistency tests. Install via `pip install git+https://github.com/originalrgsec/open-workspace-builder.git`.
 18. S018 — Rewrite README for external users, split getting-started by environment, document security model.
 19. S022 — Evaluator scorer: SkillScorer with per-dimension scoring and weighted composite via ModelBackend judge operation.
 20. S023 — Evaluator judge: QualityJudge with pairwise candidate/baseline comparison and prompt injection hardening.
@@ -699,4 +699,4 @@ class ReputationLedger:
 
 - [PRD](./prd.md)
 - [ADR](./adr.md)
-- Repo: https://github.com/VolcanixLLC/open-workspace-builder
+- Repo: https://github.com/originalrgsec/open-workspace-builder

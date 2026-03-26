@@ -39,7 +39,7 @@ Before upgrading, check what changed between your current version and the target
 owb --version  # current version
 ```
 
-Read the [CHANGELOG.md](https://github.com/VolcanixLLC/open-workspace-builder/blob/main/CHANGELOG.md) for all entries between your current version and the target. Pay attention to:
+Read the [CHANGELOG.md](https://github.com/originalrgsec/open-workspace-builder/blob/main/CHANGELOG.md) for all entries between your current version and the target. Pay attention to:
 
 - **Added** — new commands or config fields you may want to configure.
 - **Changed** — renamed files, moved content, deprecated config keys. These are the items `owb migrate` will flag.

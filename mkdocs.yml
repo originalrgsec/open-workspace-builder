@@ -1,18 +1,16 @@
 site_name: Open Workspace Builder
-site_url: https://volcanixllc.github.io/open-workspace-builder/
+site_url: https://originalrgsec.github.io/open-workspace-builder/
 site_description: Scaffold, maintain, and secure AI coding workspaces from a single command.
-site_author: Volcanix LLC
-repo_url: https://github.com/VolcanixLLC/open-workspace-builder
-repo_name: VolcanixLLC/open-workspace-builder
+site_author: originalrgsec
+repo_url: https://github.com/originalrgsec/open-workspace-builder
+repo_name: originalrgsec/open-workspace-builder
 
 theme:
   name: material
   custom_dir: docs/overrides
-  logo: assets/images/logo-white.png
-  favicon: assets/images/favicon.png
-  font:
-    text: Inter
-    code: JetBrains Mono
+  logo: assets/images/profile-avatar.jpg
+  favicon: assets/images/profile-avatar.jpg
+  font: false
   palette:
     - scheme: slate
       primary: custom
@@ -116,7 +114,7 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/VolcanixLLC/open-workspace-builder
+      link: https://github.com/originalrgsec/open-workspace-builder
   generator: false
 
-copyright: Copyright &copy; 2026 Volcanix LLC
+copyright: Copyright &copy; 2026 originalrgsec

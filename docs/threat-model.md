@@ -91,10 +91,10 @@ graph TD
     Scanner --> Builder
     Main --> Scanner
 
-    classDef external fill:#0F0F1A,color:#A0A0B0,stroke:#555,stroke-width:1px
-    classDef store fill:#16213E,color:#E0E0E0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
-    classDef process fill:#1A1A2E,color:#F5B041,stroke:#E8920D,stroke-width:2px
-    classDef actor fill:#16213E,color:#E0E0E0,stroke:#E8920D,stroke-width:2px
+    classDef external fill:#0A0A14,color:#B0B0C0,stroke:#555,stroke-width:1px
+    classDef store fill:#1B2A4A,color:#F0F0F0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+    classDef process fill:#12121E,color:#E8B830,stroke:#D4A017,stroke-width:2px
+    classDef actor fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px
 ```
 
 STRIDE notation in the diagram: **S** = Spoofing, **T** = Tampering, **R** = Repudiation, **I** = Information Disclosure, **D** = Denial of Service, **E** = Elevation of Privilege. Threat IDs (T-NNN) map to the threat register below.

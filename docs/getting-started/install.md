@@ -9,7 +9,7 @@ Open Workspace Builder requires Python 3.10 or later. You will also need pip (or
 Install directly from GitHub:
 
 ```bash
-pip install git+https://github.com/VolcanixLLC/open-workspace-builder.git
+pip install git+https://github.com/originalrgsec/open-workspace-builder.git
 ```
 
 To use the LLM-powered security scanner (Layer 3):
@@ -23,7 +23,7 @@ pip install "open-workspace-builder[llm]"
 Clone the repository and install in development mode with all optional dependencies:
 
 ```bash
-git clone https://github.com/VolcanixLLC/open-workspace-builder.git
+git clone https://github.com/originalrgsec/open-workspace-builder.git
 cd open-workspace-builder
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
