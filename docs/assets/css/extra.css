@@ -170,8 +170,14 @@
 }
 
 .vx-feature__icon {
-  font-size: 2rem;
+  display: flex;
+  justify-content: center;
   margin-bottom: 1rem;
+}
+
+.vx-feature__icon svg {
+  width: 32px;
+  height: 32px;
 }
 
 .vx-feature__title {
