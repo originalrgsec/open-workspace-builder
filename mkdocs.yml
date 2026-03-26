@@ -101,6 +101,7 @@ nav:
     - Using as a Library: guides/library-usage.md
   - Reference:
     - CLI Commands: reference/cli.md
+    - Lifecycle and Agents: reference/lifecycle.md
     - PRD: prd.md
     - ADR: adr.md
     - SDR: sdr.md
