@@ -106,6 +106,7 @@ nav:
     - ADR: adr.md
     - SDR: sdr.md
     - Threat Model: threat-model.md
+  - Credits: credits.md
   - Releases:
     - v0.5.0: releases/v0.5.0.md
     - v0.4.0: releases/v0.4.0.md
