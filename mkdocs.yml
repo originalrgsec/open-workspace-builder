@@ -75,7 +75,8 @@ nav:
     - Why OWB: getting-started/why-owb.md
     - How It Works: getting-started/how-it-works.md
     - Installation: getting-started/install.md
-    - First Run: howto-first-run.md
+    - "First Run: Fresh": getting-started/first-run-fresh.md
+    - "First Run: Existing": howto-first-run.md
   - Concepts:
     - Architecture: concepts/architecture.md
     - Security Model: concepts/security.md

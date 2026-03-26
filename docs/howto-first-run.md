@@ -1,6 +1,8 @@
-# How-To: First Run Against an Existing Vault
+# First Run: Existing Vault
 
-This guide walks through running OWB (or a CLI wrapper like CWB) against an existing Obsidian vault for the first time. The approach is conservative: build against a disposable copy, verify everything, then repeat on the live vault.
+This guide walks through running OWB against an existing Obsidian vault for the first time. If you do not have an existing vault, see [First Run: Fresh](getting-started/first-run-fresh.md) instead.
+
+The approach is conservative: build against a disposable copy, verify everything, then repeat on the live vault.
 
 ## Understanding the Workspace Layout
 
