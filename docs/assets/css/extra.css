@@ -247,19 +247,8 @@
   box-sizing: border-box;
 }
 
-.mermaid-fullscreen-overlay .mermaid-clone {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  max-width: 95vw;
-  max-height: 90vh;
-}
-
-.mermaid-fullscreen-overlay .mermaid-clone svg {
-  max-width: 95vw;
-  max-height: 85vh;
-  width: auto;
-  height: auto;
+.mermaid-fullscreen-overlay > svg {
+  display: block;
 }
 
 /* ---- Comparison Table Styling ---- */
