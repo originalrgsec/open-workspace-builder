@@ -1,0 +1,104 @@
+site_name: Open Workspace Builder
+site_url: https://volcanixllc.github.io/open-workspace-builder/
+site_description: Scaffold, maintain, and secure AI coding workspaces from a single command.
+site_author: Volcanix LLC
+repo_url: https://github.com/VolcanixLLC/open-workspace-builder
+repo_name: VolcanixLLC/open-workspace-builder
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  logo: assets/images/logo-white.png
+  favicon: assets/images/favicon.png
+  font:
+    text: Inter
+    code: JetBrains Mono
+  palette:
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - content.code.copy
+    - content.code.annotate
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+extra_css:
+  - assets/css/extra.css
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - attr_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - tables
+  - footnotes
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Why OWB: getting-started/why-owb.md
+    - Installation: getting-started/install.md
+    - First Run: howto-first-run.md
+  - Concepts:
+    - Architecture: concepts/architecture.md
+    - Security Model: concepts/security.md
+    - Configuration: concepts/configuration.md
+  - Workflow:
+    - Design to Operate: workflow/design-to-operate.md
+  - Guides:
+    - Upgrading: howto-upgrade.md
+    - Using as a Library: guides/library-usage.md
+  - Reference:
+    - CLI Commands: reference/cli.md
+    - PRD: prd.md
+    - ADR: adr.md
+    - SDR: sdr.md
+    - Threat Model: threat-model.md
+  - Releases:
+    - v0.5.0: releases/v0.5.0.md
+    - v0.4.0: releases/v0.4.0.md
+    - v0.3.0: releases/v0.3.0.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/VolcanixLLC/open-workspace-builder
+  generator: false
+
+copyright: Copyright &copy; 2026 Volcanix LLC
