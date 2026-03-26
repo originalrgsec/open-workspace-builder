@@ -61,10 +61,10 @@ If there are uncommitted local changes, push them before proceeding. Do not run 
 owb --version
 ```
 
-If using a CLI wrapper (e.g., CWB), verify that too:
+If using a CLI wrapper, verify that too:
 
 ```bash
-cwb --version
+<wrapper> --version
 ```
 
 If not installed, activate your project venv first (e.g., `source ~/projects/Code/.venv/bin/activate` for the shared workspace venv), then:
@@ -102,7 +102,7 @@ cp -R "$LIVE_VAULT" "$TEST_VAULT"
 
 ## Step 2: Review Config
 
-OWB reads its config from `~/.<cli_name>/config.yaml`. If you are using a CLI wrapper (like CWB),
+OWB reads its config from `~/.<cli_name>/config.yaml`. If you are using a CLI wrapper,
 the wrapper installs pre-baked defaults on first invocation.
 
 If no config exists yet, run any `owb` command (e.g., `owb --version`) to generate the default,
@@ -150,7 +150,7 @@ ls "$WORK_DIR/test-workspace/.skills/skills/"
 head -20 "$WORK_DIR/test-workspace/<config_dir>/<config_filename>"
 ```
 
-Replace `<vault_name>`, `<config_dir>`, and `<config_filename>` with values from your config (defaults: `Obsidian`, `.ai`, `WORKSPACE.md`; CWB overrides: `Obsidian`, `.claude`, `CLAUDE.md`). The vault deploys directly under the workspace root (no intermediate parent directory).
+Replace `<vault_name>`, `<config_dir>`, and `<config_filename>` with values from your config (defaults: `Obsidian`, `.ai`, `WORKSPACE.md`). CLI wrappers may override these defaults (e.g., `.claude`, `CLAUDE.md`). The vault deploys directly under the workspace root (no intermediate parent directory).
 
 **Note:** Context files (about-me.md, brand-voice.md, working-style.md) are deployed as stubs if they do not already exist. If they exist, `owb init` skips them. Run `owb context status <target>` to check their fill state, or `owb context migrate <target>` to add missing template sections.
 
@@ -263,7 +263,7 @@ ls /path/to/workspace/<config_dir>/commands/
 ls /path/to/workspace/<config_dir>/rules/
 ```
 
-Replace `<config_dir>` with `.claude` (CWB) or `.ai` (OWB default).
+Replace `<config_dir>` with `.ai` (OWB default) or the value your CLI wrapper uses.
 
 ## Step 10: Confirm ECC in Claude Code CLI
 
@@ -294,7 +294,7 @@ Keep the backup until you have completed at least one full sprint on the managed
 
 **Tiers not detected.** The scanner looks for directories containing subdirectories with `_index.md` or `status.md`. If your vault uses a different convention, edit the config manually.
 
-**ECC not deployed.** Check the config for `ecc: enabled: true`. OWB disables ECC by default. Enable it in the config or use a wrapper (like CWB) that enables it.
+**ECC not deployed.** Check the config for `ecc: enabled: true`. OWB disables ECC by default. Enable it in the config or use a CLI wrapper that enables it.
 
 **Security scan blocks a file.** Check flag details in the scan output. For false positives, re-run with `--layers 1,2` to skip semantic analysis.
 
@@ -311,7 +311,7 @@ as a workaround — see next entry.
 **Nested Obsidian/Obsidian/ directory appeared.** This happens when `owb init` targets the
 vault directory instead of the workspace root. The `init` command always creates an
 `Obsidian/` subdirectory under the target. If the target IS the vault, you get nesting.
-Fix: `rm -rf /path/to/vault/Obsidian /path/to/vault/.claude /path/to/vault/.skills /path/to/vault/.cwb`.
+Fix: `rm -rf /path/to/vault/Obsidian /path/to/vault/.claude /path/to/vault/.skills /path/to/vault/.ai`.
 The correct `init` target is always the workspace root, never the vault. Step 9 uses `init`
 for the workspace root; Steps 5-8 use `migrate` for the vault. These are not interchangeable.
 

@@ -71,7 +71,7 @@ An Obsidian vault with 18 note templates, structured project management, a decis
 <div class="vx-feature__icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#E8920D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
 <div class="vx-feature__title">Model-Agnostic, Vendor-Extensible</div>
 <div class="vx-feature__desc">
-OWB works with any LLM provider through LiteLLM — Anthropic, OpenAI, Ollama, or anything else that speaks the protocol. Downstream packages like CWB (Claude Workspace Builder) depend on OWB as a core library and overlay their own vendor-specific defaults.
+OWB works with any LLM provider through LiteLLM — Anthropic, OpenAI, Ollama, or anything else that speaks the protocol. Downstream packages depend on OWB as a core library and overlay their own vendor-specific defaults, configuration namespaces, and extensions.
 </div>
 </div>
 

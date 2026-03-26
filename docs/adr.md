@@ -387,12 +387,12 @@ graph LR
 - **License check:** N/A.
 - **OSS health check:** N/A.
 
-### AD-7: Evaluator Extraction from CWB to OWB
+### AD-7: Evaluator Extraction to OWB Core
 
-- **Context:** The skill evaluator (classifier, generator, persistence) was originally built in CWB using CWB's direct Anthropic SDK backend. Sprint 6 extracts it to OWB to make evaluation available to any downstream package. The generator's single-string prompt interface needed adaptation to OWB's system/user prompt separation.
+- **Context:** The skill evaluator (classifier, generator, persistence) was originally built in a downstream wrapper using a direct Anthropic SDK backend. Sprint 6 extracts it to OWB to make evaluation available to any downstream package. The generator's single-string prompt interface needed adaptation to OWB's system/user prompt separation.
 - **Decision:** Extract classifier, generator, persistence to OWB's evaluator package. Adapt generator to use ModelBackend.completion(operation="generate", system_prompt=..., user_message=...) with system/user separation. Add scorer, judge, and manager as new OWB modules. Weight vectors and skill type definitions ship as YAML data files.
-- **Alternatives considered:** Keeping the evaluator in CWB only was rejected because evaluation is a core capability that should be available to any OWB downstream package, not just Claude-specific wrappers.
-- **Consequences:** CWB's evaluator modules become thin wrappers or are deprecated in favor of OWB's. The prompt interface change means CWB's ModelBackend (single-string generate) cannot be used directly — CWB must adapt or delegate to OWB's evaluator.
+- **Alternatives considered:** Keeping the evaluator in the downstream wrapper only was rejected because evaluation is a core capability that should be available to any OWB downstream package, not just vendor-specific wrappers.
+- **Consequences:** Downstream evaluator modules become thin wrappers or are deprecated in favor of OWB's. The prompt interface change means single-string generate backends cannot be used directly — downstream packages must adapt or delegate to OWB's evaluator.
 
 ### AD-8: Prompt Injection Hardening in Evaluator
 
@@ -447,18 +447,17 @@ be deployed to the vault during init and tracked by diff/migrate.
 
 **Decision:** The VaultBuilder deploys content/policies/*.md to Obsidian/code/ during
 build(). The migrator detects drift automatically because it builds a reference workspace
-and diffs it. Wrapper repos (like CWB) override the generic policies with their own
+and diffs it. Downstream wrapper repos override the generic policies with their own
 content/policies/ because the content_root resolves to the wrapper's directory.
 
 **Alternatives considered:** (1) PolicyInstaller as a separate engine module — rejected
 because the vault engine already handles all vault content creation and adding a separate
-module fragments responsibility. (2) Config-driven policy selection — deferred; CWB
-already implements this via PoliciesConfig.install, and OWB deploys all files from the
-directory unconditionally which is simpler and correct for the generic case.
+module fragments responsibility. (2) Config-driven policy selection — deferred; OWB
+deploys all files from the directory unconditionally which is simpler and correct for
+the generic case. Downstream wrappers can implement selective policy installation.
 
 **Consequences:** Wrapper repos must run their own policy installation step after
-OWB's engine to override generic policies. This is documented in the CWB Override
-Architecture section of the S064 story.
+OWB's engine to override generic policies.
 
 ## Technology Stack
 

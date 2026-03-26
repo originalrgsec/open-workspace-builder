@@ -27,7 +27,7 @@ The setup wizard (`owb init` on first run) generates `~/.owb/config.yaml` intera
 
 ## Name-Aware Resolution
 
-OWB resolves configuration paths from the binary name at runtime. When invoked as `owb`, it reads from `~/.owb/config.yaml`. When invoked as `cwb` (or any other downstream wrapper), it reads from `~/.cwb/config.yaml`. This enables vendor-specific packages to share OWB's engine while maintaining separate configuration namespaces.
+OWB resolves configuration paths from the binary name at runtime. When invoked as `owb`, it reads from `~/.owb/config.yaml`. When invoked as `mwb` (or any other downstream wrapper), it reads from `~/.mwb/config.yaml`. This enables vendor-specific packages to share OWB's engine while maintaining separate configuration namespaces.
 
 The `claude_md` YAML key is accepted as a backward-compatible alias for `agent_config`.
 

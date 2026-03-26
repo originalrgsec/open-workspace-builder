@@ -13,7 +13,7 @@ A downstream wrapper depends on OWB and adds vendor-specific behavior on top:
 
 ## Config Namespace Isolation
 
-OWB resolves paths from the binary name at runtime. When a user invokes `cwb`, OWB reads config from `~/.cwb/config.yaml`. When the same user invokes `owb`, it reads from `~/.owb/config.yaml`. The two namespaces are completely independent. A user can run both tools on the same machine without config collision.
+OWB resolves paths from the binary name at runtime. When a user invokes `mwb`, OWB reads config from `~/.mwb/config.yaml`. When the same user invokes `owb`, it reads from `~/.owb/config.yaml`. The two namespaces are completely independent. A user can run both tools on the same machine without config collision.
 
 ## What You Get from OWB
 

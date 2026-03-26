@@ -26,7 +26,7 @@ Configuration covers vault structure, ECC setup, custom skills, agent behavior, 
 
 ## Name-Aware CLI
 
-OWB resolves config file paths from the binary name: `owb` reads `~/.owb/config.yaml`, `cwb` reads `~/.cwb/config.yaml`. This pattern enables downstream vendors to wrap OWB, use their own configuration namespace, and share OWB's underlying engine and infrastructure.
+OWB resolves config file paths from the binary name: `owb` reads `~/.owb/config.yaml`, `mwb` reads `~/.mwb/config.yaml`. This pattern enables downstream vendors to wrap OWB, use their own configuration namespace, and share OWB's underlying engine and infrastructure.
 
 ## Security Scanner Architecture
 

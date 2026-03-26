@@ -68,14 +68,14 @@ git pull
 pip install -e .
 ```
 
-For CLI wrappers (e.g., CWB), upgrade the wrapper too. It pins an OWB version in its dependencies, so upgrading the wrapper pulls the correct OWB.
+For CLI wrappers, upgrade the wrapper too. It pins an OWB version in its dependencies, so upgrading the wrapper pulls the correct OWB.
 
 ## Step 3: Check Config Compatibility
 
 If the changelog mentions new config fields or changed defaults, review your config:
 
 ```bash
-cat ~/.owb/config.yaml   # or ~/.cwb/config.yaml for CWB
+cat ~/.owb/config.yaml   # or ~/.<wrapper>/config.yaml for CLI wrappers
 ```
 
 OWB uses a three-layer config precedence: built-in defaults, config file, CLI flags. New fields always have sensible defaults, so your existing config will still work. However, you may want to opt in to new capabilities (e.g., a new secrets backend, a new marketplace format).
