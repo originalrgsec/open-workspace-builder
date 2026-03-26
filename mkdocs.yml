@@ -102,6 +102,7 @@ nav:
   - Reference:
     - CLI Commands: reference/cli.md
     - Lifecycle and Agents: reference/lifecycle.md
+    - License Compliance: reference/license-compliance.md
     - PRD: prd.md
     - ADR: adr.md
     - SDR: sdr.md
