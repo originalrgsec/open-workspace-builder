@@ -45,7 +45,11 @@ The CHANGELOG entry links to the manifest for the full picture.
 
 Tag the release after the PR merges.
 
-### 4. Metrics Recorded (If Pipeline Metrics Are Active)
+### 4. Vault Audit
+
+Run the vault-audit skill (or equivalent mechanical + semantic checks) before declaring the sprint closed. Sprint-level documentation changes (status.md, bootstrap, retro-log, decisions index, policy files) are high-risk for link rot and structural drift. The audit catches issues introduced during close-out itself, not just during active development. Origin: RETRO-006 — vault audit was omitted from Sprint 9 close-out until the owner caught it.
+
+### 5. Metrics Recorded (If Pipeline Metrics Are Active)
 
 For projects with an active metrics system (currently workspace-builder), record metrics entries for each pipeline run completed during the sprint. This is not a retroactive data entry exercise; metrics should be recorded as runs complete throughout the sprint.
 
