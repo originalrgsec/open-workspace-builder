@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-03-27
+
+### Added
+- 16 new security scanner patterns across 3 new categories (OWB-S071):
+  - Jailbreak preambles (6 patterns): DAN mode, developer mode, unrestricted mode, safety bypass
+  - Markdown/HTML exfiltration (5 patterns): tracking pixels, iframes, data URIs, HTML comment exploits
+  - MCP/tool manipulation (5 patterns): protocol keywords, tool invocation, connected service access, output redirection
+  - Tiered severity: service data access and output redirection are critical; documentation-overlapping patterns are warning
+- Unicode tag character detection (U+E0001–E007F) at critical severity in structural scanner
+- Variation selector detection (U+FE00–FE0F, U+E0100–E01EF) at warning severity
+- Layer 3 semantic prompt updated with MCP/tool manipulation threat category
+- Multi-file correlation mode via `owb security scan <dir> --correlate` for cross-file attack detection
+- Skill-creator fork in content store with AgentSkills spec compliance (CSK-S001):
+  - Core skill creation workflow retained from upstream, plugin-specific content stripped
+  - Spec compliance section: name constraints, description limits, metadata/license fields
+  - `owb validate` integrated into iteration loop
+- 85 new tests (1046 → 1131)
+
+### Fixed
+- Registry pattern category names now normalize hyphens to underscores, matching YAML source
+
+See [release manifest](docs/releases/v0.6.0.md) for full details.
+
 ## [0.5.1] - 2026-03-26
 
 ### Fixed
