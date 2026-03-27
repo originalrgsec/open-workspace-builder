@@ -24,7 +24,7 @@ jobs:
         run: pip install build
 
       - name: Build package
-        run: python -m build
+        run: pyproject-build
 
       - name: Upload dist artifacts
         uses: actions/upload-artifact@v4
