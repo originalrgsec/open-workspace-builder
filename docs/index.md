@@ -25,10 +25,10 @@ hide:
 
 <div class="rg-section" markdown>
 
-<p class="rg-section__title">The problem is not Claude. The problem is context.</p>
+<p class="rg-section__title">The problem is not your model. The problem is context.</p>
 
 <p class="rg-section__desc">
-  Claude is capable. The question is whether it has the information it needs to be useful on <em>your</em> projects, across sessions, without you re-explaining everything. OWB solves the context problem by giving you a repeatable structure that persists project state, captures decisions, and surfaces the right information at the right time.
+  Modern coding agents are capable. The question is whether they have the information they need to be useful on <em>your</em> projects, across sessions, without you re-explaining everything. OWB solves the context problem by giving you a repeatable structure that persists project state, captures decisions, and surfaces the right information at the right time.
 </p>
 
 </div>
@@ -63,7 +63,7 @@ Every file that enters the workspace — upstream updates, third-party skills, m
 <div class="rg-feature__icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
 <div class="rg-feature__title">Knowledge Vault</div>
 <div class="rg-feature__desc">
-An Obsidian vault with 18 note templates, structured project management, a decision index, research pipeline, and session logging. Claude starts every session by reading a bootstrap file that tells it where each project stands and what to do next. No re-explaining.
+An Obsidian vault with 18 note templates, structured project management, a decision index, research pipeline, and session logging. Your agent starts every session by reading a bootstrap file that tells it where each project stands and what to do next. No re-explaining.
 </div>
 </div>
 
