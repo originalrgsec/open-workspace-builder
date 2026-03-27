@@ -348,7 +348,7 @@ class TestRealCustomSkills:
 
     @pytest.mark.parametrize(
         "skill_name",
-        ["mobile-inbox-triage", "oss-health-check", "vault-audit"],
+        ["mobile-inbox-triage", "oss-health-check", "skill-creator", "vault-audit"],
     )
     def test_custom_skill_passes(self, content_skills_dir: Path, skill_name: str) -> None:
         skill_path = content_skills_dir / skill_name
