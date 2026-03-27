@@ -108,6 +108,7 @@ class TestTemplates:
         "project-index.md",
         "readme.md",
         "research-note.md",
+        "research-spike.md",
         "retrospective.md",
         "roadmap.md",
         "sdr.md",
@@ -324,3 +325,27 @@ class TestYamlConfigBuild:
             sorted(f.name for f in templates_dir.iterdir()) if templates_dir.exists() else []
         )
         assert template_files == ["readme.md"]
+
+
+class TestBuilderValidation:
+    """WorkspaceBuilder rejects invalid content_root."""
+
+    def test_raises_on_missing_content_dir(self, tmp_path: Path) -> None:
+        bad_root = tmp_path / "empty"
+        bad_root.mkdir()
+        (bad_root / "vendor").mkdir()
+        with pytest.raises(FileNotFoundError, match="content"):
+            WorkspaceBuilder(Config(), bad_root)
+
+    def test_raises_on_missing_vendor_dir(self, tmp_path: Path) -> None:
+        bad_root = tmp_path / "empty"
+        bad_root.mkdir()
+        (bad_root / "content").mkdir()
+        with pytest.raises(FileNotFoundError, match="vendor"):
+            WorkspaceBuilder(Config(), bad_root)
+
+    def test_raises_on_completely_empty_root(self, tmp_path: Path) -> None:
+        bad_root = tmp_path / "empty"
+        bad_root.mkdir()
+        with pytest.raises(FileNotFoundError, match="content.*vendor"):
+            WorkspaceBuilder(Config(), bad_root)

@@ -268,15 +268,13 @@ class TestMergeNewSections:
 
 
 class TestMalformedYaml:
-    """Malformed YAML produces warning and falls back to defaults."""
+    """Malformed YAML raises ValueError with parse details."""
 
-    def test_malformed_yaml_returns_defaults(self, tmp_path: Path) -> None:
+    def test_malformed_yaml_raises(self, tmp_path: Path) -> None:
         cfg = tmp_path / "bad.yaml"
         cfg.write_text("{{invalid yaml: [", encoding="utf-8")
-        with pytest.warns(UserWarning, match="Could not load config file"):
-            config = load_config(cfg, cli_name="owb")
-        assert config.target == "output"
-        assert isinstance(config.models, ModelsConfig)
+        with pytest.raises(ValueError, match="Could not parse config file"):
+            load_config(cfg, cli_name="owb")
 
 
 # ---------------------------------------------------------------------------

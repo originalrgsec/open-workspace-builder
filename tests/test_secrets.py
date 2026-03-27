@@ -377,6 +377,41 @@ class TestResolveKey:
             resolve_key("some_key", backend, env_var="SOME_KEY")
 
 
+class TestResolveKeyWithRealBackend:
+    """Integration tests per integration-verification-policy §5.
+
+    These tests use real backend instances instead of MagicMock to verify
+    that resolve_key() works with actual constructed backends.
+    """
+
+    def test_env_backend_returns_stored_value(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        backend = EnvVarBackend()
+        backend.set("test_api_key", "real-secret-value")
+        result = resolve_key("test_api_key", backend)
+        assert result == "real-secret-value"
+        monkeypatch.delenv("test_api_key", raising=False)
+
+    def test_env_backend_falls_through_to_env_var(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("FALLBACK_KEY", "from-env")
+        backend = EnvVarBackend()
+        # Backend has no value for this key, should fall through to env var
+        result = resolve_key("missing_from_backend", backend, env_var="FALLBACK_KEY")
+        assert result == "from-env"
+
+    def test_cli_override_wins_over_real_backend(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        backend = EnvVarBackend()
+        backend.set("my_key", "backend-value")
+        result = resolve_key("my_key", backend, cli_override="cli-wins")
+        assert result == "cli-wins"
+        monkeypatch.delenv("my_key", raising=False)
+
+    def test_error_with_real_backend_lists_env_name(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("NONEXISTENT", raising=False)
+        backend = EnvVarBackend()
+        with pytest.raises(ValueError, match="env backend"):
+            resolve_key("nonexistent", backend, env_var="NONEXISTENT")
+
+
 # ── get_backend factory ───────────────────────────────────────────────────
 
 
@@ -526,6 +561,11 @@ class TestSecretsConfig:
 
 
 class TestBitwardenBackend:
+    @pytest.fixture(autouse=True)
+    def _mock_bw_on_path(self) -> None:  # noqa: ANN204
+        with patch("open_workspace_builder.secrets.bitwarden_backend.shutil.which", return_value="/usr/bin/bw"):
+            yield
+
     def _make_bw_item_json(self, fields: list[tuple[str, str]], item_id: str = "abc123") -> str:
         data = {
             "id": item_id,
@@ -646,11 +686,36 @@ class TestBitwardenBackend:
             cmd = mock_run.call_args[0][0]
             assert "Custom Item" in cmd
 
+    def test_get_raises_when_cli_not_installed(self) -> None:
+        with patch("open_workspace_builder.secrets.bitwarden_backend.shutil.which", return_value=None):
+            from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+            with pytest.raises(RuntimeError, match="not installed"):
+                BitwardenBackend().get("ANY_KEY")
+
+    def test_get_raises_when_vault_locked(self) -> None:
+        run_result = MagicMock(returncode=1, stdout="", stderr="Vault is locked")
+        with patch("open_workspace_builder.secrets.bitwarden_backend.subprocess.run", return_value=run_result):
+            from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+            with pytest.raises(RuntimeError, match="locked or not authenticated"):
+                BitwardenBackend().get("ANY_KEY")
+
+    def test_get_raises_on_unexpected_error(self) -> None:
+        run_result = MagicMock(returncode=1, stdout="", stderr="Connection refused")
+        with patch("open_workspace_builder.secrets.bitwarden_backend.subprocess.run", return_value=run_result):
+            from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+            with pytest.raises(RuntimeError, match="bw get item failed"):
+                BitwardenBackend().get("ANY_KEY")
+
 
 # ── OnePasswordBackend ───────────────────────────────────────────────────
 
 
 class TestOnePasswordBackend:
+    @pytest.fixture(autouse=True)
+    def _mock_op_on_path(self) -> None:  # noqa: ANN204
+        with patch("open_workspace_builder.secrets.onepassword_backend.shutil.which", return_value="/usr/bin/op"):
+            yield
+
     def test_get_returns_value(self) -> None:
         run_result = MagicMock(returncode=0, stdout="secret_value\n", stderr="")
         with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", return_value=run_result):
@@ -757,4 +822,24 @@ class TestOnePasswordBackend:
             OnePasswordBackend().get("K")
             env = mock_run.call_args[1].get("env", {})
             assert env.get("OP_SERVICE_ACCOUNT_TOKEN") == "test-token"
+
+    def test_get_raises_when_cli_not_installed(self) -> None:
+        with patch("open_workspace_builder.secrets.onepassword_backend.shutil.which", return_value=None):
+            from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+            with pytest.raises(RuntimeError, match="not installed"):
+                OnePasswordBackend().get("ANY_KEY")
+
+    def test_get_raises_when_not_signed_in(self) -> None:
+        run_result = MagicMock(returncode=1, stdout="", stderr="not signed in")
+        with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", return_value=run_result):
+            from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+            with pytest.raises(RuntimeError, match="not authenticated"):
+                OnePasswordBackend().get("ANY_KEY")
+
+    def test_get_raises_on_unexpected_error(self) -> None:
+        run_result = MagicMock(returncode=1, stdout="", stderr="Connection refused")
+        with patch("open_workspace_builder.secrets.onepassword_backend.subprocess.run", return_value=run_result):
+            from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
+            with pytest.raises(RuntimeError, match="op item get failed"):
+                OnePasswordBackend().get("ANY_KEY")
 

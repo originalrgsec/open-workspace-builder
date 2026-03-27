@@ -38,14 +38,33 @@ class OnePasswordBackend:
         self._item_name = _DEFAULT_ITEM_NAME
 
     def get(self, key: str) -> str | None:
-        """Retrieve a field value from the 1Password item."""
+        """Retrieve a field value from the 1Password item.
+
+        Returns None if the item or field does not exist. Raises RuntimeError
+        if the CLI is not installed or not authenticated.
+        """
+        if shutil.which("op") is None:
+            raise RuntimeError(
+                "1Password CLI (op) is not installed. "
+                "Install it from https://1password.com/downloads/command-line/"
+            )
         result = self._run_op([
             "item", "get", self._item_name,
             "--fields", f"label={key}",
             "--vault", self._vault,
         ])
         if result.returncode != 0:
-            return None
+            stderr = result.stderr.lower()
+            if "not found" in stderr or "doesn't exist" in stderr or "no item" in stderr:
+                return None
+            if "sign in" in stderr or "not signed in" in stderr or "unauthorized" in stderr:
+                raise RuntimeError(
+                    f"1Password is not authenticated. "
+                    f"Run 'op signin' first. Detail: {result.stderr.strip()}"
+                )
+            raise RuntimeError(
+                f"op item get failed: {result.stderr.strip()}"
+            )
         value = result.stdout.strip()
         return value if value else None
 

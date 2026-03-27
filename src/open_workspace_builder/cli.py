@@ -16,10 +16,9 @@ def _find_content_root() -> Path:
     """Find the package content root (where vendor/ and content/ live).
 
     Walks up from this file's location to find the project root that contains
-    the content/ and vendor/ directories. Falls back to cwd.
+    the content/ and vendor/ directories. Raises FileNotFoundError if neither
+    candidate contains the required directories.
     """
-    # When installed as a package, content is relative to the project root
-    # Try common locations
     candidates = [
         Path(__file__).resolve().parent.parent.parent,  # src/open_workspace_builder/ -> repo root
         Path.cwd(),
@@ -27,7 +26,12 @@ def _find_content_root() -> Path:
     for candidate in candidates:
         if (candidate / "content").is_dir() and (candidate / "vendor").is_dir():
             return candidate
-    return Path.cwd()
+    checked = ", ".join(str(c) for c in candidates)
+    raise FileNotFoundError(
+        f"Could not find content/ and vendor/ directories. "
+        f"Checked: {checked}. "
+        f"Run this command from the project root or install the package correctly."
+    )
 
 
 @click.group()

@@ -62,17 +62,21 @@ If the CHANGELOG is missing or the latest section is empty, report FAIL with ins
 
 **Conditional check.** Determine if the project has an active metrics system (look for metrics configuration, metrics directory, or pipeline metrics files). If metrics are active, prompt the operator to confirm metrics have been recorded for this sprint. If no metrics system is detected, report SKIP.
 
-### Item 6: Tag the Release
+### Item 6: Vault Audit
+
+**Automated check.** If the project uses an Obsidian vault, run the vault-audit skill (or equivalent mechanical and semantic checks). Sprint completion often involves bulk edits to project docs, status files, bootstrap, retro-log, and decisions index. These edits are high-risk for broken wiki links, stale references, and structural drift. The audit catches issues introduced during close-out itself, not just during active development.
+
+Per the development-process policy, this is a sprint completion gate, not an optional post-step. If vault audit finds issues, they must be fixed before the sprint can close.
+
+If the project does not use an Obsidian vault, report SKIP.
+
+### Item 7: Tag the Release
 
 **Prompt the operator.** This step happens after the PR merges, not before. Remind the operator:
 
 "After the PR merges, tag the release with `git tag v<version>` and push the tag. Do not tag before the merge."
 
 Report this item as PENDING until the operator confirms the PR has merged and the tag has been pushed.
-
-## Post-Checklist: Vault Audit
-
-After completing the checklist, run the vault-audit skill if the project uses an Obsidian vault. Sprint completion often involves bulk edits to project docs, which can introduce broken wiki links or stale references.
 
 ## Summary Output
 
@@ -88,7 +92,8 @@ Present a final table:
 | 3 | CHANGELOG updated       | PASS / FAIL  | Entry found / missing     |
 | 4 | Release manifest        | PASS / FAIL  | docs/releases/vX.Y.Z.md  |
 | 5 | Metrics recorded        | PASS / SKIP  | Active / not configured   |
-| 6 | Release tagged          | PENDING      | Tag after PR merge        |
+| 6 | Vault audit             | PASS / FAIL / SKIP | Issues found / clean / no vault |
+| 7 | Release tagged          | PENDING      | Tag after PR merge        |
 ```
 
 If any item is FAIL, the sprint is not ready to close. List the blocking items and what the operator needs to do to resolve them.

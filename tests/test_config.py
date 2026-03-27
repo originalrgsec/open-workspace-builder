@@ -40,9 +40,9 @@ class TestLoadConfigDefaults:
         config = load_config(None)
         assert config.target == "output"
 
-    def test_nonexistent_path_returns_defaults(self, tmp_path: Path) -> None:
-        config = load_config(tmp_path / "nope.yaml")
-        assert config.target == "output"
+    def test_nonexistent_path_raises(self, tmp_path: Path) -> None:
+        with pytest.raises(FileNotFoundError, match="Config file not found"):
+            load_config(tmp_path / "nope.yaml")
 
 
 class TestLoadConfigWithYaml:

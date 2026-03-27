@@ -288,7 +288,10 @@ def load_config(
     if config_path is not None:
         resolved_path = Path(config_path)
         if not resolved_path.exists():
-            resolved_path = None
+            raise FileNotFoundError(
+                f"Config file not found: {resolved_path}. "
+                f"Check the path and try again."
+            )
     else:
         user_config = Path.home() / f".{cli_name}" / "config.yaml"
         if user_config.exists():
@@ -309,8 +312,9 @@ def load_config(
     try:
         raw = yaml.safe_load(resolved_path.read_text(encoding="utf-8")) or {}
     except Exception as exc:
-        warnings.warn(f"Could not load config file: {exc}", stacklevel=2)
-        return _with_resolved_paths(defaults, cli_name)
+        raise ValueError(
+            f"Could not parse config file {resolved_path}: {exc}"
+        ) from exc
 
     config = _build_config_from_dict(defaults, raw)
     return _with_resolved_paths(config, cli_name)

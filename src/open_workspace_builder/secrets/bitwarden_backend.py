@@ -123,10 +123,29 @@ class BitwardenBackend:
         )
 
     def _fetch_item(self) -> _BwItem | None:
-        """Fetch the named item from Bitwarden. Returns None if not found."""
+        """Fetch the named item from Bitwarden. Returns None if not found.
+
+        Raises RuntimeError if the CLI is not installed, not authenticated,
+        or returns an unexpected error (as opposed to "item not found").
+        """
+        if shutil.which("bw") is None:
+            raise RuntimeError(
+                "Bitwarden CLI (bw) is not installed. "
+                "Install it from https://bitwarden.com/help/cli/"
+            )
         result = self._run_bw(["get", "item", self._item_name])
         if result.returncode != 0:
-            return None
+            stderr = result.stderr.lower()
+            if "not found" in stderr:
+                return None
+            if "locked" in stderr or "not logged in" in stderr or "unauthenticated" in stderr:
+                raise RuntimeError(
+                    f"Bitwarden vault is locked or not authenticated. "
+                    f"Run 'bw unlock' or 'bw login' first. Detail: {result.stderr.strip()}"
+                )
+            raise RuntimeError(
+                f"bw get item failed: {result.stderr.strip()}"
+            )
         try:
             data = json.loads(result.stdout)
         except json.JSONDecodeError:

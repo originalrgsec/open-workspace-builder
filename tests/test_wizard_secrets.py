@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from open_workspace_builder.config import SecretsConfig
 
@@ -174,6 +177,56 @@ class TestStepApiKeyWithBackend:
         from open_workspace_builder.wizard.setup import _step_api_key
 
         _step_api_key("other", SecretsConfig())
+
+
+class TestWizardWithRealBackend:
+    """Integration tests per integration-verification-policy §5.
+
+    These tests use a real EnvVarBackend instead of MagicMock to verify
+    that the wizard's key storage path works with an actual backend instance.
+    """
+
+    def test_anthropic_key_stored_in_real_env_backend(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from open_workspace_builder.secrets.env_backend import EnvVarBackend
+
+        backend = EnvVarBackend()
+        confirms = iter([True])
+        prompts = iter(["sk-ant-real-test"])
+        with patch("click.confirm", side_effect=lambda *a, **kw: next(confirms)):
+            with patch("click.prompt", side_effect=lambda *a, **kw: next(prompts)):
+                with patch(
+                    "open_workspace_builder.secrets.factory.get_backend",
+                    return_value=backend,
+                ):
+                    from open_workspace_builder.wizard.setup import _step_api_key
+
+                    _step_api_key("anthropic", SecretsConfig())
+        # Verify the key was actually stored in the environment
+        assert os.environ.get("anthropic_api_key") == "sk-ant-real-test"
+        # Clean up
+        monkeypatch.delenv("anthropic_api_key", raising=False)
+
+    def test_openai_key_stored_in_real_env_backend(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from open_workspace_builder.secrets.env_backend import EnvVarBackend
+
+        backend = EnvVarBackend()
+        confirms = iter([True])
+        prompts = iter(["sk-openai-real-test"])
+        with patch("click.confirm", side_effect=lambda *a, **kw: next(confirms)):
+            with patch("click.prompt", side_effect=lambda *a, **kw: next(prompts)):
+                with patch(
+                    "open_workspace_builder.secrets.factory.get_backend",
+                    return_value=backend,
+                ):
+                    from open_workspace_builder.wizard.setup import _step_api_key
+
+                    _step_api_key("openai", SecretsConfig())
+        assert os.environ.get("openai_api_key") == "sk-openai-real-test"
+        monkeypatch.delenv("openai_api_key", raising=False)
 
 
 class TestWriteConfigYamlSecrets:

@@ -14,7 +14,16 @@ from open_workspace_builder.engine.vault import VaultBuilder
 class WorkspaceBuilder:
     """Builds an AI workspace from configuration."""
 
+    REQUIRED_SUBDIRS = ("content", "vendor")
+
     def __init__(self, config: Config, content_root: Path, dry_run: bool = False) -> None:
+        missing = [d for d in self.REQUIRED_SUBDIRS if not (content_root / d).is_dir()]
+        if missing:
+            raise FileNotFoundError(
+                f"Content root {content_root} is missing required directories: "
+                f"{', '.join(missing)}. "
+                f"Ensure the package is installed correctly or run from the project root."
+            )
         self._config = config
         self._content_root = content_root
         self._dry_run = dry_run
