@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-03-26
+
+### Fixed
+- Configuration errors now fail loudly instead of silently returning defaults (OWB-S073):
+  - `load_config()` raises on missing explicit config path and invalid YAML
+  - `_find_content_root()` raises when no content directory found
+  - `WorkspaceBuilder.build()` validates content_root before filesystem writes
+  - Secrets backends distinguish misconfiguration from missing keys
+
+### Changed
+- Factory and builder tests use real constructor signatures alongside mocks (OWB-S074)
+
+### Added
+- CLI contract tests (29 tests) verifying all subcommand exit codes and error messages
+- Pipeline smoke tests (9 tests) for end-to-end build, evaluate, and audit workflows
+- Updated sprint-complete skill with vault audit as numbered gate item
+
 ## [0.5.0] - 2026-03-25
 
 ### Added

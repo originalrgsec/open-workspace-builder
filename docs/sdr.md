@@ -691,6 +691,12 @@ class ReputationLedger:
 - Goal: Inline policy enforcement, license audit CLI, spec validation, Bitwarden/1Password secrets, MCP server, five Claude Skills for CLI parity, genericized Claude remnants, decisions index populated. Executed via 3 concurrent git worktree rounds.
 - Tests: 992 passing
 
+### Sprint 10: Policy Compliance
+- Stories: OWB-S073 (M), OWB-S074 (S)
+- Goal: Close integration-verification-policy compliance gaps identified during the 2026-03-26 audit. S070 (Stage 2 research spike) originally planned but deferred to backlog — current local execution model sufficient.
+- Tests: 992 → 1046 (+54)
+- Tag: v0.5.1
+
 ## Open Questions
 
 1. Should the CLI use `click` or `argparse`? Click provides a cleaner subcommand model but adds a dependency. Argparse is stdlib but verbose for this many subcommands. Recommendation: click.
