@@ -1,0 +1,34 @@
+id: "owb-mcp-manipulation"
+version: "1.0.0"
+type: "pattern"
+author: "Open Workspace Builder"
+description: "MCP/tool manipulation and abuse detection patterns"
+compatibility: ">=0.1.0"
+
+payload:
+  patterns:
+    - id: mcp-001
+      pattern: "(?i)tool_use|tool_result|tool_call"
+      severity: warning
+      description: "MCP protocol keyword (suspicious in content files)"
+      false_positive_hint: "Legitimate in MCP documentation or tool development guides"
+    - id: mcp-002
+      pattern: "(?i)call\\s+the\\s+(tool|function|server)\\s+.*\\s+with"
+      severity: warning
+      description: "Instruction to invoke a specific tool"
+      false_positive_hint: "Legitimate in API or tool documentation"
+    - id: mcp-003
+      pattern: "(?i)(read|access|fetch)\\s+.*\\s+(from|via)\\s+(slack|gmail|drive|obsidian|asana)"
+      severity: critical
+      description: "Instruction to access connected service data"
+      false_positive_hint: "Legitimate in integration documentation"
+    - id: mcp-004
+      pattern: "(?i)when\\s+(the|a)\\s+(tool|server)\\s+(returns|responds).*then"
+      severity: warning
+      description: "Conditional instruction on tool response"
+      false_positive_hint: "Legitimate in workflow automation documentation"
+    - id: mcp-005
+      pattern: "(?i)pipe\\s+.*output.*to|redirect\\s+.*response.*to"
+      severity: critical
+      description: "Instruction to redirect tool output"
+      false_positive_hint: "Legitimate in shell scripting or pipeline documentation"

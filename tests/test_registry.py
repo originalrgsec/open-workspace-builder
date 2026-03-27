@@ -232,7 +232,7 @@ class TestGetActiveItems:
 
 
 class TestPatternSetResolution:
-    """owb-default includes -> resolves to all 9 pattern files from bundled data."""
+    """owb-default includes -> resolves to all 12 pattern files from bundled data."""
 
     def test_bundled_owb_default_resolves(self) -> None:
         patterns_dir = (
@@ -245,7 +245,7 @@ class TestPatternSetResolution:
         )
         reg = Registry(base_dirs=[patterns_dir])
         active = reg.get_active_items("pattern", ("owb-default",))
-        assert len(active) == 9
+        assert len(active) == 12
         ids = {item.id for item in active}
         expected = {
             "owb-exfiltration",
@@ -257,6 +257,9 @@ class TestPatternSetResolution:
             "owb-privilege",
             "owb-sensitive-paths",
             "owb-prompt-injection",
+            "owb-jailbreak",
+            "owb-markdown-exfil",
+            "owb-mcp-manipulation",
         }
         assert ids == expected
 

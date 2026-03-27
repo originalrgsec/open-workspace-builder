@@ -1,0 +1,39 @@
+id: "owb-jailbreak"
+version: "1.0.0"
+type: "pattern"
+author: "Open Workspace Builder"
+description: "Jailbreak preamble and mode activation detection patterns"
+compatibility: ">=0.1.0"
+
+payload:
+  patterns:
+    - id: jailbreak-001
+      pattern: "(?i)\\bDAN\\s+(mode|prompt)"
+      severity: critical
+      description: "DAN (Do Anything Now) jailbreak"
+      false_positive_hint: "Legitimate in security research discussing jailbreak techniques"
+    - id: jailbreak-002
+      pattern: "(?i)developer\\s+mode\\s+(enabled|activated|on)"
+      severity: critical
+      description: "Developer mode jailbreak"
+      false_positive_hint: "Legitimate in developer documentation about debug modes"
+    - id: jailbreak-003
+      pattern: "(?i)act\\s+as\\s+an?\\s+(unrestricted|unfiltered|uncensored)"
+      severity: critical
+      description: "Unrestricted mode jailbreak"
+      false_positive_hint: "Legitimate in content policy documentation"
+    - id: jailbreak-004
+      pattern: "(?i)you\\s+have\\s+been\\s+(jailbroken|unlocked|freed)"
+      severity: critical
+      description: "Jailbreak confirmation framing"
+      false_positive_hint: "Legitimate in security research discussing jailbreak techniques"
+    - id: jailbreak-005
+      pattern: "(?i)ignore\\s+(all\\s+)?safety\\s+(guidelines|protocols|rules|filters)"
+      severity: critical
+      description: "Safety bypass instruction"
+      false_positive_hint: "Legitimate in safety documentation discussing bypass risks"
+    - id: jailbreak-006
+      pattern: "(?i)opposite\\s+mode|anti-?assistant|chaos\\s+mode"
+      severity: critical
+      description: "Adversarial mode activation"
+      false_positive_hint: "Legitimate in security research discussing adversarial techniques"

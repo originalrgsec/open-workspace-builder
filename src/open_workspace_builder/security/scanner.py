@@ -129,6 +129,64 @@ class Scanner:
             flags=flags_tuple,
         )
 
+    def scan_package(self, dir_path: Path, glob_pattern: str = "*.md") -> ScanReport:
+        """Scan a directory with cross-file correlation analysis.
+
+        Scans all matching files individually first, then runs a cross-file
+        correlation pass using the LLM (Layer 3). The correlation pass looks
+        for coordinated attacks that span multiple files.
+        """
+        # Individual file scans first.
+        verdicts: list[ScanVerdict] = []
+        file_contents: dict[str, str] = {}
+        for file_path in sorted(dir_path.glob(glob_pattern)):
+            if file_path.is_file():
+                verdicts.append(self.scan_file(file_path))
+                try:
+                    file_contents[file_path.name] = file_path.read_text(
+                        encoding="utf-8", errors="replace"
+                    )
+                except OSError:
+                    pass
+
+        # Cross-file correlation pass (L3 only, requires backend).
+        correlation_flags: tuple[ScanFlag, ...] = ()
+        if 3 in self._layers and self._backend is not None and len(file_contents) >= 2:
+            from open_workspace_builder.security.semantic import analyze_cross_file
+
+            try:
+                cross_flags = analyze_cross_file(file_contents, self._backend)
+                correlation_flags = tuple(cross_flags)
+            except Exception:
+                correlation_flags = (
+                    ScanFlag(
+                        category="correlation_error",
+                        severity="warning",
+                        evidence="Cross-file correlation analysis failed",
+                        description="Semantic cross-file analysis encountered an error",
+                        layer=3,
+                    ),
+                )
+
+        # If correlation found issues, add a synthetic verdict entry.
+        if correlation_flags:
+            correlation_verdict = _compute_verdict(correlation_flags)
+            verdicts.append(ScanVerdict(
+                file_path=f"{dir_path} (cross-file correlation)",
+                verdict=correlation_verdict,
+                flags=correlation_flags,
+            ))
+
+        summary: dict[str, int] = {"clean": 0, "flagged": 0, "malicious": 0, "error": 0}
+        for v in verdicts:
+            summary[v.verdict] = summary.get(v.verdict, 0) + 1
+
+        return ScanReport(
+            directory=str(dir_path),
+            verdicts=tuple(verdicts),
+            summary=summary,
+        )
+
     def scan_directory(self, dir_path: Path, glob_pattern: str = "*.md") -> ScanReport:
         """Scan all matching files in a directory, return aggregated report."""
         verdicts: list[ScanVerdict] = []

@@ -39,13 +39,13 @@ class TestRegistryLoadedPatterns:
 
 
 class TestPatternCountParity:
-    """Split registry files contain exactly the same 42 patterns as the original."""
+    """Split registry files contain exactly the same 58 patterns as the original."""
 
     def test_same_count(self) -> None:
         old_rules = load_patterns()  # monolithic file
         reg = Registry(base_dirs=[_REGISTRY_PATTERNS_DIR])
         new_rules = load_patterns(registry=reg)
-        assert len(new_rules) == len(old_rules) == 42
+        assert len(new_rules) == len(old_rules) == 58
 
     def test_same_pattern_ids(self) -> None:
         old_rules = load_patterns()
@@ -68,11 +68,23 @@ class TestPatternCountParity:
             assert old.severity == new.severity, f"Severity mismatch for {pid}"
             assert old.description == new.description, f"Description mismatch for {pid}"
 
-    def test_nine_categories(self) -> None:
+    def test_twelve_categories(self) -> None:
         reg = Registry(base_dirs=[_REGISTRY_PATTERNS_DIR])
         rules = load_patterns(registry=reg)
         categories = {r.category for r in rules}
-        assert len(categories) == 9
+        assert len(categories) == 12
+
+    def test_category_names_match_yaml(self) -> None:
+        """Registry path must produce the same category names as the YAML path."""
+        old_rules = load_patterns()  # monolithic YAML
+        reg = Registry(base_dirs=[_REGISTRY_PATTERNS_DIR])
+        new_rules = load_patterns(registry=reg)
+        old_cats = {r.category for r in old_rules}
+        new_cats = {r.category for r in new_rules}
+        assert old_cats == new_cats, (
+            f"Category name mismatch between YAML and registry paths."
+            f" YAML-only: {old_cats - new_cats}, Registry-only: {new_cats - old_cats}"
+        )
 
 
 class TestScannerWithRegistry:

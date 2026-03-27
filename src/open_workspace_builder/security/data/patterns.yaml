@@ -1,5 +1,5 @@
 # Security patterns for workspace content scanning.
-# 42 patterns across 9 categories.
+# 58 patterns across 12 categories.
 
 categories:
   exfiltration:
@@ -247,3 +247,95 @@ categories:
         severity: critical
         description: "Fake markup delimiter injection"
         false_positive_hint: "Legitimate in LLM documentation discussing formats"
+
+  jailbreak:
+    description: "Jailbreak preambles and mode activation"
+    patterns:
+      - id: jailbreak-001
+        pattern: "(?i)\\bDAN\\s+(mode|prompt)"
+        severity: critical
+        description: "DAN (Do Anything Now) jailbreak"
+        false_positive_hint: "Legitimate in security research discussing jailbreak techniques"
+      - id: jailbreak-002
+        pattern: "(?i)developer\\s+mode\\s+(enabled|activated|on)"
+        severity: critical
+        description: "Developer mode jailbreak"
+        false_positive_hint: "Legitimate in developer documentation about debug modes"
+      - id: jailbreak-003
+        pattern: "(?i)act\\s+as\\s+an?\\s+(unrestricted|unfiltered|uncensored)"
+        severity: critical
+        description: "Unrestricted mode jailbreak"
+        false_positive_hint: "Legitimate in content policy documentation"
+      - id: jailbreak-004
+        pattern: "(?i)you\\s+have\\s+been\\s+(jailbroken|unlocked|freed)"
+        severity: critical
+        description: "Jailbreak confirmation framing"
+        false_positive_hint: "Legitimate in security research discussing jailbreak techniques"
+      - id: jailbreak-005
+        pattern: "(?i)ignore\\s+(all\\s+)?safety\\s+(guidelines|protocols|rules|filters)"
+        severity: critical
+        description: "Safety bypass instruction"
+        false_positive_hint: "Legitimate in safety documentation discussing bypass risks"
+      - id: jailbreak-006
+        pattern: "(?i)opposite\\s+mode|anti-?assistant|chaos\\s+mode"
+        severity: critical
+        description: "Adversarial mode activation"
+        false_positive_hint: "Legitimate in security research discussing adversarial techniques"
+
+  markdown_exfil:
+    description: "Markdown and HTML exfiltration vectors"
+    patterns:
+      - id: mdexfil-001
+        pattern: "!\\[.*?\\]\\(https?://[^)]+\\?.*="
+        severity: warning
+        description: "Markdown image with query parameters (tracking pixel)"
+        false_positive_hint: "Legitimate if linking to images with sizing or display parameters"
+      - id: mdexfil-002
+        pattern: "<iframe\\b"
+        severity: critical
+        description: "Iframe embed in markdown"
+        false_positive_hint: "Legitimate in web development documentation"
+      - id: mdexfil-003
+        pattern: "<img\\s+src=[\"']https?://"
+        severity: warning
+        description: "HTML image tag with external source"
+        false_positive_hint: "Legitimate in web documentation with image examples"
+      - id: mdexfil-004
+        pattern: "data:[^;]+;base64,"
+        severity: warning
+        description: "Data URI (potential encoded payload)"
+        false_positive_hint: "Legitimate in web development showing data URI examples"
+      - id: mdexfil-005
+        pattern: "<!--.*?(script|exec|eval|fetch|XMLHttpRequest).*?-->"
+        severity: critical
+        description: "Executable code in HTML comments"
+        false_positive_hint: "Legitimate in web security documentation discussing comment injection"
+
+  mcp_manipulation:
+    description: "MCP/tool manipulation and abuse"
+    patterns:
+      - id: mcp-001
+        pattern: "(?i)tool_use|tool_result|tool_call"
+        severity: warning
+        description: "MCP protocol keyword (suspicious in content files)"
+        false_positive_hint: "Legitimate in MCP documentation or tool development guides"
+      - id: mcp-002
+        pattern: "(?i)call\\s+the\\s+(tool|function|server)\\s+.*\\s+with"
+        severity: warning
+        description: "Instruction to invoke a specific tool"
+        false_positive_hint: "Legitimate in API or tool documentation"
+      - id: mcp-003
+        pattern: "(?i)(read|access|fetch)\\s+.*\\s+(from|via)\\s+(slack|gmail|drive|obsidian|asana)"
+        severity: critical
+        description: "Instruction to access connected service data"
+        false_positive_hint: "Legitimate in integration documentation"
+      - id: mcp-004
+        pattern: "(?i)when\\s+(the|a)\\s+(tool|server)\\s+(returns|responds).*then"
+        severity: warning
+        description: "Conditional instruction on tool response"
+        false_positive_hint: "Legitimate in workflow automation documentation"
+      - id: mcp-005
+        pattern: "(?i)pipe\\s+.*output.*to|redirect\\s+.*response.*to"
+        severity: critical
+        description: "Instruction to redirect tool output"
+        false_positive_hint: "Legitimate in shell scripting or pipeline documentation"

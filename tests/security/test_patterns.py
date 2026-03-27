@@ -18,7 +18,7 @@ class TestLoadPatterns:
 
     def test_loads_bundled_patterns(self) -> None:
         patterns = load_patterns()
-        assert len(patterns) == 42
+        assert len(patterns) == 58
 
     def test_all_patterns_have_required_fields(self) -> None:
         patterns = load_patterns()
@@ -29,12 +29,13 @@ class TestLoadPatterns:
             assert p.severity in ("info", "warning", "critical")
             assert p.description
 
-    def test_nine_categories(self) -> None:
+    def test_twelve_categories(self) -> None:
         patterns = load_patterns()
         categories = {p.category for p in patterns}
         expected = {
             "exfiltration", "persistence", "stealth", "self_modification",
             "encoded", "network", "privilege", "sensitive_paths", "prompt_injection",
+            "jailbreak", "markdown_exfil", "mcp_manipulation",
         }
         assert categories == expected
 

@@ -1,0 +1,34 @@
+id: "owb-markdown-exfil"
+version: "1.0.0"
+type: "pattern"
+author: "Open Workspace Builder"
+description: "Markdown and HTML exfiltration vector detection patterns"
+compatibility: ">=0.1.0"
+
+payload:
+  patterns:
+    - id: mdexfil-001
+      pattern: "!\\[.*?\\]\\(https?://[^)]+\\?.*="
+      severity: warning
+      description: "Markdown image with query parameters (tracking pixel)"
+      false_positive_hint: "Legitimate if linking to images with sizing or display parameters"
+    - id: mdexfil-002
+      pattern: "<iframe\\b"
+      severity: critical
+      description: "Iframe embed in markdown"
+      false_positive_hint: "Legitimate in web development documentation"
+    - id: mdexfil-003
+      pattern: "<img\\s+src=[\"']https?://"
+      severity: warning
+      description: "HTML image tag with external source"
+      false_positive_hint: "Legitimate in web documentation with image examples"
+    - id: mdexfil-004
+      pattern: "data:[^;]+;base64,"
+      severity: warning
+      description: "Data URI (potential encoded payload)"
+      false_positive_hint: "Legitimate in web development showing data URI examples"
+    - id: mdexfil-005
+      pattern: "<!--.*?(script|exec|eval|fetch|XMLHttpRequest).*?-->"
+      severity: critical
+      description: "Executable code in HTML comments"
+      false_positive_hint: "Legitimate in web security documentation discussing comment injection"

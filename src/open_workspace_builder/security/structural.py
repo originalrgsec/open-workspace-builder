@@ -121,6 +121,34 @@ def check_encoding(path: Path) -> list[ScanFlag]:
                 layer=1,
             ))
 
+        # Detect Unicode tag characters (U+E0001–U+E007F) used to hide instructions.
+        for i, ch in enumerate(line):
+            cp = ord(ch)
+            if 0xE0001 <= cp <= 0xE007F:
+                flags.append(ScanFlag(
+                    category="encoding",
+                    severity="critical",
+                    evidence=f"Line {line_num}, col {i + 1}: U+{cp:05X} TAG CHARACTER",
+                    description="Unicode tag character detected — used to hide instructions",
+                    line_number=line_num,
+                    layer=1,
+                ))
+                break  # One flag per line is sufficient.
+
+        # Detect variation selectors (U+FE00–U+FE0F, U+E0100–U+E01EF).
+        for i, ch in enumerate(line):
+            cp = ord(ch)
+            if (0xFE00 <= cp <= 0xFE0F) or (0xE0100 <= cp <= 0xE01EF):
+                flags.append(ScanFlag(
+                    category="encoding",
+                    severity="warning",
+                    evidence=f"Line {line_num}, col {i + 1}: U+{cp:04X} VARIATION SELECTOR",
+                    description="Variation selector character detected — may obscure content",
+                    line_number=line_num,
+                    layer=1,
+                ))
+                break  # One flag per line is sufficient.
+
         # Detect characters in non-visible Unicode ranges (homoglyphs).
         for i, ch in enumerate(line):
             cp = ord(ch)

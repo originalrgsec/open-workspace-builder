@@ -521,6 +521,12 @@ def security() -> None:
     default=False,
     help="Run SAST (Semgrep) on source code.",
 )
+@click.option(
+    "--correlate",
+    is_flag=True,
+    default=False,
+    help="Run cross-file correlation analysis on directories (requires Layer 3).",
+)
 @click.pass_context
 def scan(
     ctx: click.Context,
@@ -530,13 +536,15 @@ def scan(
     output_file: str | None,
     sca: bool,
     sast: bool,
+    correlate: bool,
 ) -> None:
     """Scan a file or directory for security issues.
 
     Runs a three-layer scanner: structural validation, pattern matching, and
     (optionally) semantic analysis via LLM. Use --layers to select which
-    layers to run. Use --sca for dependency scanning and --sast for Semgrep
-    static analysis. Returns exit code 2 if any issues are found.
+    layers to run. Use --sca for dependency scanning, --sast for Semgrep
+    static analysis, and --correlate for cross-file correlation on directories.
+    Returns exit code 2 if any issues are found.
     """
     from open_workspace_builder.security.scanner import Scanner
 
@@ -585,7 +593,11 @@ def scan(
         _print_verdict(verdict.file_path, verdict.verdict, len(verdict.flags))
         has_issues = verdict.verdict in ("flagged", "malicious")
     else:
-        report = scanner.scan_directory(target)
+        report = (
+            scanner.scan_package(target)
+            if correlate
+            else scanner.scan_directory(target)
+        )
         report_data = {
             "directory": report.directory,
             "summary": report.summary,

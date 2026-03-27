@@ -35,8 +35,13 @@ def _load_patterns_from_registry(
     items = registry.get_active_items("pattern", active_patterns)
     rules: list[PatternRule] = []
     for item in items:
-        # Category name derived from item id (e.g. "owb-exfiltration" -> "exfiltration")
-        cat_name = item.id.removeprefix("owb-") if item.id.startswith("owb-") else item.id
+        # Category name derived from item id (e.g. "owb-self-modification" -> "self_modification").
+        # Normalize hyphens to underscores so registry path matches monolithic YAML category names.
+        cat_name = (
+            item.id.removeprefix("owb-").replace("-", "_")
+            if item.id.startswith("owb-")
+            else item.id.replace("-", "_")
+        )
         for p in item.payload.get("patterns", []):
             rules.append(
                 PatternRule(

@@ -16,3 +16,6 @@ payload:
     - owb-privilege
     - owb-sensitive-paths
     - owb-prompt-injection
+    - owb-jailbreak
+    - owb-markdown-exfil
+    - owb-mcp-manipulation
