@@ -47,7 +47,7 @@ hide:
 <div class="rg-feature__icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
 <div class="rg-feature__title">Three-Layer Security Scanner</div>
 <div class="rg-feature__desc">
-Every file that enters the workspace — upstream updates, third-party skills, migrated content — runs through structural validation, pattern matching against 42 known attack signatures, and optional LLM-powered semantic analysis. Prompt injection gets caught before it reaches your sessions.
+Every file that enters the workspace — upstream updates, third-party skills, migrated content — runs through structural validation, pattern matching against 58 known attack signatures (including MCP manipulation and multi-file correlation), and optional LLM-powered semantic analysis. Prompt injection gets caught before it reaches your sessions.
 </div>
 </div>
 
@@ -83,6 +83,14 @@ Before a skill enters the workspace, the evaluator classifies it, generates a te
 </div>
 </div>
 
+<div class="rg-feature" markdown>
+<div class="rg-feature__icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+<div class="rg-feature__title">Token Tracking and Cost Management</div>
+<div class="rg-feature__desc">
+<code>owb metrics tokens</code> parses Claude Code session files and calculates per-model, per-project, and per-day cost breakdowns. Export to Google Sheets or Excel. Record costs to a local ledger with session-end hooks. Get monthly forecasts, budget alerts, and per-story cost attribution. Know what your AI usage actually costs.
+</div>
+</div>
+
 </div>
 
 <div class="rg-section" markdown>
@@ -114,6 +122,16 @@ Before a skill enters the workspace, the evaluator classifies it, generates a te
   <div style="background:#D4A017; color:#0A0A14; padding:0.45rem 0.9rem; border-radius:6px; font-weight:600; font-size:0.8rem; font-family:JetBrains Mono,monospace;">owb migrate</div>
   <div style="background:#D4A017; color:#0A0A14; padding:0.45rem 0.9rem; border-radius:6px; font-weight:600; font-size:0.8rem; font-family:JetBrains Mono,monospace;">owb security scan</div>
   <div style="background:#D4A017; color:#0A0A14; padding:0.45rem 0.9rem; border-radius:6px; font-weight:600; font-size:0.8rem; font-family:JetBrains Mono,monospace;">owb eval</div>
+</div>
+
+<div class="rg-section" markdown>
+
+<p class="rg-section__title">What comes next: Phase 2</p>
+
+<p class="rg-section__desc">
+  OWB is designed around a <a href="concepts/phases/">four-phase maturity model</a>. Phase 1 (interactive sessions) is fully operational. Phase 2 introduces hybrid model routing — cheaper open-weight models handle code generation while Claude provides oversight and review. The existing LiteLLM integration means the codebase is already model-agnostic. Phase 2 adds the operational infrastructure: environment bootstrap, sandbox execution, and cost optimization. <a href="concepts/phases/">Read the phase model documentation</a> for details.
+</p>
+
 </div>
 
 <div class="rg-install" markdown>

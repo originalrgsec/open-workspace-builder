@@ -94,6 +94,7 @@ nav:
     - Architecture: concepts/architecture.md
     - Security Model: concepts/security.md
     - Configuration: concepts/configuration.md
+    - Phase Model: concepts/phases.md
   - Guides:
     - Upgrading: howto-upgrade.md
     - Using as a Library: guides/library-usage.md
@@ -107,6 +108,8 @@ nav:
     - Threat Model: threat-model.md
   - Credits: credits.md
   - Releases:
+    - v0.7.0: releases/v0.7.0.md
+    - v0.6.0: releases/v0.6.0.md
     - v0.5.1: releases/v0.5.1.md
     - v0.5.0: releases/v0.5.0.md
     - v0.4.0: releases/v0.4.0.md

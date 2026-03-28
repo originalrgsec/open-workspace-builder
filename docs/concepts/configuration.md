@@ -22,6 +22,8 @@ The setup wizard (`owb init` on first run) generates `~/.owb/config.yaml` intera
 | `security` | Active pattern sets, scanner layer selection |
 | `trust` | Trust tier policy selection |
 | `marketplace` | Output format (generic, anthropic, openai) |
+| `secrets` | Secrets backend selection (env, keyring, age, bitwarden, onepassword) |
+| `tokens` | Token tracking: ledger path, budget threshold, auto-record |
 | `paths` | Config, data, and credentials directory paths |
 | `context_templates` | Whether to deploy personal context files |
 
@@ -43,6 +45,50 @@ models:
 ```
 
 Supported providers include Anthropic, OpenAI, Ollama, Azure, AWS Bedrock, and any other provider supported by LiteLLM.
+
+## Token Tracking Configuration
+
+The `tokens` section controls the cost tracking and budget alert system:
+
+```yaml
+tokens:
+  ledger_path: ""              # default: ~/.owb/data/ledger.jsonl
+  budget_threshold: 200.0      # monthly budget in dollars (0 = disabled)
+  auto_record: false           # enable session-end hook recording
+```
+
+### Custom Model Pricing
+
+Override API-equivalent pricing for models not in the built-in registry by creating `~/.owb/pricing.yaml`:
+
+```yaml
+my-custom-model:
+  input_per_mtok: 3.0
+  output_per_mtok: 15.0
+  cache_write_per_mtok: 3.75
+  cache_read_per_mtok: 0.30
+```
+
+### Google Sheets Export Setup
+
+To export token data to Google Sheets:
+
+1. Install the Sheets extra: `pip install "open-workspace-builder[sheets]"`
+2. Store your Google OAuth client credentials: `owb auth google-store --client-id YOUR_ID --client-secret YOUR_SECRET`
+3. Run the OAuth flow: `owb auth google`
+4. Export: `owb metrics export --format gsheets --sheet-id YOUR_SHEET_ID`
+
+Credentials are encrypted using the configured secrets backend (age, keyring, or env).
+
+## Optional Dependency Groups
+
+| Extra | Provides | Install |
+|-------|----------|---------|
+| `[sheets]` | Google Sheets export for token tracking | `pip install "open-workspace-builder[sheets]"` |
+| `[xlsx]` | Excel export for token tracking | `pip install "open-workspace-builder[xlsx]"` |
+| `[llm]` | Layer 3 semantic scanner | `pip install "open-workspace-builder[llm]"` |
+| `[mcp]` | MCP server for AI desktop clients | `pip install "open-workspace-builder[mcp]"` |
+| `[dev]` | Development dependencies (pytest, ruff) | `pip install "open-workspace-builder[dev]"` |
 
 ## Example Config
 

@@ -697,6 +697,23 @@ class ReputationLedger:
 - Tests: 992 → 1046 (+54)
 - Tag: v0.5.1
 
+### Sprint 11: Scanner Gaps + Skills
+- Stories: OWB-S071 (L), CSK-S001 (S)
+- Goal: Scanner pattern gap closure (16 new patterns across 3 categories, 42 → 58), Unicode tag/variation selector detection, L3 MCP threat category, multi-file correlation via --correlate flag. Skill-creator forked into content store with AgentSkills spec compliance.
+- Tests: 1046 → 1131 (+85)
+- Tag: v0.6.0
+
+### Sprint 12: Token Economics + Roadmap
+- Stories: OWB-S075 (L), OWB-S076 (M)
+- Goal: Token consumption tracking CLI (owb metrics tokens), cost analysis with per-model/project/day breakdowns, Google Sheets and Excel export, pricing registry with YAML overrides, token analysis skill for sprint workflows. Cost baseline established: $1,183/mo API-equivalent on $200 Max plan. Roadmap discussion: hybrid model architecture, phase restructuring.
+- Tests: 1131 → 1213 (+82)
+- Tag: v0.7.0
+
+### Sprint 13: Research, Docs, and Token Automation
+- Stories: OWB-S076-C (M), OWB-S077 (L), OWB-S080 (M)
+- Goal: Token tracking Level C (local ledger with file locking, monthly forecasting, budget alerts, per-story attribution, sync command). Model hosting research spike (4 US providers, 6 models, 4 local frameworks, 7-scenario cost model). Documentation sweep for v0.7.0 (CLI reference, configuration guide, phase model page, ADRs, README, SDR sync).
+- Tests: 1213 → 1253 (+40)
+
 ## Open Questions
 
 1. Should the CLI use `click` or `argparse`? Click provides a cleaner subcommand model but adds a dependency. Argparse is stdlib but verbose for this many subcommands. Recommendation: click.

@@ -4,7 +4,7 @@ Scaffold, maintain, and secure AI coding workspaces from a single command.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Tests: 713](https://img.shields.io/badge/tests-713%20passed-brightgreen)](tests/)
+[![Tests: 1253](https://img.shields.io/badge/tests-1253%20passed-brightgreen)](tests/)
 
 ## What It Does
 
@@ -22,6 +22,8 @@ Key capabilities:
 - **Name-aware CLI** that resolves config paths from the binary name (`owb` vs `cwb`)
 - **Skill evaluation pipeline** with scoring, judging, and three evaluation modes (new, update, overlap)
 - **Multi-source content infrastructure** with config-driven discovery, repo audit, and update pipeline
+- **Token consumption tracking** with cost analysis, budget alerts, monthly forecasting, and per-story attribution
+- **Supply chain scanning** with pip-audit, GuardDog, and Semgrep SAST integration
 
 ## Quick Start
 
@@ -157,6 +159,25 @@ owb eval ./path/to/skill          # evaluate a new skill
 owb eval ./path/to/skill --compare  # compare against existing version
 ```
 
+### `owb metrics` — Token Tracking and Cost Analysis
+
+```bash
+owb metrics tokens                              # consumption report
+owb metrics tokens --format json --since 20260301  # filtered JSON
+owb metrics export --format gsheets --sheet-id ID  # export to Sheets
+owb metrics record --story OWB-S076             # record to local ledger
+owb metrics sync --sheet-id ID                  # record + export
+owb metrics forecast                            # monthly cost projection
+owb metrics budget-check --threshold 200        # budget alert (exit 2 if over)
+owb metrics by-story                            # cost per story ID
+```
+
+Requires `[sheets]` extra for Google Sheets or `[xlsx]` for Excel export.
+
+## Phase Model
+
+OWB uses a [four-phase maturity model](docs/concepts/phases.md). Phase 1 (interactive sessions) is fully operational. Phase 2 (hybrid model routing with cheaper open-weight models for builds and Claude for oversight) is in design. The existing LiteLLM integration means the codebase is already model-agnostic.
+
 ## Security Scanner
 
 The scanner uses a defense-in-depth approach to catch malicious content in workspace files.
@@ -167,7 +188,7 @@ The scanner uses a defense-in-depth approach to catch malicious content in works
 | **2 — Pattern** | Regex matching against registry patterns | Shell injection, credential harvesting, data exfiltration, prompt injection, known-malicious signatures |
 | **3 — Semantic** | LLM analysis via configured model | Behavioral manipulation, social engineering, stealth language, obfuscated payloads, self-modification |
 
-Patterns are loaded from the extensible registry. The default set (`owb-default`) includes 42 patterns across 9 categories. Add custom pattern files to the registry overlay directory for project-specific rules.
+Patterns are loaded from the extensible registry. The default set (`owb-default`) includes 58 patterns across 12 categories. Add custom pattern files to the registry overlay directory for project-specific rules.
 
 Layer 3 requires a configured model in `models.security_scan` and the `llm` extra:
 
@@ -196,7 +217,7 @@ cd open-workspace-builder
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev,security]"
 
-# Run tests (625 tests)
+# Run tests (1253 tests)
 pytest tests/
 
 # Lint

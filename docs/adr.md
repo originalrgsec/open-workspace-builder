@@ -499,6 +499,26 @@ Not a concern for v1. The builder generates a workspace in seconds. The security
 
 The builder is a stateless CLI tool. If it fails mid-build, the user re-runs it. The `--dry-run` flag allows previewing all changes before writing. Integrity hashes on vendored content detect corruption. The update log and reputation ledger are append-only to minimize corruption risk.
 
+## AD-15: xlsxwriter for Excel Export
+
+**Decision:** Use xlsxwriter instead of openpyxl for Excel token report export.
+
+**Context:** Token tracking export (S075) needed an Excel output option. Both xlsxwriter and openpyxl are mature libraries. xlsxwriter is write-only (no read support), which is sufficient for report generation. openpyxl supports both read and write but is larger and slower for write-only use cases.
+
+**Rationale:** xlsxwriter scores better on OSS health metrics (higher maintenance cadence, smaller dependency footprint) and is purpose-built for write-only workloads. OWB never needs to read existing Excel files. The API is cleaner for formatting-heavy reports (bold headers, currency formatting, percentage formatting).
+
+**Status:** Accepted (Sprint 12).
+
+## AD-16: Google Sheets OAuth with InstalledAppFlow
+
+**Decision:** Use Google's InstalledAppFlow OAuth pattern with age-encrypted credential storage for Sheets export.
+
+**Context:** Token tracking export to Google Sheets requires authenticated API access. Options considered: API key (limited to public data), service account (requires Google Cloud project setup), OAuth InstalledAppFlow (opens browser for consent, stores refresh token).
+
+**Rationale:** InstalledAppFlow is the standard pattern for CLI tools that act on behalf of a user. The owner already has Google Workspace. Client credentials (client_id, client_secret) are stored encrypted via the configured secrets backend (age by default). The refresh token is stored in `~/.owb/credentials/` and auto-refreshed. No service account or long-lived API key is needed.
+
+**Status:** Accepted (Sprint 12).
+
 ## Open Questions
 
 1. Should `owb init` generate a `.gitignore` that excludes populated context files by default?
