@@ -1826,6 +1826,341 @@ def metrics_export(
         click.echo(f"Exported to: {output_path}")
 
 
+def _record_sessions(
+    projects_dir: Path,
+    resolved_ledger: Path,
+    story_id: str = "",
+) -> tuple[int, list[tuple[str, str, list]]]:
+    """Record all sessions to the ledger. Returns (count, session_data).
+
+    The returned session_data can be reused for export without re-parsing.
+    """
+    from open_workspace_builder.tokens.calculator import build_report
+    from open_workspace_builder.tokens.ledger import append_entry
+    from open_workspace_builder.tokens.models import LedgerEntry
+    from open_workspace_builder.tokens.parser import (
+        discover_session_files,
+        parse_session_file,
+        project_name_from_dir,
+    )
+    from open_workspace_builder.tokens.pricing import load_pricing
+
+    pricing = load_pricing()
+    session_files = discover_session_files(projects_dir)
+    recorded = 0
+    all_session_data: list[tuple[str, str, list]] = []
+
+    for session_file in session_files:
+        project_name = project_name_from_dir(session_file.parent.name)
+        usages = parse_session_file(session_file)
+        if not usages:
+            continue
+
+        session_id = session_file.stem
+        all_session_data.append((project_name, session_id, usages))
+
+        session_data = [(project_name, session_id, usages)]
+        report = build_report(session_data, pricing)
+
+        entry = LedgerEntry(
+            session_id=session_id,
+            project=project_name,
+            timestamp=usages[0].timestamp,
+            total_input=report.total_input,
+            total_output=report.total_output,
+            total_cache_creation=report.total_cache_creation,
+            total_cache_read=report.total_cache_read,
+            cost=report.total_cost,
+            story_id=story_id,
+        )
+        append_entry(resolved_ledger, entry)
+        recorded += 1
+
+    return recorded, all_session_data
+
+
+@metrics.command("record")
+@click.option(
+    "--claude-dir",
+    default=None,
+    help="Path to Claude Code data directory (default: ~/.claude)",
+)
+@click.option(
+    "--ledger",
+    "ledger_path",
+    default=None,
+    help="Path to ledger file (default: ~/.owb/data/ledger.jsonl)",
+)
+@click.option("--story", "story_id", default="", help="Story ID to tag this session")
+def metrics_record(
+    claude_dir: str | None,
+    ledger_path: str | None,
+    story_id: str,
+) -> None:
+    """Record session costs to the local ledger.
+
+    Parses all session files and appends a cost summary for each session.
+    Skips sessions already in the ledger. Designed to be called from a
+    Claude Code session-end hook.
+    """
+    projects_dir = Path(claude_dir or Path.home() / ".claude") / "projects"
+    if not projects_dir.is_dir():
+        click.echo(f"Error: Claude Code projects directory not found: {projects_dir}")
+        sys.exit(1)
+
+    resolved_ledger = Path(
+        ledger_path or Path.home() / ".owb" / "data" / "ledger.jsonl"
+    )
+
+    recorded, _ = _record_sessions(projects_dir, resolved_ledger, story_id)
+    click.echo(f"Recorded {recorded} session(s) to {resolved_ledger}")
+
+
+@metrics.command("forecast")
+@click.option(
+    "--ledger",
+    "ledger_path",
+    default=None,
+    help="Path to ledger file (default: ~/.owb/data/ledger.jsonl)",
+)
+@click.option(
+    "--current-date",
+    default=None,
+    help="Current date as YYYY-MM-DD (default: today)",
+)
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
+def metrics_forecast(
+    ledger_path: str | None,
+    current_date: str | None,
+    output_format: str,
+) -> None:
+    """Show monthly cost forecast from ledger data.
+
+    Extrapolates month-to-date cost to a projected monthly total.
+    """
+    from datetime import date
+
+    from open_workspace_builder.tokens.forecast import forecast_monthly
+    from open_workspace_builder.tokens.ledger import read_entries
+
+    resolved_ledger = Path(
+        ledger_path or Path.home() / ".owb" / "data" / "ledger.jsonl"
+    )
+    resolved_date = current_date or date.today().isoformat()
+
+    entries = read_entries(resolved_ledger)
+    if not entries:
+        click.echo("No ledger data found.")
+        sys.exit(0)
+
+    result = forecast_monthly(entries, current_date=resolved_date)
+
+    if output_format == "json":
+        click.echo(
+            json.dumps(
+                {
+                    "month_to_date": round(result.month_to_date, 2),
+                    "projected_total": round(result.projected_total, 2),
+                    "daily_average": round(result.daily_average, 2),
+                    "days_elapsed": result.days_elapsed,
+                    "days_in_month": result.days_in_month,
+                },
+                indent=2,
+            )
+        )
+    else:
+        click.echo(f"Month-to-date:   ${result.month_to_date:.2f}")
+        click.echo(f"Daily average:   ${result.daily_average:.2f}")
+        click.echo(
+            f"Projected total: ${result.projected_total:.2f} "
+            f"({result.days_elapsed}/{result.days_in_month} days)"
+        )
+
+
+@metrics.command("budget-check")
+@click.option(
+    "--ledger",
+    "ledger_path",
+    default=None,
+    help="Path to ledger file (default: ~/.owb/data/ledger.jsonl)",
+)
+@click.option(
+    "--threshold",
+    type=float,
+    required=True,
+    help="Monthly budget threshold in dollars",
+)
+@click.option(
+    "--current-date",
+    default=None,
+    help="Current date as YYYY-MM-DD (default: today)",
+)
+def metrics_budget_check(
+    ledger_path: str | None,
+    threshold: float,
+    current_date: str | None,
+) -> None:
+    """Check month-to-date cost against budget threshold.
+
+    Exits with code 2 if over budget (useful for hook scripts).
+    Exit 0 means under budget.
+    """
+    from datetime import date
+
+    from open_workspace_builder.tokens.budget import check_budget
+    from open_workspace_builder.tokens.ledger import read_entries
+
+    resolved_ledger = Path(
+        ledger_path or Path.home() / ".owb" / "data" / "ledger.jsonl"
+    )
+    resolved_date = current_date or date.today().isoformat()
+
+    entries = read_entries(resolved_ledger)
+    result = check_budget(entries, threshold=threshold, current_date=resolved_date)
+
+    if result.exceeded:
+        click.echo(
+            f"OVER BUDGET: ${result.month_to_date:.2f} / "
+            f"${result.threshold:.2f} ({result.pct_used:.1f}%)"
+        )
+        sys.exit(2)
+    else:
+        click.echo(
+            f"Under budget: ${result.month_to_date:.2f} / "
+            f"${result.threshold:.2f} ({result.pct_used:.1f}%) — "
+            f"${result.remaining:.2f} remaining"
+        )
+
+
+@metrics.command("sync")
+@click.option(
+    "--claude-dir",
+    default=None,
+    help="Path to Claude Code data directory (default: ~/.claude)",
+)
+@click.option(
+    "--ledger",
+    "ledger_path",
+    default=None,
+    help="Path to ledger file (default: ~/.owb/data/ledger.jsonl)",
+)
+@click.option("--sheet-id", default=None, help="Google Sheet ID for export (optional)")
+@click.option("--story", "story_id", default="", help="Story ID to tag sessions")
+def metrics_sync(
+    claude_dir: str | None,
+    ledger_path: str | None,
+    sheet_id: str | None,
+    story_id: str,
+) -> None:
+    """Record session costs and optionally export to Google Sheets.
+
+    Combines record + export into a single command for sprint-close hooks.
+    If --sheet-id is provided, exports to Google Sheets after recording.
+    """
+    projects_dir = Path(claude_dir or Path.home() / ".claude") / "projects"
+    if not projects_dir.is_dir():
+        click.echo(f"Error: Claude Code projects directory not found: {projects_dir}")
+        sys.exit(1)
+
+    resolved_ledger = Path(
+        ledger_path or Path.home() / ".owb" / "data" / "ledger.jsonl"
+    )
+
+    recorded, all_session_data = _record_sessions(
+        projects_dir, resolved_ledger, story_id
+    )
+    click.echo(f"Recorded {recorded} session(s) to {resolved_ledger}")
+
+    if sheet_id:
+        try:
+            from open_workspace_builder.tokens.sheets_export import export_to_sheets
+        except ImportError:
+            click.echo(
+                "Warning: Google Sheets export requires additional packages.\n"
+                "Install with: uv pip install open-workspace-builder[sheets]"
+            )
+            return
+
+        from open_workspace_builder.tokens.calculator import build_report
+        from open_workspace_builder.tokens.pricing import load_pricing
+
+        pricing = load_pricing()
+        report = build_report(all_session_data, pricing)
+        export_to_sheets(report, sheet_id)
+        click.echo(f"Exported to Google Sheet: {sheet_id}")
+
+
+@metrics.command("by-story")
+@click.option(
+    "--ledger",
+    "ledger_path",
+    default=None,
+    help="Path to ledger file (default: ~/.owb/data/ledger.jsonl)",
+)
+@click.option("--since", default=None, help="Start date filter (YYYYMMDD)")
+@click.option("--until", default=None, help="End date filter (YYYYMMDD)")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
+def metrics_by_story(
+    ledger_path: str | None,
+    since: str | None,
+    until: str | None,
+    output_format: str,
+) -> None:
+    """Show cost breakdown by story ID from ledger data.
+
+    Groups ledger entries by their story_id tag and shows total cost per story.
+    """
+    from collections import defaultdict
+
+    from open_workspace_builder.tokens.ledger import read_entries
+
+    resolved_ledger = Path(
+        ledger_path or Path.home() / ".owb" / "data" / "ledger.jsonl"
+    )
+
+    entries = read_entries(resolved_ledger, since=since, until=until)
+    if not entries:
+        click.echo("No ledger data found.")
+        sys.exit(0)
+
+    story_costs: dict[str, dict] = defaultdict(
+        lambda: {"total_cost": 0.0, "sessions": 0}
+    )
+    for entry in entries:
+        tag = entry.story_id or "(untagged)"
+        story_costs[tag]["total_cost"] += entry.cost.total
+        story_costs[tag]["sessions"] += 1
+
+    if output_format == "json":
+        # Convert defaultdict to regular dict for JSON serialization
+        out = {
+            k: {"total_cost": round(v["total_cost"], 2), "sessions": v["sessions"]}
+            for k, v in sorted(story_costs.items())
+        }
+        click.echo(json.dumps(out, indent=2))
+    else:
+        click.echo("Cost by Story")
+        click.echo("=" * 50)
+        for tag in sorted(story_costs):
+            data = story_costs[tag]
+            click.echo(
+                f"  {tag:<20s}  ${data['total_cost']:>8.2f}  "
+                f"({data['sessions']} session{'s' if data['sessions'] != 1 else ''})"
+            )
+
+
 @owb.group()
 def mcp() -> None:
     """MCP (Model Context Protocol) server commands."""

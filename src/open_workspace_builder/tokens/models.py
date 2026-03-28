@@ -107,6 +107,21 @@ class DailyBreakdown:
 
 
 @dataclass(frozen=True)
+class LedgerEntry:
+    """One session's cost record in the local ledger."""
+
+    session_id: str
+    project: str
+    timestamp: str
+    total_input: int
+    total_output: int
+    total_cache_creation: int
+    total_cache_read: int
+    cost: TokenCost = field(default_factory=TokenCost)
+    story_id: str = ""
+
+
+@dataclass(frozen=True)
 class TokenReport:
     """Complete token consumption report."""
 

@@ -188,6 +188,15 @@ class SecretsConfig:
 
 
 @dataclass(frozen=True)
+class TokensConfig:
+    """Token tracking and budget configuration."""
+
+    ledger_path: str = ""  # empty = derive from paths.data_dir/ledger.jsonl
+    budget_threshold: float = 0.0  # monthly budget in dollars, 0 = disabled
+    auto_record: bool = False  # enable session-end hook recording
+
+
+@dataclass(frozen=True)
 class PathsConfig:
     """Directory paths for config, data, and credentials."""
 
@@ -210,6 +219,7 @@ class Config:
     sources: SourcesConfig = field(default_factory=SourcesConfig)
     marketplace: MarketplaceConfig = field(default_factory=MarketplaceConfig)
     secrets: SecretsConfig = field(default_factory=SecretsConfig)
+    tokens: TokensConfig = field(default_factory=TokensConfig)
     paths: PathsConfig = field(default_factory=PathsConfig)
 
 
@@ -226,6 +236,7 @@ _SECTION_CLASSES: dict[str, type] = {
     "sources": SourcesConfig,
     "marketplace": MarketplaceConfig,
     "secrets": SecretsConfig,
+    "tokens": TokensConfig,
     "paths": PathsConfig,
 }
 
