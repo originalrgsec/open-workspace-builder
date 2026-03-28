@@ -20,7 +20,7 @@ from open_workspace_builder.cli import owb
 
 @pytest.fixture()
 def runner() -> CliRunner:
-    return CliRunner(mix_stderr=False)
+    return CliRunner()
 
 
 @pytest.fixture()

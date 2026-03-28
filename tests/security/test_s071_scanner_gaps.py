@@ -19,7 +19,7 @@ from open_workspace_builder.security.patterns import (
     check_patterns,
     load_patterns,
 )
-from open_workspace_builder.security.scanner import Scanner, ScanFlag
+from open_workspace_builder.security.scanner import Scanner
 from open_workspace_builder.security.semantic import (
     _ANALYSIS_SYSTEM_PROMPT,
     _CROSS_FILE_SYSTEM_PROMPT,

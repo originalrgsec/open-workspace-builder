@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 
 class TestTokenAnalysisSkill:
     """Validate the token-analysis skill file structure."""
