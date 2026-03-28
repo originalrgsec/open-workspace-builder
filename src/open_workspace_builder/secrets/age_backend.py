@@ -34,6 +34,7 @@ class AgeBackend:
         self._secrets_dir.mkdir(parents=True, exist_ok=True)
         ciphertext = self._encrypt(value)
         age_file = self._key_path(key)
+        age_file.parent.mkdir(parents=True, exist_ok=True)
         age_file.write_bytes(ciphertext)
 
     def delete(self, key: str) -> None:
@@ -73,7 +74,12 @@ class AgeBackend:
 
         if self._pyrage is not None:
             identity = self._pyrage.x25519.Identity.generate()
-            self._identity_path.write_text(str(identity), encoding="utf-8")
+            public_key = str(identity.to_public())
+            content = (
+                f"# public key: {public_key}\n"
+                f"{identity}\n"
+            )
+            self._identity_path.write_text(content, encoding="utf-8")
         else:
             result = subprocess.run(
                 ["age-keygen"],
