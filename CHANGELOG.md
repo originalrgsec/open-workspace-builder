@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-03-28
+
+### Added
+- Token consumption tracking CLI (OWB-S075):
+  - `owb metrics tokens` command: parse Claude Code JSONL sessions, calculate API-equivalent costs
+  - Per-project, per-model, per-day breakdowns with date filtering and project filtering
+  - Cache efficiency analysis (hit ratio, cost reduction percentage)
+  - Pricing registry with hardcoded Anthropic rates and YAML override support
+  - JSON output mode for machine-readable reports
+  - Google Sheets export via `owb metrics export --format gsheets` (OAuth 2.0 flow)
+  - Excel export via `owb metrics export --format xlsx` (xlsxwriter, replaces openpyxl)
+  - `owb auth google-store` and `owb auth google` commands for Sheets OAuth setup
+  - New optional dependency groups: `[sheets]` (google-api-python-client, google-auth-oauthlib), `[xlsx]` (xlsxwriter)
+- Token analysis skill with workflow integration (OWB-S076):
+  - `content/skills/token-analysis/SKILL.md` with AgentSkills spec compliance
+  - Sprint close workflow: cost section in retro, tracking sheet update
+  - Sprint planning workflow: trailing cost trend, cost-per-story estimate
+  - Monthly review workflow: full breakdown with trend analysis
+  - Sprint-complete Item 5 updated with token consumption sub-item (5a)
+  - Sprint-plan Step 8 added for cost estimation
+  - token-analysis registered in default skills install list
+- 82 new tests (1131 → 1213)
+
+### Changed
+- openpyxl dependency replaced by xlsxwriter (openpyxl scored RED on OSS health check: bus factor 1, no funding, 21-month release gap; xlsxwriter scored GREEN: BSD-2-Clause, 70M monthly downloads, 13 years mature)
+
 ## [0.6.0] - 2026-03-27
 
 ### Added
