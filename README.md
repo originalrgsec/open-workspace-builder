@@ -2,6 +2,7 @@
 
 Scaffold, maintain, and secure AI coding workspaces from a single command.
 
+[![PyPI](https://img.shields.io/pypi/v/open-workspace-builder)](https://pypi.org/project/open-workspace-builder/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Tests: 1253](https://img.shields.io/badge/tests-1253%20passed-brightgreen)](tests/)
@@ -28,7 +29,7 @@ Key capabilities:
 ## Quick Start
 
 ```bash
-pip install git+https://github.com/originalrgsec/open-workspace-builder.git
+pip install open-workspace-builder
 
 # First run launches an interactive setup wizard
 owb init
@@ -214,15 +215,14 @@ OWB's config system resolves paths based on the CLI name, so `cwb` loads from `~
 ```bash
 git clone https://github.com/originalrgsec/open-workspace-builder.git
 cd open-workspace-builder
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev,security]"
+uv sync --all-extras
 
 # Run tests (1253 tests)
-pytest tests/
+uv run pytest tests/
 
 # Lint
-ruff check src/ tests/
-ruff format --check src/ tests/
+uv run ruff check src/ tests/
+uv run ruff format --check src/ tests/
 ```
 
 ## License

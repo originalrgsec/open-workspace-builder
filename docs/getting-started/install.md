@@ -6,16 +6,25 @@ Open Workspace Builder requires Python 3.10 or later. You will also need pip (or
 
 ## Installation
 
-Install directly from GitHub:
+Install from PyPI:
+
+```bash
+pip install open-workspace-builder
+```
+
+Or install directly from GitHub for the latest development version:
 
 ```bash
 pip install git+https://github.com/originalrgsec/open-workspace-builder.git
 ```
 
-To use the LLM-powered security scanner (Layer 3):
+### Optional Extras
 
 ```bash
-pip install "open-workspace-builder[llm]"
+pip install "open-workspace-builder[llm]"     # Layer 3 semantic scanner
+pip install "open-workspace-builder[sheets]"  # Google Sheets token export
+pip install "open-workspace-builder[xlsx]"    # Excel token export
+pip install "open-workspace-builder[mcp]"     # MCP server
 ```
 
 ## Development Installation

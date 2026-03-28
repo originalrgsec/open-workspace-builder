@@ -143,7 +143,7 @@ pip install open-workspace-builder
 owb init
 ```
 
-That is the entire setup. The wizard handles the rest.
+OWB is [available on PyPI](https://pypi.org/project/open-workspace-builder/). The wizard handles the rest.
 
 [Read the first-run guide →](howto-first-run.md){ .rg-btn .rg-btn--primary }
 
