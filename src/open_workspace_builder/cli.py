@@ -1088,6 +1088,78 @@ def auth_backends() -> None:
         click.echo("  onepassword: not available (install op CLI: https://developer.1password.com/docs/cli/)")
 
 
+@auth.command("google-store")
+@click.option(
+    "--config",
+    "-c",
+    "config_path",
+    default=None,
+    help="Path to YAML config file.",
+)
+@click.pass_context
+def auth_google_store(ctx: click.Context, config_path: str | None) -> None:
+    """Store Google OAuth client credentials (encrypted with age).
+
+    Prompts for client_id and client_secret (input is masked).
+    Credentials are encrypted with age and stored in the config directory.
+    """
+    cli_name = ctx.obj.get("cli_name", "owb")
+    config = load_config(config_path, cli_name=cli_name)
+    config_dir = config.paths.config_dir
+
+    client_id = click.prompt("Google OAuth client_id", hide_input=True)
+    client_secret = click.prompt("Google OAuth client_secret", hide_input=True)
+
+    if not client_id or not client_secret:
+        click.echo("Error: client_id and client_secret cannot be empty.")
+        sys.exit(1)
+
+    try:
+        from open_workspace_builder.auth.google import store_google_credentials
+
+        secrets_file = store_google_credentials(
+            client_id=client_id,
+            client_secret=client_secret,
+            config_dir=config_dir,
+            age_key_path=config.secrets.age_identity,
+        )
+        click.echo(f"Google OAuth credentials stored at {secrets_file}")
+    except (ImportError, FileNotFoundError) as exc:
+        click.echo(f"Error: {exc}")
+        sys.exit(1)
+
+
+@auth.command("google")
+@click.option(
+    "--config",
+    "-c",
+    "config_path",
+    default=None,
+    help="Path to YAML config file.",
+)
+@click.pass_context
+def auth_google(ctx: click.Context, config_path: str | None) -> None:
+    """Run Google OAuth flow for Sheets API access.
+
+    Opens a browser for user consent. The resulting token is saved for
+    use by 'owb metrics export --format gsheets'.
+    """
+    cli_name = ctx.obj.get("cli_name", "owb")
+    config = load_config(config_path, cli_name=cli_name)
+
+    try:
+        from open_workspace_builder.auth.google import run_oauth_flow
+
+        token_path = run_oauth_flow(
+            config_dir=config.paths.config_dir,
+            age_key_path=config.secrets.age_identity,
+        )
+        click.echo(f"Google Sheets OAuth token saved at {token_path}")
+    except (ImportError, FileNotFoundError, ValueError) as exc:
+        click.echo(f"Error: {exc}")
+        sys.exit(1)
+
+
 # ── owb audit ────────────────────────────────────────────────────────────
 
 
@@ -1586,6 +1658,172 @@ def validate(path: str) -> None:
         click.echo("  No issues found.")
 
     sys.exit(0 if result.valid else 1)
+
+
+@owb.group()
+@click.pass_context
+def metrics(ctx: click.Context) -> None:
+    """Token consumption tracking and cost analysis."""
+    ctx.ensure_object(dict)
+
+
+@metrics.command("tokens")
+@click.option("--since", default=None, help="Start date filter (YYYYMMDD)")
+@click.option("--until", default=None, help="End date filter (YYYYMMDD)")
+@click.option("--project", "project_filter", default=None, help="Filter by project name")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
+@click.option(
+    "--claude-dir",
+    default=None,
+    help="Path to Claude Code data directory (default: ~/.claude)",
+)
+def metrics_tokens(
+    since: str | None,
+    until: str | None,
+    project_filter: str | None,
+    output_format: str,
+    claude_dir: str | None,
+) -> None:
+    """Report token consumption and API-equivalent costs.
+
+    Parses Claude Code session files and calculates per-model, per-project,
+    and per-day cost breakdowns.
+    """
+    from open_workspace_builder.tokens.calculator import build_report
+    from open_workspace_builder.tokens.parser import (
+        discover_session_files,
+        parse_session_file,
+        project_name_from_dir,
+    )
+    from open_workspace_builder.tokens.pricing import load_pricing
+
+    projects_dir = Path(claude_dir or Path.home() / ".claude") / "projects"
+    if not projects_dir.is_dir():
+        click.echo(f"Error: Claude Code projects directory not found: {projects_dir}")
+        sys.exit(1)
+
+    pricing = load_pricing()
+    session_files = discover_session_files(projects_dir)
+
+    if not session_files:
+        click.echo("No session files found.")
+        sys.exit(0)
+
+    # Parse all sessions and group by project.
+    session_data: list[tuple[str, str, list]] = []
+    for session_file in session_files:
+        project_dir_name = session_file.parent.name
+        project_name = project_name_from_dir(project_dir_name)
+
+        if project_filter and project_filter.lower() not in project_name.lower():
+            continue
+
+        usages = parse_session_file(session_file)
+        if usages:
+            session_id = session_file.stem
+            session_data.append((project_name, session_id, usages))
+
+    report = build_report(session_data, pricing, since=since, until=until)
+
+    if output_format == "json":
+        from open_workspace_builder.tokens.reporter import format_report_json
+
+        click.echo(json.dumps(format_report_json(report), indent=2))
+    else:
+        from open_workspace_builder.tokens.reporter import format_report
+
+        click.echo(format_report(report))
+
+
+@metrics.command("export")
+@click.option(
+    "--format",
+    "export_format",
+    type=click.Choice(["gsheets", "xlsx"]),
+    required=True,
+    help="Export format",
+)
+@click.option("--sheet-id", default=None, help="Google Sheet ID (required for gsheets)")
+@click.option("--output", "output_path", default=None, help="Output file path (for xlsx)")
+@click.option("--since", default=None, help="Start date filter (YYYYMMDD)")
+@click.option("--until", default=None, help="End date filter (YYYYMMDD)")
+@click.option(
+    "--claude-dir",
+    default=None,
+    help="Path to Claude Code data directory (default: ~/.claude)",
+)
+def metrics_export(
+    export_format: str,
+    sheet_id: str | None,
+    output_path: str | None,
+    since: str | None,
+    until: str | None,
+    claude_dir: str | None,
+) -> None:
+    """Export token consumption data to Google Sheets or Excel.
+
+    Google Sheets requires the [sheets] extra and configured OAuth credentials.
+    Excel requires the [xlsx] extra.
+    """
+    if export_format == "gsheets" and not sheet_id:
+        click.echo("Error: --sheet-id is required for Google Sheets export.")
+        sys.exit(1)
+    if export_format == "xlsx" and not output_path:
+        click.echo("Error: --output is required for Excel export.")
+        sys.exit(1)
+
+    from open_workspace_builder.tokens.calculator import build_report
+    from open_workspace_builder.tokens.parser import (
+        discover_session_files,
+        parse_session_file,
+        project_name_from_dir,
+    )
+    from open_workspace_builder.tokens.pricing import load_pricing
+
+    projects_dir = Path(claude_dir or Path.home() / ".claude") / "projects"
+    if not projects_dir.is_dir():
+        click.echo(f"Error: Claude Code projects directory not found: {projects_dir}")
+        sys.exit(1)
+
+    pricing = load_pricing()
+    session_files = discover_session_files(projects_dir)
+    session_data: list[tuple[str, str, list]] = []
+    for session_file in session_files:
+        project_name = project_name_from_dir(session_file.parent.name)
+        usages = parse_session_file(session_file)
+        if usages:
+            session_data.append((project_name, session_file.stem, usages))
+
+    report = build_report(session_data, pricing, since=since, until=until)
+
+    if export_format == "gsheets":
+        try:
+            from open_workspace_builder.tokens.sheets_export import export_to_sheets
+        except ImportError:
+            click.echo(
+                "Error: Google Sheets export requires additional packages.\n"
+                "Install with: uv pip install open-workspace-builder[sheets]"
+            )
+            sys.exit(1)
+        export_to_sheets(report, sheet_id)  # type: ignore[arg-type]
+        click.echo(f"Exported to Google Sheet: {sheet_id}")
+    elif export_format == "xlsx":
+        try:
+            from open_workspace_builder.tokens.xlsx_export import export_to_xlsx
+        except ImportError:
+            click.echo(
+                "Error: Excel export requires xlsxwriter.\n"
+                "Install with: uv pip install open-workspace-builder[xlsx]"
+            )
+            sys.exit(1)
+        export_to_xlsx(report, output_path)  # type: ignore[arg-type]
+        click.echo(f"Exported to: {output_path}")
 
 
 @owb.group()

@@ -56,6 +56,13 @@ sast = [
 mcp = [
     "mcp>=1.0.0",
 ]
+sheets = [
+    "google-api-python-client>=2.0",
+    "google-auth-oauthlib>=1.0",
+]
+xlsx = [
+    "xlsxwriter>=3.0",
+]
 dev = [
     "pytest>=7.0",
     "ruff>=0.1.0",
