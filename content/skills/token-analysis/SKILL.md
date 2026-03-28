@@ -2,10 +2,15 @@
 name: token-analysis
 description: >-
   Analyze token consumption and API-equivalent costs from Claude Code sessions.
-  Use this skill during sprint close (write cost section to retro, update
-  tracking sheet), sprint planning (show trailing cost trend and estimate),
-  monthly review (full breakdown with charts), or ad-hoc cost analysis. Wraps
+  Use this skill when closing a sprint (write cost section to retro, update
+  tracking sheet), when planning a sprint (show trailing cost trend and
+  estimate), when doing a monthly review (full breakdown with charts), or
+  when the user asks about token usage or cost analysis. This skill wraps
   the `owb metrics tokens` CLI commands.
+metadata:
+  author: open-workspace-builder
+  version: "1.0.0"
+license: MIT
 ---
 
 # Token Consumption Analysis

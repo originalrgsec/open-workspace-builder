@@ -40,6 +40,18 @@ class TestTokenAnalysisSkill:
         content = skill_file.read_text(encoding="utf-8")
         assert "description:" in content
 
+    def test_skill_has_metadata_block(self) -> None:
+        skill_file = self._skill_path() / "SKILL.md"
+        content = skill_file.read_text(encoding="utf-8")
+        assert "metadata:" in content
+        assert "author:" in content
+        assert "version:" in content
+
+    def test_skill_has_license(self) -> None:
+        skill_file = self._skill_path() / "SKILL.md"
+        content = skill_file.read_text(encoding="utf-8")
+        assert "license:" in content
+
     def test_skill_references_cli_command(self) -> None:
         skill_file = self._skill_path() / "SKILL.md"
         content = skill_file.read_text(encoding="utf-8")
