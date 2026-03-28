@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-03-28
+
+### Added
+- Token tracking Level C — automation and forecasting (OWB-S076-C):
+  - `owb metrics record` command: append session costs to local JSONL ledger with `--story` tagging
+  - `owb metrics sync` command: record + optional Google Sheets export for sprint-close hooks
+  - `owb metrics forecast` command: monthly cost projection from ledger data (linear extrapolation)
+  - `owb metrics budget-check` command: month-to-date threshold check with exit code 2 for hook integration
+  - `owb metrics by-story` command: cost breakdown grouped by story ID tag
+  - `LedgerEntry` frozen dataclass for session cost records
+  - `TokensConfig` added to config system (ledger_path, budget_threshold, auto_record)
+  - File locking on ledger writes for concurrent hook safety
+  - Date validation at function boundaries
+- Phase model documentation page (`docs/concepts/phases.md`) explaining Phases 0-3 (OWB-S080)
+- CLI reference expanded from 6 to 15 documented commands (OWB-S080)
+- ADR entries for xlsxwriter (AD-15) and Google Sheets OAuth (AD-16) (OWB-S080)
+- Token tracking feature card on landing page and README (OWB-S080)
+- Phase 2 preview section on landing page and README (OWB-S080)
+- Optional dependency groups documented in configuration guide (OWB-S080)
+- SDR sprint plan entries through Sprint 13 (OWB-S080)
+- 5 vault research notes from model hosting research spike (OWB-S077):
+  - US-based providers: Together AI (primary), Fireworks AI (secondary)
+  - Models: Qwen 3.5 27B recommended (SWE-bench 72.4, 17 GB Q4)
+  - Local frameworks: Ollama now, MLX/vllm-mlx for 96+ GB hardware
+  - 7-scenario cost model: Max plan subsidy makes hybrid uneconomical for single user
+  - Architecture decision tree with trigger events for hybrid adoption
+- 40 new tests (1213 → 1253)
+
+### Fixed
+- Age backend pyrage identity generation now writes public key comment line matching age-keygen format
+
+### Changed
+- Security scanner pattern count corrected in docs (42 → 58 patterns across 12 categories)
+- README test badge updated (713 → 1253)
+
 ## [0.7.0] - 2026-03-28
 
 ### Added
