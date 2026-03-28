@@ -58,9 +58,13 @@ If the CHANGELOG is missing or the latest section is empty, report FAIL with ins
 
 **Automated check.** Look for `docs/releases/v<version>.md` matching the version being released. If the releases directory does not exist or no manifest matches the current version, report FAIL and describe the expected manifest contents: Code changes, Project Docs changes, Content changes, Infrastructure changes, Test breakdown, Stories completed.
 
-### Item 5: Metrics Recorded
+### Item 5: Metrics Recorded (including Token Consumption)
 
-**Conditional check.** Determine if the project has an active metrics system (look for metrics configuration, metrics directory, or pipeline metrics files). If metrics are active, prompt the operator to confirm metrics have been recorded for this sprint. If no metrics system is detected, report SKIP.
+**Conditional check.** Two sub-items:
+
+**5a: Token consumption.** Invoke the **token-analysis** skill's sprint close workflow. This runs `owb metrics tokens` for the sprint date range, writes the cost section to the retro, and updates the tracking Google Sheet. If the token-analysis skill is available, run it. If not, run `owb metrics tokens --since <sprint_start> --until <sprint_end>` directly and include the summary in the retro manually.
+
+**5b: Pipeline metrics.** Determine if the project has an active pipeline metrics system (look for metrics configuration, metrics directory, or pipeline metrics files). If metrics are active, prompt the operator to confirm metrics have been recorded for this sprint. If no metrics system is detected, report SKIP for 5b.
 
 ### Item 6: Vault Audit
 

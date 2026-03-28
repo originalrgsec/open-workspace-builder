@@ -166,7 +166,15 @@ Update `_bootstrap.md` project manifest table:
 - Update the project's "Phase" column if changed
 - Update the "Next Action" column to reflect the sprint theme
 
-### Step 8: Sprint Open Summary
+### Step 8: Cost Estimate
+
+Invoke the **token-analysis** skill's sprint planning workflow. This pulls trailing cost data from the previous 2 sprints, calculates cost-per-story, and estimates the upcoming sprint's cost based on the planned story count.
+
+If the token-analysis skill is not available, run `owb metrics tokens --format json` for the last 30 days and calculate the estimate manually. If no historical data exists, report SKIP.
+
+Present the cost estimate table as part of the sprint open summary.
+
+### Step 9: Sprint Open Summary
 
 Present the complete summary:
 

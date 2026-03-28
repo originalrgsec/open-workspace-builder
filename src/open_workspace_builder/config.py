@@ -95,6 +95,7 @@ class SkillsConfig:
         "mobile-inbox-triage",
         "vault-audit",
         "oss-health-check",
+        "token-analysis",
     )
 
 
