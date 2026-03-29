@@ -167,3 +167,74 @@ class TestStagePromote:
 
         updated = yaml.safe_load(config_file.read_text(encoding="utf-8"))
         assert updated["stage"]["current_stage"] == 1
+
+    def test_promote_with_enable_hooks_persists_config(
+        self, runner: CliRunner, tmp_path: Path
+    ) -> None:
+        vault = tmp_path / "Obsidian"
+        vault.mkdir()
+        (vault / "_index.md").write_text("# Index\nContent here.", encoding="utf-8")
+        (vault / "_bootstrap.md").write_text("# Bootstrap\nContent here.", encoding="utf-8")
+        self_dir = vault / "self"
+        self_dir.mkdir()
+        (self_dir / "_index.md").write_text(
+            "# Self\nReal content about the user.", encoding="utf-8"
+        )
+        proj = vault / "projects" / "TestProj"
+        proj.mkdir(parents=True)
+        (proj / "status.md").write_text("# Status\nActive.", encoding="utf-8")
+
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            f"target: {vault}\nstage:\n  current_stage: 0\n",
+            encoding="utf-8",
+        )
+        result = runner.invoke(
+            owb,
+            [
+                "stage", "promote",
+                "--vault", str(vault),
+                "--config", str(config_file),
+                "--enable-hooks",
+            ],
+        )
+        assert result.exit_code == 0
+        import yaml
+
+        updated = yaml.safe_load(config_file.read_text(encoding="utf-8"))
+        assert updated["enforcement"]["hooks_enabled"] is True
+
+    def test_promote_no_hooks_flag_does_not_persist(
+        self, runner: CliRunner, tmp_path: Path
+    ) -> None:
+        vault = tmp_path / "Obsidian"
+        vault.mkdir()
+        (vault / "_index.md").write_text("# Index\nContent here.", encoding="utf-8")
+        (vault / "_bootstrap.md").write_text("# Bootstrap\nContent here.", encoding="utf-8")
+        self_dir = vault / "self"
+        self_dir.mkdir()
+        (self_dir / "_index.md").write_text(
+            "# Self\nReal content about the user.", encoding="utf-8"
+        )
+        proj = vault / "projects" / "TestProj"
+        proj.mkdir(parents=True)
+        (proj / "status.md").write_text("# Status\nActive.", encoding="utf-8")
+
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            f"target: {vault}\nstage:\n  current_stage: 0\n",
+            encoding="utf-8",
+        )
+        result = runner.invoke(
+            owb,
+            [
+                "stage", "promote",
+                "--vault", str(vault),
+                "--config", str(config_file),
+            ],
+        )
+        assert result.exit_code == 0
+        import yaml
+
+        updated = yaml.safe_load(config_file.read_text(encoding="utf-8"))
+        assert "enforcement" not in updated

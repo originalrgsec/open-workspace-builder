@@ -9,6 +9,7 @@ import pytest
 
 from open_workspace_builder.config import (
     Config,
+    EnforcementConfig,
     MarketplaceConfig,
     ModelsConfig,
     PathsConfig,
@@ -69,10 +70,19 @@ class TestNewSectionDefaults:
         s = StageConfig()
         assert s.current_stage == 0
 
+    def test_enforcement_defaults(self) -> None:
+        e = EnforcementConfig()
+        assert e.hooks_enabled is False
+
     def test_config_includes_stage(self) -> None:
         config = Config()
         assert isinstance(config.stage, StageConfig)
         assert config.stage.current_stage == 0
+
+    def test_config_includes_enforcement(self) -> None:
+        config = Config()
+        assert isinstance(config.enforcement, EnforcementConfig)
+        assert config.enforcement.hooks_enabled is False
 
     def test_new_sections_are_frozen(self) -> None:
         with pytest.raises(AttributeError):
@@ -87,6 +97,8 @@ class TestNewSectionDefaults:
             PathsConfig().config_dir = "x"  # type: ignore[misc]
         with pytest.raises(AttributeError):
             StageConfig().current_stage = 1  # type: ignore[misc]
+        with pytest.raises(AttributeError):
+            EnforcementConfig().hooks_enabled = True  # type: ignore[misc]
 
 
 # ---------------------------------------------------------------------------
@@ -178,6 +190,7 @@ class TestPathsResolution:
             marketplace=MarketplaceConfig(format="anthropic"),
             tokens=TokensConfig(budget_threshold=50.0),
             stage=StageConfig(current_stage=2),
+            enforcement=EnforcementConfig(hooks_enabled=True),
         )
         resolved = _with_resolved_paths(config, "owb")
         assert resolved.target == "custom"
@@ -187,6 +200,7 @@ class TestPathsResolution:
         assert resolved.marketplace.format == "anthropic"
         assert resolved.tokens.budget_threshold == 50.0
         assert resolved.stage.current_stage == 2
+        assert resolved.enforcement.hooks_enabled is True
 
 
 # ---------------------------------------------------------------------------
@@ -306,6 +320,12 @@ class TestMergeNewSections:
         cfg.write_text("target: my-output\n", encoding="utf-8")
         config = load_config(cfg, cli_name="owb")
         assert config.stage.current_stage == 0
+
+    def test_enforcement_overlay(self, tmp_path: Path) -> None:
+        cfg = tmp_path / "c.yaml"
+        cfg.write_text("enforcement:\n  hooks_enabled: true\n", encoding="utf-8")
+        config = load_config(cfg, cli_name="owb")
+        assert config.enforcement.hooks_enabled is True
 
 
 # ---------------------------------------------------------------------------

@@ -2246,7 +2246,16 @@ def stage_status(vault: str | None, config_path: str | None) -> None:
     type=click.Path(exists=True),
     help="Path to YAML config file.",
 )
-def stage_promote(vault: str | None, config_path: str | None) -> None:
+@click.option(
+    "--enable-hooks/--no-hooks",
+    default=None,
+    help="Enable/disable hook-based policy enforcement (Phase 2+).",
+)
+def stage_promote(
+    vault: str | None,
+    config_path: str | None,
+    enable_hooks: bool | None,
+) -> None:
     """Promote to the next bootstrap stage after verifying exit criteria."""
     import yaml
 
@@ -2276,11 +2285,15 @@ def stage_promote(vault: str | None, config_path: str | None) -> None:
                 click.echo(f"         {criterion.detail}")
         sys.exit(1)
 
-    # Write updated stage to config file
     new_stage = assessment.target_stage
+
+    # Write updated stage (and enforcement config) to config file
+    hooks_enabled = enable_hooks if enable_hooks is not None else config.enforcement.hooks_enabled
     if resolved_config_path and resolved_config_path.exists():
         raw = yaml.safe_load(resolved_config_path.read_text(encoding="utf-8")) or {}
         raw.setdefault("stage", {})["current_stage"] = new_stage
+        if enable_hooks is not None:
+            raw.setdefault("enforcement", {})["hooks_enabled"] = hooks_enabled
         resolved_config_path.write_text(
             yaml.dump(raw, default_flow_style=False, sort_keys=False),
             encoding="utf-8",
@@ -2290,6 +2303,33 @@ def stage_promote(vault: str | None, config_path: str | None) -> None:
             "Warning: no config file specified — stage not persisted. "
             "Pass --config to save."
         )
+
+    # Deploy hooks if promoting to Stage 2+ with hooks enabled
+    if new_stage >= 2 and hooks_enabled:
+        from dataclasses import replace
+
+        from open_workspace_builder.config import EnforcementConfig, StageConfig
+        from open_workspace_builder.enforcement import deploy_hooks
+
+        updated_config = replace(
+            config,
+            enforcement=EnforcementConfig(hooks_enabled=True),
+            stage=StageConfig(current_stage=new_stage),
+        )
+        try:
+            content_root = _find_content_root()
+            policies_dir = content_root / "content" / "policies"
+        except FileNotFoundError:
+            policies_dir = Path("content") / "policies"
+        owb_dir = Path(config.paths.config_dir) if config.paths.config_dir else Path.home() / ".owb"
+        agent_config_dir = Path.home() / ".claude"
+        deploy_hooks(
+            config=updated_config,
+            policies_dir=policies_dir,
+            owb_dir=owb_dir,
+            agent_config_dir=agent_config_dir,
+        )
+        click.echo("Hook-based policy enforcement deployed.")
 
     click.echo(f"Promoted to Stage {new_stage}")
 

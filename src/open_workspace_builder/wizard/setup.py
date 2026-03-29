@@ -363,6 +363,10 @@ def _write_config_yaml(config: Config, config_path: Path) -> None:
     if config.stage.current_stage != 0:
         data["stage"] = {"current_stage": config.stage.current_stage}
 
+    # Only write enforcement config if non-default
+    if config.enforcement.hooks_enabled:
+        data["enforcement"] = {"hooks_enabled": config.enforcement.hooks_enabled}
+
     # Only write secrets config if non-default
     if config.secrets.backend != "env":
         secrets_data: dict[str, str] = {"backend": config.secrets.backend}

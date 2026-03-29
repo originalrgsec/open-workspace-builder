@@ -207,6 +207,13 @@ class StageConfig:
 
 
 @dataclass(frozen=True)
+class EnforcementConfig:
+    """Policy enforcement configuration."""
+
+    hooks_enabled: bool = False
+
+
+@dataclass(frozen=True)
 class PathsConfig:
     """Directory paths for config, data, and credentials."""
 
@@ -231,6 +238,7 @@ class Config:
     secrets: SecretsConfig = field(default_factory=SecretsConfig)
     tokens: TokensConfig = field(default_factory=TokensConfig)
     stage: StageConfig = field(default_factory=StageConfig)
+    enforcement: EnforcementConfig = field(default_factory=EnforcementConfig)
     paths: PathsConfig = field(default_factory=PathsConfig)
 
 
@@ -249,6 +257,7 @@ _SECTION_CLASSES: dict[str, type] = {
     "secrets": SecretsConfig,
     "tokens": TokensConfig,
     "stage": StageConfig,
+    "enforcement": EnforcementConfig,
     "paths": PathsConfig,
 }
 
@@ -365,6 +374,7 @@ def _with_resolved_paths(config: Config, cli_name: str) -> Config:
         secrets=config.secrets,
         tokens=config.tokens,
         stage=config.stage,
+        enforcement=config.enforcement,
         paths=resolved,
     )
 
