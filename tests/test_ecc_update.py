@@ -129,6 +129,47 @@ def mixed_scanner() -> MagicMock:
     return scanner
 
 
+@pytest.fixture
+def flagged_scanner() -> MagicMock:
+    """Scanner that returns 'flagged' (warning-only) for files containing 'pretend'."""
+
+    def _scan(path: Path) -> ScanVerdict:
+        content = path.read_text(encoding="utf-8", errors="replace")
+        if "pretend" in content.lower():
+            return ScanVerdict(
+                file_path=str(path),
+                verdict="flagged",
+                flags=(
+                    ScanFlag(
+                        category="stealth",
+                        severity="warning",
+                        evidence="pretend to be",
+                        description="Identity manipulation instruction",
+                        layer=2,
+                    ),
+                ),
+            )
+        if "exfiltrate" in content.lower() or "evil.example.com" in content:
+            return ScanVerdict(
+                file_path=str(path),
+                verdict="malicious",
+                flags=(
+                    ScanFlag(
+                        category="exfiltration",
+                        severity="critical",
+                        evidence="curl exfil",
+                        description="Potential data exfiltration via curl",
+                        layer=2,
+                    ),
+                ),
+            )
+        return ScanVerdict(file_path=str(path), verdict="clean", flags=())
+
+    scanner = MagicMock()
+    scanner.scan_file.side_effect = _scan
+    return scanner
+
+
 # ---------------------------------------------------------------------------
 # Unit tests: helpers
 # ---------------------------------------------------------------------------
@@ -708,6 +749,241 @@ class TestCLI:
         assert result.exit_code == 0
         assert "update" in result.output
         assert "status" in result.output
+
+
+# ---------------------------------------------------------------------------
+# Trusted-source exemption (Issue #1)
+# ---------------------------------------------------------------------------
+
+
+class TestTrustedSourceExemption:
+    """Trusted upstream URLs should skip Layer 2 pattern scanning."""
+
+    @patch("open_workspace_builder.engine.ecc_update.fetch_upstream")
+    def test_trusted_url_skips_layer2(
+        self,
+        mock_fetch: MagicMock,
+        upstream_dir: Path,
+        vendor_dir: Path,
+    ) -> None:
+        """When upstream URL is trusted, Layer 2 patterns should not run."""
+        mock_fetch.return_value = "deadbeef"
+        # Set repo_url to a trusted URL
+        meta_path = vendor_dir / ".upstream-meta.json"
+        meta = json.loads(meta_path.read_text())
+        meta["repo_url"] = "https://github.com/affaan-m/everything-claude-code"
+        meta_path.write_text(json.dumps(meta))
+
+        with patch("open_workspace_builder.engine.ecc_update.tempfile") as mock_tmp:
+            mock_tmp.TemporaryDirectory.return_value.__enter__ = MagicMock(
+                return_value=str(upstream_dir.parent)
+            )
+            mock_tmp.TemporaryDirectory.return_value.__exit__ = MagicMock(return_value=False)
+
+            results = run_update(
+                vendor_dir,
+                accept_all=True,
+                trusted_upstream_urls=(
+                    "https://github.com/affaan-m/everything-claude-code",
+                ),
+            )
+
+        blocked = [r for r in results if r.action == "blocked"]
+        # Even the malicious-agent.md should not be caught by Layer 2 patterns
+        # when the upstream is trusted (Layer 1 structural checks only)
+        # The malicious-agent.md is a regular markdown file, so Layer 1 won't flag it
+        assert len(blocked) == 0
+
+    @patch("open_workspace_builder.engine.ecc_update.fetch_upstream")
+    def test_untrusted_url_runs_full_scan(
+        self,
+        mock_fetch: MagicMock,
+        upstream_dir: Path,
+        vendor_dir: Path,
+        flagged_scanner: MagicMock,
+    ) -> None:
+        """Untrusted URL should run full Layer 1+2 scanning."""
+        mock_fetch.return_value = "deadbeef"
+        with patch("open_workspace_builder.engine.ecc_update.tempfile") as mock_tmp:
+            mock_tmp.TemporaryDirectory.return_value.__enter__ = MagicMock(
+                return_value=str(upstream_dir.parent)
+            )
+            mock_tmp.TemporaryDirectory.return_value.__exit__ = MagicMock(return_value=False)
+
+            results = run_update(
+                vendor_dir,
+                accept_all=True,
+                scanner=flagged_scanner,
+                # No trusted_upstream_urls — defaults to empty
+            )
+
+        blocked = [r for r in results if r.action == "blocked"]
+        assert len(blocked) == 1  # malicious-agent.md still blocked
+
+    @patch("open_workspace_builder.engine.ecc_update.fetch_upstream")
+    def test_trusted_url_still_runs_layer1(
+        self,
+        mock_fetch: MagicMock,
+        upstream_dir: Path,
+        vendor_dir: Path,
+    ) -> None:
+        """Even trusted URLs must run Layer 1 structural checks (binary, encoding)."""
+        mock_fetch.return_value = "deadbeef"
+        # Create a binary file in upstream
+        (upstream_dir / "agents" / "sneaky.exe").write_bytes(b"\x00\x01\x02\x03")
+
+        meta_path = vendor_dir / ".upstream-meta.json"
+        meta = json.loads(meta_path.read_text())
+        meta["repo_url"] = "https://github.com/affaan-m/everything-claude-code"
+        meta_path.write_text(json.dumps(meta))
+
+        with patch("open_workspace_builder.engine.ecc_update.tempfile") as mock_tmp:
+            mock_tmp.TemporaryDirectory.return_value.__enter__ = MagicMock(
+                return_value=str(upstream_dir.parent)
+            )
+            mock_tmp.TemporaryDirectory.return_value.__exit__ = MagicMock(return_value=False)
+
+            results = run_update(
+                vendor_dir,
+                accept_all=True,
+                trusted_upstream_urls=(
+                    "https://github.com/affaan-m/everything-claude-code",
+                ),
+            )
+
+        by_path = {r.relative_path: r for r in results}
+        exe_result = by_path.get("agents/sneaky.exe")
+        # Layer 1 should catch the .exe extension
+        assert exe_result is not None
+        assert exe_result.action == "blocked"
+
+    @patch("open_workspace_builder.engine.ecc_update.fetch_upstream")
+    def test_explicit_scanner_overrides_trusted(
+        self,
+        mock_fetch: MagicMock,
+        upstream_dir: Path,
+        vendor_dir: Path,
+        flagged_scanner: MagicMock,
+    ) -> None:
+        """When an explicit scanner is passed, it takes precedence over trust logic."""
+        mock_fetch.return_value = "deadbeef"
+        meta_path = vendor_dir / ".upstream-meta.json"
+        meta = json.loads(meta_path.read_text())
+        meta["repo_url"] = "https://github.com/affaan-m/everything-claude-code"
+        meta_path.write_text(json.dumps(meta))
+
+        with patch("open_workspace_builder.engine.ecc_update.tempfile") as mock_tmp:
+            mock_tmp.TemporaryDirectory.return_value.__enter__ = MagicMock(
+                return_value=str(upstream_dir.parent)
+            )
+            mock_tmp.TemporaryDirectory.return_value.__exit__ = MagicMock(return_value=False)
+
+            results = run_update(
+                vendor_dir,
+                accept_all=True,
+                scanner=flagged_scanner,  # explicit scanner — should be used
+                trusted_upstream_urls=(
+                    "https://github.com/affaan-m/everything-claude-code",
+                ),
+            )
+
+        blocked = [r for r in results if r.action == "blocked"]
+        assert len(blocked) == 1  # flagged_scanner blocks malicious-agent.md
+
+
+# ---------------------------------------------------------------------------
+# Severity differentiation (Issue #1)
+# ---------------------------------------------------------------------------
+
+
+class TestSeverityDifferentiation:
+    """Flagged (warning-only) files should be accepted with warnings, not blocked."""
+
+    @patch("open_workspace_builder.engine.ecc_update.fetch_upstream")
+    def test_flagged_verdict_accepted_not_blocked(
+        self,
+        mock_fetch: MagicMock,
+        upstream_dir: Path,
+        vendor_dir: Path,
+        flagged_scanner: MagicMock,
+    ) -> None:
+        mock_fetch.return_value = "deadbeef"
+        with patch("open_workspace_builder.engine.ecc_update.tempfile") as mock_tmp:
+            mock_tmp.TemporaryDirectory.return_value.__enter__ = MagicMock(
+                return_value=str(upstream_dir.parent)
+            )
+            mock_tmp.TemporaryDirectory.return_value.__exit__ = MagicMock(return_value=False)
+
+            results = run_update(
+                vendor_dir,
+                accept_all=True,
+                scanner=flagged_scanner,
+            )
+
+        by_path = {r.relative_path: r for r in results}
+
+        # Flagged agent should be accepted, not blocked
+        flagged = by_path["agents/flagged-agent.md"]
+        assert flagged.action == "accepted"
+        assert flagged.warnings is not None
+        assert len(flagged.warnings) > 0
+
+        # Malicious agent should still be blocked
+        malicious = by_path["agents/malicious-agent.md"]
+        assert malicious.action == "blocked"
+
+    @patch("open_workspace_builder.engine.ecc_update.fetch_upstream")
+    def test_flagged_file_is_copied_to_vendor(
+        self,
+        mock_fetch: MagicMock,
+        upstream_dir: Path,
+        vendor_dir: Path,
+        flagged_scanner: MagicMock,
+    ) -> None:
+        mock_fetch.return_value = "deadbeef"
+        with patch("open_workspace_builder.engine.ecc_update.tempfile") as mock_tmp:
+            mock_tmp.TemporaryDirectory.return_value.__enter__ = MagicMock(
+                return_value=str(upstream_dir.parent)
+            )
+            mock_tmp.TemporaryDirectory.return_value.__exit__ = MagicMock(return_value=False)
+
+            run_update(
+                vendor_dir,
+                accept_all=True,
+                scanner=flagged_scanner,
+            )
+
+        # Flagged file should be present in vendor (was accepted)
+        assert (vendor_dir / "agents" / "flagged-agent.md").exists()
+
+        # Malicious file should NOT be present
+        assert not (vendor_dir / "agents" / "malicious-agent.md").exists()
+
+    @patch("open_workspace_builder.engine.ecc_update.fetch_upstream")
+    def test_malicious_verdict_still_blocked(
+        self,
+        mock_fetch: MagicMock,
+        upstream_dir: Path,
+        vendor_dir: Path,
+        flagged_scanner: MagicMock,
+    ) -> None:
+        mock_fetch.return_value = "deadbeef"
+        with patch("open_workspace_builder.engine.ecc_update.tempfile") as mock_tmp:
+            mock_tmp.TemporaryDirectory.return_value.__enter__ = MagicMock(
+                return_value=str(upstream_dir.parent)
+            )
+            mock_tmp.TemporaryDirectory.return_value.__exit__ = MagicMock(return_value=False)
+
+            results = run_update(
+                vendor_dir,
+                accept_all=True,
+                scanner=flagged_scanner,
+            )
+
+        blocked = [r for r in results if r.action == "blocked"]
+        assert len(blocked) == 1
+        assert blocked[0].relative_path == "agents/malicious-agent.md"
+        assert blocked[0].flag_details is not None
 
 
 # ---------------------------------------------------------------------------

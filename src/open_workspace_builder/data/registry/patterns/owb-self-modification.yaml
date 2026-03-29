@@ -13,10 +13,10 @@ payload:
       description: "Instruction to self-modify rules or config"
       false_positive_hint: "Legitimate in meta-programming documentation"
     - id: selfmod-002
-      pattern: "(?i)rewrite\\s+(your|this)\\s+(prompt|system|instructions?)"
+      pattern: "(?i)rewrite\\s+(your)\\s+(system\\s+prompt|instructions?|core\\s+rules)|rewrite\\s+(this)\\s+(system\\s+prompt)"
       severity: critical
-      description: "Instruction to rewrite system prompt"
-      false_positive_hint: "Legitimate in prompt engineering guides"
+      description: "Instruction to rewrite own system prompt or instructions"
+      false_positive_hint: "Casual usage like 'rewrite this prompt template' will not match"
     - id: selfmod-003
       pattern: "(?i)append.*to.*(CLAUDE\\.md|WORKSPACE\\.md|agent.config)"
       severity: warning

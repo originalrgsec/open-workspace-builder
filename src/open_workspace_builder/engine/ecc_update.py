@@ -39,6 +39,7 @@ class UpdateResult:
     category: str
     action: str  # "accepted", "rejected", "blocked", "skipped", "unchanged"
     flag_details: list[str] | None = None
+    warnings: list[str] | None = None
 
 
 def _sha256(path: Path) -> str:
@@ -197,15 +198,19 @@ def apply_accepted_file(
 def build_update_log_entry(
     upstream_commit: str,
     results: list[UpdateResult],
+    *,
+    trusted_source_exempt: bool = False,
 ) -> dict:
     """Build a structured log entry for the update."""
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "upstream_commit": upstream_commit,
+        "trusted_source_exempt": trusted_source_exempt,
         "files_offered": [r.relative_path for r in results],
         "files_accepted": [r.relative_path for r in results if r.action == "accepted"],
         "files_rejected": [r.relative_path for r in results if r.action == "rejected"],
         "files_blocked": [r.relative_path for r in results if r.action == "blocked"],
+        "files_warned": [r.relative_path for r in results if r.warnings],
         "flag_details": {
             r.relative_path: r.flag_details
             for r in results
@@ -236,6 +241,7 @@ def run_update(
     accept_all: bool = False,
     prompt_fn: object | None = None,
     scanner: object | None = None,
+    trusted_upstream_urls: tuple[str, ...] = (),
 ) -> list[UpdateResult]:
     """Execute the full update workflow.
 
@@ -245,7 +251,10 @@ def run_update(
         accept_all: If True, auto-accept non-flagged files.
         prompt_fn: Callable(FileReview) -> str for interactive prompts.
                    Returns "a" (accept), "r" (reject), "q" (quit).
-        scanner: Optional Scanner instance (for testing).
+        scanner: Optional Scanner instance (for testing). When provided,
+                 takes precedence over trusted-source auto-selection.
+        trusted_upstream_urls: URLs whose content skips Layer 2 pattern
+                               scanning (Layer 1 structural checks still run).
 
     Returns:
         List of UpdateResult for each file processed.
@@ -256,12 +265,26 @@ def run_update(
 
         diffs = diff_trees(upstream_dir, vendor_dir)
 
+        # Resolve scanner: explicit scanner wins; otherwise check trusted-source
+        effective_scanner = scanner
+        trusted_source_exempt = False
+        if effective_scanner is None and trusted_upstream_urls:
+            meta = _load_json(vendor_dir / ".upstream-meta.json")
+            repo_url = meta.get("repo_url", "")
+            if repo_url in trusted_upstream_urls:
+                from open_workspace_builder.security.scanner import Scanner
+
+                effective_scanner = Scanner(layers=(1,))
+                trusted_source_exempt = True
+
         # Scan new and changed files
         reviews: list[FileReview] = []
         for d in diffs:
             if d.category in ("new", "changed"):
                 upstream_file = upstream_dir / d.relative_path
-                verdict = scan_file_for_update(upstream_file, scanner=scanner)
+                verdict = scan_file_for_update(
+                    upstream_file, scanner=effective_scanner
+                )
                 reviews.append(FileReview(diff=d, verdict=verdict))
             else:
                 reviews.append(FileReview(diff=d, verdict=None))
@@ -285,28 +308,35 @@ def run_update(
                 continue
 
             # Check security verdict
+            is_malicious = False
             is_flagged = False
-            flag_details: list[str] = []
+            scan_details: list[str] = []
             if review.verdict is not None:
                 verdict = review.verdict
-                if hasattr(verdict, "verdict") and verdict.verdict in ("flagged", "malicious"):
-                    is_flagged = True
+                if hasattr(verdict, "verdict"):
+                    if verdict.verdict == "malicious":
+                        is_malicious = True
+                    elif verdict.verdict == "flagged":
+                        is_flagged = True
                     if hasattr(verdict, "flags"):
-                        flag_details = [
+                        scan_details = [
                             f"[{f.severity}] {f.category}: {f.description}"
                             for f in verdict.flags
                         ]
 
-            if is_flagged:
+            if is_malicious:
                 results.append(
                     UpdateResult(
                         relative_path=d.relative_path,
                         category=d.category,
                         action="blocked",
-                        flag_details=flag_details,
+                        flag_details=scan_details,
                     )
                 )
                 continue
+
+            # Warning-level findings: note as warnings but allow the file through
+            file_warnings = scan_details if is_flagged else None
 
             if quit_requested:
                 results.append(
@@ -346,6 +376,7 @@ def run_update(
                         relative_path=d.relative_path,
                         category=d.category,
                         action="accepted",
+                        warnings=file_warnings,
                     )
                 )
             else:
@@ -354,6 +385,7 @@ def run_update(
                         relative_path=d.relative_path,
                         category=d.category,
                         action="rejected",
+                        warnings=file_warnings,
                     )
                 )
 
@@ -363,7 +395,11 @@ def run_update(
             update_upstream_meta(vendor_dir, upstream_commit)
 
         # Always write update log
-        log_entry = build_update_log_entry(upstream_commit, results)
+        log_entry = build_update_log_entry(
+            upstream_commit,
+            results,
+            trusted_source_exempt=trusted_source_exempt,
+        )
         _append_jsonl(vendor_dir / ".update-log.jsonl", log_entry)
 
     return results

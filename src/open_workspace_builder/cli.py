@@ -403,11 +403,15 @@ def update(accept_all: bool, dry_run: bool) -> None:
     prompt_fn = None if accept_all else _interactive_prompt
 
     try:
+        from open_workspace_builder.config import SecurityConfig
+
+        security_config = SecurityConfig()
         results = run_update(
             vendor_dir,
             dry_run=dry_run,
             accept_all=accept_all,
             prompt_fn=prompt_fn,
+            trusted_upstream_urls=security_config.trusted_upstream_urls,
         )
     except Exception as exc:
         click.echo(f"Error during update: {exc}")
@@ -425,6 +429,17 @@ def update(accept_all: bool, dry_run: bool) -> None:
                 details="; ".join(r.flag_details or []),
             )
             ledger.record_event(event)
+        elif r.warnings:
+            event = FlagEvent.now(
+                source="ecc",
+                file_path=r.relative_path,
+                flag_category="security_scan",
+                severity="warning",
+                disposition="flagged",
+                details="; ".join(r.warnings),
+            )
+            ledger.record_event(event)
+            click.echo(f"  [WARN] {r.relative_path}: {'; '.join(r.warnings)}")
 
     if ledger.check_threshold("ecc"):
         click.echo(
@@ -435,7 +450,11 @@ def update(accept_all: bool, dry_run: bool) -> None:
     accepted = sum(1 for r in results if r.action == "accepted")
     rejected = sum(1 for r in results if r.action == "rejected")
     blocked = sum(1 for r in results if r.action == "blocked")
-    click.echo(f"\nUpdate complete: {accepted} accepted, {rejected} rejected, {blocked} blocked")
+    warned = sum(1 for r in results if r.warnings and r.action == "accepted")
+    click.echo(
+        f"\nUpdate complete: {accepted} accepted, {rejected} rejected, "
+        f"{blocked} blocked, {warned} warned"
+    )
 
 
 @ecc.command()

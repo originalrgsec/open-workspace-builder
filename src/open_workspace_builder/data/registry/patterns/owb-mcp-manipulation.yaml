@@ -9,19 +9,19 @@ payload:
   patterns:
     - id: mcp-001
       pattern: "(?i)tool_use|tool_result|tool_call"
-      severity: warning
-      description: "MCP protocol keyword (suspicious in content files)"
-      false_positive_hint: "Legitimate in MCP documentation or tool development guides"
+      severity: info
+      description: "MCP protocol keyword (expected in agent and tool documentation)"
+      false_positive_hint: "Common in MCP documentation or tool development guides"
     - id: mcp-002
       pattern: "(?i)call\\s+the\\s+(tool|function|server)\\s+.*\\s+with"
       severity: warning
       description: "Instruction to invoke a specific tool"
       false_positive_hint: "Legitimate in API or tool documentation"
     - id: mcp-003
-      pattern: "(?i)(read|access|fetch)\\s+.*\\s+(from|via)\\s+(slack|gmail|drive|obsidian|asana)"
+      pattern: "(?i)(read|access|fetch)\\s+(?!the\\s+(project|sprint|build|test|session|current|latest|config)\\s).{1,40}\\s+(from|via)\\s+(slack|gmail|drive|obsidian|asana)"
       severity: critical
       description: "Instruction to access connected service data"
-      false_positive_hint: "Legitimate in integration documentation"
+      false_positive_hint: "Project-specific reads like 'read the project status from Obsidian' will not match"
     - id: mcp-004
       pattern: "(?i)when\\s+(the|a)\\s+(tool|server)\\s+(returns|responds).*then"
       severity: warning

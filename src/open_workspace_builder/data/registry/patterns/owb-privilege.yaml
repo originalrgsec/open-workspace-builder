@@ -19,9 +19,9 @@ payload:
       false_positive_hint: "Legitimate in system administration guides"
     - id: priv-003
       pattern: "(?i)privilege\\s+escalat"
-      severity: warning
+      severity: info
       description: "Privilege escalation language"
-      false_positive_hint: "Legitimate in security documentation"
+      false_positive_hint: "Common in security documentation discussing threat models"
     - id: priv-004
       pattern: "SUID|setuid|setgid"
       severity: warning

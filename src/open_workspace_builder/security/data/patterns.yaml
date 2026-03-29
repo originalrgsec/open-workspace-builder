@@ -64,10 +64,10 @@ categories:
     description: "Stealth and evasion techniques"
     patterns:
       - id: stealth-001
-        pattern: "(?i)do\\s+not\\s+(mention|reveal|disclose|tell|show)"
+        pattern: "(?i)do\\s+not\\s+(mention|reveal|disclose|tell|show)\\s+.{0,30}(these\\s+instructions?|this\\s+(prompt|to)|the\\s+(above|user))"
         severity: critical
-        description: "Instruction to hide behavior from user"
-        false_positive_hint: "Legitimate in privacy policy context"
+        description: "Instruction to hide behavior or instructions from user"
+        false_positive_hint: "General guidance like 'do not reveal API keys' will not match"
       - id: stealth-002
         pattern: "(?i)ignore\\s+(previous|prior|above|all)\\s+(instructions?|rules?|guidelines?)"
         severity: critical
@@ -98,10 +98,10 @@ categories:
         description: "Instruction to self-modify rules or config"
         false_positive_hint: "Legitimate in meta-programming documentation"
       - id: selfmod-002
-        pattern: "(?i)rewrite\\s+(your|this)\\s+(prompt|system|instructions?)"
+        pattern: "(?i)rewrite\\s+(your)\\s+(system\\s+prompt|instructions?|core\\s+rules)|rewrite\\s+(this)\\s+(system\\s+prompt)"
         severity: critical
-        description: "Instruction to rewrite system prompt"
-        false_positive_hint: "Legitimate in prompt engineering guides"
+        description: "Instruction to rewrite own system prompt or instructions"
+        false_positive_hint: "Casual usage like 'rewrite this prompt template' will not match"
       - id: selfmod-003
         pattern: "(?i)append.*to.*(CLAUDE\\.md|WORKSPACE\\.md|agent.config)"
         severity: warning
@@ -181,9 +181,9 @@ categories:
         false_positive_hint: "Legitimate in system administration guides"
       - id: priv-003
         pattern: "(?i)privilege\\s+escalat"
-        severity: warning
+        severity: info
         description: "Privilege escalation language"
-        false_positive_hint: "Legitimate in security documentation"
+        false_positive_hint: "Common in security documentation discussing threat models"
       - id: priv-004
         pattern: "SUID|setuid|setgid"
         severity: warning
@@ -214,10 +214,10 @@ categories:
         description: "System password file access"
         false_positive_hint: "Legitimate in Linux administration documentation"
       - id: path-005
-        pattern: "(?i)(api[_-]?key|secret[_-]?key|access[_-]?token)\\s*[=:]\\s*['\"][^'\"]{8,}"
+        pattern: "(?i)(api[_-]?key|secret[_-]?key|access[_-]?token)\\s*[=:]\\s*['\"](?!your[_-]|placeholder|example|replace|changeme|xxx|todo|test[_-]|fake[_-]|dummy|PLACEHOLDER)[^'\"]{8,}"
         severity: critical
-        description: "Hardcoded secret value"
-        false_positive_hint: "Legitimate if using placeholder/example values"
+        description: "Hardcoded secret value (excludes common placeholders)"
+        false_positive_hint: "Placeholder values like 'your-api-key-here' or 'PLACEHOLDER_REPLACE_ME' will not match"
 
   prompt_injection:
     description: "Prompt injection and behavioral manipulation"
@@ -238,10 +238,10 @@ categories:
         description: "Instruction override attempt"
         false_positive_hint: "Legitimate in update documentation"
       - id: inject-004
-        pattern: "(?i)from\\s+now\\s+on,?\\s+(you|always|never|ignore)"
+        pattern: "(?i)from\\s+now\\s+on,?\\s+(you\\s+(will|must|should)\\s+(ignore|forget|disregard|never\\s+refuse)|ignore|never\\s+refuse)"
         severity: critical
-        description: "Behavioral override instruction"
-        false_positive_hint: "Legitimate in style guide context"
+        description: "Behavioral override instruction — override safety or compliance"
+        false_positive_hint: "Legitimate style guide instructions like 'from now on, always use X' will not match"
       - id: inject-005
         pattern: "(?i)</?system>|\\[SYSTEM\\]|\\[INST\\]"
         severity: critical
@@ -316,19 +316,19 @@ categories:
     patterns:
       - id: mcp-001
         pattern: "(?i)tool_use|tool_result|tool_call"
-        severity: warning
-        description: "MCP protocol keyword (suspicious in content files)"
-        false_positive_hint: "Legitimate in MCP documentation or tool development guides"
+        severity: info
+        description: "MCP protocol keyword (expected in agent and tool documentation)"
+        false_positive_hint: "Common in MCP documentation or tool development guides"
       - id: mcp-002
         pattern: "(?i)call\\s+the\\s+(tool|function|server)\\s+.*\\s+with"
         severity: warning
         description: "Instruction to invoke a specific tool"
         false_positive_hint: "Legitimate in API or tool documentation"
       - id: mcp-003
-        pattern: "(?i)(read|access|fetch)\\s+.*\\s+(from|via)\\s+(slack|gmail|drive|obsidian|asana)"
+        pattern: "(?i)(read|access|fetch)\\s+(?!the\\s+(project|sprint|build|test|session|current|latest|config)\\s).{1,40}\\s+(from|via)\\s+(slack|gmail|drive|obsidian|asana)"
         severity: critical
         description: "Instruction to access connected service data"
-        false_positive_hint: "Legitimate in integration documentation"
+        false_positive_hint: "Project-specific reads like 'read the project status from Obsidian' will not match"
       - id: mcp-004
         pattern: "(?i)when\\s+(the|a)\\s+(tool|server)\\s+(returns|responds).*then"
         severity: warning

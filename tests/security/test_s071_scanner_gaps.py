@@ -227,7 +227,7 @@ class TestMcpManipulationPatterns:
         f.write_text('{"type": "tool_use", "name": "read_file"}', encoding="utf-8")
         flags = check_patterns(f, patterns)
         assert any("mcp-001" in fl.evidence for fl in flags)
-        assert all(fl.severity == "warning" for fl in flags if "mcp-001" in fl.evidence)
+        assert all(fl.severity == "info" for fl in flags if "mcp-001" in fl.evidence)
 
     def test_tool_call_keyword(self, tmp_path: Path, patterns: list[PatternRule]) -> None:
         f = tmp_path / "mcp.md"
@@ -274,9 +274,9 @@ class TestMcpManipulationPatterns:
         assert any("mcp-005" in fl.evidence for fl in flags)
 
     def test_mcp_severity_tiers(self, patterns: list[PatternRule]) -> None:
-        """mcp-003 and mcp-005 are critical; mcp-001, mcp-002, mcp-004 are warning."""
+        """mcp-003 and mcp-005 are critical; mcp-001 is info; mcp-002, mcp-004 are warning."""
         severity_map = {p.id: p.severity for p in patterns}
-        assert severity_map["mcp-001"] == "warning"
+        assert severity_map["mcp-001"] == "info"
         assert severity_map["mcp-002"] == "warning"
         assert severity_map["mcp-003"] == "critical"
         assert severity_map["mcp-004"] == "warning"

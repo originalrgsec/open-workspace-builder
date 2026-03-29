@@ -141,6 +141,9 @@ class SecurityConfig:
     scanner_layers: tuple[int, ...] = (1, 2, 3)
     sca_enabled: bool = False
     sast_enabled: bool = False
+    trusted_upstream_urls: tuple[str, ...] = (
+        "https://github.com/affaan-m/everything-claude-code",
+    )
 
 
 @dataclass(frozen=True)

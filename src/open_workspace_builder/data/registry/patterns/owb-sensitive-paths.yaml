@@ -28,7 +28,7 @@ payload:
       description: "System password file access"
       false_positive_hint: "Legitimate in Linux administration documentation"
     - id: path-005
-      pattern: "(?i)(api[_-]?key|secret[_-]?key|access[_-]?token)\\s*[=:]\\s*['\"][^'\"]{8,}"
+      pattern: "(?i)(api[_-]?key|secret[_-]?key|access[_-]?token)\\s*[=:]\\s*['\"](?!your[_-]|placeholder|example|replace|changeme|xxx|todo|test[_-]|fake[_-]|dummy|PLACEHOLDER)[^'\"]{8,}"
       severity: critical
-      description: "Hardcoded secret value"
-      false_positive_hint: "Legitimate if using placeholder/example values"
+      description: "Hardcoded secret value (excludes common placeholders)"
+      false_positive_hint: "Placeholder values like 'your-api-key-here' or 'PLACEHOLDER_REPLACE_ME' will not match"

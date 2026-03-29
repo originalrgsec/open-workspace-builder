@@ -8,10 +8,10 @@ compatibility: ">=0.1.0"
 payload:
   patterns:
     - id: stealth-001
-      pattern: "(?i)do\\s+not\\s+(mention|reveal|disclose|tell|show)"
+      pattern: "(?i)do\\s+not\\s+(mention|reveal|disclose|tell|show)\\s+.{0,30}(these\\s+instructions?|this\\s+(prompt|to)|the\\s+(above|user))"
       severity: critical
-      description: "Instruction to hide behavior from user"
-      false_positive_hint: "Legitimate in privacy policy context"
+      description: "Instruction to hide behavior or instructions from user"
+      false_positive_hint: "General guidance like 'do not reveal API keys' will not match"
     - id: stealth-002
       pattern: "(?i)ignore\\s+(previous|prior|above|all)\\s+(instructions?|rules?|guidelines?)"
       severity: critical

@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-03-29
+
+### Fixed
+- Security scanner false-positives blocking ECC self-update on major version jumps (#1):
+  - Only "malicious" (critical-flag) verdicts now block files; "flagged" (warning-only)
+    verdicts are accepted with a printed warning instead of being silently blocked
+  - Reputation ledger records use actual scan severity and disposition instead of
+    hardcoding all blocked files as `confirmed_malicious`/`critical`
+  - Ledger deduplicates by (source, file_path) — repeated scans of the same file
+    update the existing entry instead of inflating the threshold count
+  - Threshold check counts distinct files, not accumulated repeat entries
+  - 7 high-false-positive patterns tuned to reduce false positives on legitimate
+    agent definition content: inject-004, mcp-003, stealth-001, selfmod-002,
+    path-005 (negative lookaheads and tighter anchors)
+  - 2 patterns downgraded from warning to info: priv-003, mcp-001
+  - `--accept-all` now works correctly for first-party ECC content — previously
+    18 files were blocked with no way to override
+
+### Added
+- Trusted upstream URL allowlist (`SecurityConfig.trusted_upstream_urls`): when the
+  ECC upstream URL matches a trusted source, Layer 2 pattern scanning is skipped
+  during updates (Layer 1 structural checks still run)
+- `trusted_source_exempt` field in update log entries — audit trail when Layer 2 is bypassed
+- `files_warned` field in update log entries for flagged-but-accepted files
+- `UpdateResult.warnings` field for flagged-but-accepted files
+- CLI output now shows warned file count alongside accepted/rejected/blocked
+- 22 new tests (1253 → 1275):
+  - 5 ledger deduplication tests
+  - 3 severity differentiation tests
+  - 4 trusted-source exemption tests
+  - 11 false-positive regression tests (paired positive/negative for each tuned pattern)
+
 ## [0.8.0] - 2026-03-28
 
 ### Added

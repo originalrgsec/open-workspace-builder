@@ -125,3 +125,74 @@ class TestReputationLedger:
         os.chmod(ledger_path, 0o600)
         ledger = ReputationLedger(ledger_path)
         assert ledger.get_history("any") == []
+
+    def test_dedup_same_source_file_updates_not_appends(self, tmp_path: Path) -> None:
+        """Recording twice for the same (source, file_path) should upsert, not append."""
+        ledger = ReputationLedger(tmp_path / "ledger.jsonl")
+        ledger.record_event(FlagEvent.now(
+            source="ecc", file_path="agents/a.md",
+            flag_category="test", severity="warning",
+            disposition="flagged", details="first run",
+        ))
+        ledger.record_event(FlagEvent.now(
+            source="ecc", file_path="agents/a.md",
+            flag_category="test", severity="critical",
+            disposition="confirmed_malicious", details="second run",
+        ))
+        history = ledger.get_history("ecc")
+        assert len(history) == 1
+        assert history[0].severity == "critical"
+        assert history[0].details == "second run"
+
+    def test_dedup_different_files_both_kept(self, tmp_path: Path) -> None:
+        """Different file_paths under the same source should both be kept."""
+        ledger = ReputationLedger(tmp_path / "ledger.jsonl")
+        ledger.record_event(FlagEvent.now(
+            source="ecc", file_path="agents/a.md",
+            flag_category="test", severity="critical",
+            disposition="confirmed_malicious", details="file a",
+        ))
+        ledger.record_event(FlagEvent.now(
+            source="ecc", file_path="agents/b.md",
+            flag_category="test", severity="critical",
+            disposition="confirmed_malicious", details="file b",
+        ))
+        history = ledger.get_history("ecc")
+        assert len(history) == 2
+
+    def test_threshold_counts_distinct_files(self, tmp_path: Path) -> None:
+        """Threshold should count distinct files, not accumulated repeat entries."""
+        ledger = ReputationLedger(tmp_path / "ledger.jsonl")
+        # Record 5 events for the SAME file — should count as 1 distinct file
+        for i in range(5):
+            ledger.record_event(FlagEvent.now(
+                source="ecc", file_path="agents/same.md",
+                flag_category="test", severity="critical",
+                disposition="confirmed_malicious", details=f"run {i}",
+            ))
+        assert ledger.check_threshold("ecc", threshold=1) is False  # 1 file, not > 1
+
+        # Now add 3 more distinct files to reach 4 distinct files total
+        for name in ("b.md", "c.md", "d.md"):
+            ledger.record_event(FlagEvent.now(
+                source="ecc", file_path=f"agents/{name}",
+                flag_category="test", severity="critical",
+                disposition="confirmed_malicious", details="distinct",
+            ))
+        assert ledger.check_threshold("ecc", threshold=3) is True  # 4 > 3
+
+    def test_dedup_across_different_sources(self, tmp_path: Path) -> None:
+        """Dedup is scoped to (source, file_path) — same file under different sources kept."""
+        ledger = ReputationLedger(tmp_path / "ledger.jsonl")
+        ledger.record_event(FlagEvent.now(
+            source="ecc", file_path="agents/a.md",
+            flag_category="test", severity="critical",
+            disposition="confirmed_malicious", details="ecc source",
+        ))
+        ledger.record_event(FlagEvent.now(
+            source="other", file_path="agents/a.md",
+            flag_category="test", severity="critical",
+            disposition="confirmed_malicious", details="other source",
+        ))
+        assert len(ledger.get_history("ecc")) == 1
+        assert len(ledger.get_history("other")) == 1

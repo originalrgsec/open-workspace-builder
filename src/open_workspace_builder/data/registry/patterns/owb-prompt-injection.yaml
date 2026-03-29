@@ -23,10 +23,10 @@ payload:
       description: "Instruction override attempt"
       false_positive_hint: "Legitimate in update documentation"
     - id: inject-004
-      pattern: "(?i)from\\s+now\\s+on,?\\s+(you|always|never|ignore)"
+      pattern: "(?i)from\\s+now\\s+on,?\\s+(you\\s+(will|must|should)\\s+(ignore|forget|disregard|never\\s+refuse)|ignore|never\\s+refuse)"
       severity: critical
-      description: "Behavioral override instruction"
-      false_positive_hint: "Legitimate in style guide context"
+      description: "Behavioral override instruction — override safety or compliance"
+      false_positive_hint: "Legitimate style guide instructions like 'from now on, always use X' will not match"
     - id: inject-005
       pattern: "(?i)</?system>|\\[SYSTEM\\]|\\[INST\\]"
       severity: critical

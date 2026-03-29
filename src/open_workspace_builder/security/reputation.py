@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import tempfile
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -59,21 +60,48 @@ class ReputationLedger:
             os.chmod(self._path, 0o600)
 
     def record_event(self, event: FlagEvent) -> None:
-        """Append a single event to the ledger."""
-        with self._path.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(asdict(event)) + "\n")
+        """Record an event, deduplicating by (source, file_path).
+
+        If an event with the same (source, file_path) already exists, it is
+        replaced with the new event. Otherwise, the new event is appended.
+        Writes atomically via temp file + rename.
+        """
+        existing = self._read_all()
+        key = (event.source, event.file_path)
+        updated = [e for e in existing if (e.source, e.file_path) != key]
+        updated.append(event)
+        self._write_all(updated)
 
     def check_threshold(self, source: str, threshold: int = 3) -> bool:
-        """Return True if confirmed malicious count for source exceeds threshold."""
-        count = sum(
-            1 for e in self._read_all()
+        """Return True if distinct confirmed-malicious files for source exceeds threshold."""
+        distinct_files = {
+            e.file_path
+            for e in self._read_all()
             if e.source == source and e.disposition == "confirmed_malicious"
-        )
-        return count > threshold
+        }
+        return len(distinct_files) > threshold
 
     def get_history(self, source: str) -> list[FlagEvent]:
         """Return all events for a given source."""
         return [e for e in self._read_all() if e.source == source]
+
+    def _write_all(self, events: list[FlagEvent]) -> None:
+        """Atomically rewrite the ledger with the given events."""
+        fd, tmp_path = tempfile.mkstemp(
+            dir=str(self._path.parent), suffix=".jsonl.tmp"
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                for e in events:
+                    f.write(json.dumps(asdict(e)) + "\n")
+            os.replace(tmp_path, self._path)
+            os.chmod(self._path, 0o600)
+        except BaseException:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
 
     def _read_all(self) -> list[FlagEvent]:
         """Read all events from the ledger file."""
