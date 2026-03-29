@@ -15,6 +15,7 @@ from open_workspace_builder.config import Config, load_config
 from open_workspace_builder.engine.builder import WorkspaceBuilder
 from open_workspace_builder.engine.differ import FileGap, diff_workspace
 from open_workspace_builder.security.scanner import Scanner, ScanVerdict
+from open_workspace_builder.security.trust import is_trusted, load_trust_manifest
 
 
 @dataclass(frozen=True)
@@ -33,6 +34,20 @@ class MigrateReport:
     actions: tuple[MigrateAction, ...] = ()
     summary: dict[str, int] = field(default_factory=dict)
     security_flags: tuple[ScanVerdict, ...] = ()
+
+
+def _ecc_relative_path(gap_path: str) -> str | None:
+    """Extract the ECC-relative path from a workspace gap path.
+
+    ECC files live under .claude/ in the workspace (e.g., .claude/agents/planner.md).
+    The vendor/ecc directory has the same structure without the .claude/ prefix
+    (e.g., agents/planner.md). Returns the ECC-relative path if the gap path
+    is under .claude/, or None otherwise.
+    """
+    ecc_prefix = ".claude/"
+    if gap_path.startswith(ecc_prefix):
+        return gap_path[len(ecc_prefix):]
+    return None
 
 
 def _scan_file(scanner: Scanner, file_path: Path) -> ScanVerdict:
@@ -141,6 +156,9 @@ def migrate_workspace(
     # Set up scanner (layers 1 and 2 minimum; layer 3 if API key available)
     scanner = Scanner(layers=(1, 2, 3))
 
+    # Load trust manifest for first-party ECC content
+    trust_manifest = load_trust_manifest(content_root)
+
     actions: list[MigrateAction] = []
     security_flags: list[ScanVerdict] = []
 
@@ -173,19 +191,24 @@ def migrate_workspace(
             ref_file = ref_path / gap.path
             actual_file = vault_path / gap.path
 
-            # Security scan the reference file
-            verdict = _scan_file(scanner, ref_file)
-            if verdict.verdict in ("flagged", "malicious"):
-                security_flags.append(verdict)
-                action = MigrateAction(
-                    path=gap.path,
-                    action="blocked",
-                    reason=f"Security scanner flagged: {verdict.verdict} ({len(verdict.flags)} flags)",
-                )
-                actions.append(action)
-                if not dry_run:
-                    _write_migration_log(vault_path, action)
-                continue
+            # Check trust manifest — skip scanning for unmodified first-party ECC
+            ecc_rel = _ecc_relative_path(gap.path)
+            trusted = ecc_rel is not None and is_trusted(ref_file, ecc_rel, trust_manifest)
+
+            if not trusted:
+                # Security scan the reference file
+                verdict = _scan_file(scanner, ref_file)
+                if verdict.verdict in ("flagged", "malicious"):
+                    security_flags.append(verdict)
+                    action = MigrateAction(
+                        path=gap.path,
+                        action="blocked",
+                        reason=f"Security scanner flagged: {verdict.verdict} ({len(verdict.flags)} flags)",
+                    )
+                    actions.append(action)
+                    if not dry_run:
+                        _write_migration_log(vault_path, action)
+                    continue
 
             if accept_all:
                 # Batch mode: accept all clean files, but modified needs explicit consent

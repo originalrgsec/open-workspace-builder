@@ -38,6 +38,7 @@ class WorkspaceBuilder:
     def build(self, target: Path) -> None:
         """Run the full build pipeline."""
         target = target.resolve()
+        self._check_vault_nesting(target)
         print(f"Building workspace at: {target}")
         print()
 
@@ -57,6 +58,24 @@ class WorkspaceBuilder:
         print(f"  Directories created: {created_dirs}")
         print(f"  Files created:       {created_files}")
         print(f"  Files copied:        {copied_files}")
+
+    @staticmethod
+    def _check_vault_nesting(target: Path) -> None:
+        """Abort if target appears to be an existing vault directory.
+
+        Detects vault markers (_bootstrap.md, _templates/) to prevent
+        accidentally creating a nested Obsidian/ scaffold inside a vault.
+        """
+        vault_markers = ("_bootstrap.md", "_templates")
+        if not target.exists():
+            return
+        for marker in vault_markers:
+            if (target / marker).exists():
+                raise ValueError(
+                    f"Target '{target}' appears to be a vault directory "
+                    f"(found '{marker}'). Use the workspace root as the target "
+                    f"instead, not the vault directory itself."
+                )
 
     def _write_vault_meta(self, target: Path) -> None:
         """Write vault-meta.json to the vault root with stage and version."""

@@ -22,6 +22,10 @@ class RegistryItem:
 
 
 _REQUIRED_FIELDS = ("id", "version", "type")
+_KNOWN_FIELDS = frozenset({
+    "id", "version", "type", "author", "description", "compatibility",
+    "payload", "min_owb_version",
+})
 
 
 def _load_yaml_file(path: Path) -> dict[str, Any] | None:
@@ -48,6 +52,52 @@ def _load_yaml_file(path: Path) -> dict[str, Any] | None:
     return raw
 
 
+def _get_owb_version() -> str:
+    """Return the current OWB version string."""
+    try:
+        from importlib.metadata import version
+        return version("open-workspace-builder")
+    except Exception:
+        return "0.0.0"
+
+
+def _check_min_version(raw: dict[str, Any], source: Path) -> bool:
+    """Check min_owb_version constraint. Returns True if compatible, False if not."""
+    min_ver = raw.get("min_owb_version")
+    if min_ver is None:
+        return True
+
+    try:
+        from packaging.version import Version
+        current = Version(_get_owb_version())
+        required = Version(str(min_ver))
+        if current < required:
+            item_name = raw.get("id", source.name)
+            warnings.warn(
+                f"Skipping registry item '{item_name}': requires OWB >= {min_ver}, "
+                f"running {current}",
+                stacklevel=4,
+            )
+            return False
+    except Exception:
+        # If packaging is unavailable or version parsing fails, allow the item
+        pass
+
+    return True
+
+
+def _warn_unknown_fields(raw: dict[str, Any], source: Path) -> None:
+    """Warn about unrecognized fields in a registry item."""
+    unknown = sorted(set(raw.keys()) - _KNOWN_FIELDS)
+    if unknown:
+        item_name = raw.get("id", source.name)
+        warnings.warn(
+            f"Registry item '{item_name}' contains unknown field(s): "
+            f"{', '.join(unknown)} — may require a newer OWB version",
+            stacklevel=4,
+        )
+
+
 def _parse_item(raw: dict[str, Any], source: Path) -> RegistryItem | None:
     """Parse and validate a raw dict into a RegistryItem, or None on failure."""
     missing = [f for f in _REQUIRED_FIELDS if f not in raw]
@@ -57,6 +107,13 @@ def _parse_item(raw: dict[str, Any], source: Path) -> RegistryItem | None:
             stacklevel=3,
         )
         return None
+
+    # Check version compatibility
+    if not _check_min_version(raw, source):
+        return None
+
+    # Warn about unknown fields
+    _warn_unknown_fields(raw, source)
 
     return RegistryItem(
         id=str(raw["id"]),

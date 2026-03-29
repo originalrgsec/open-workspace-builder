@@ -459,6 +459,12 @@ class VaultBuilder:
         print("  Installing cross-project policies...")
         for policy_file in policy_files:
             dest = code_dir / policy_file.name
+            if dest.exists():
+                if self._dry_run:
+                    print(f"  [skip]  {policy_file.name} (exists)")
+                else:
+                    print(f"  [skip]  {policy_file.name} (exists)")
+                continue
             if self._dry_run:
                 print(f"  [copy]  {policy_file.name} -> {dest}")
             else:
@@ -477,6 +483,12 @@ class VaultBuilder:
         self.created_dirs.append(path)
 
     def _write(self, path: Path, content: str) -> None:
+        if path.exists():
+            if self._dry_run:
+                print(f"  [skip]  {path} (exists)")
+            else:
+                print(f"  [skip]  {path.name} (exists)")
+            return
         if self._dry_run:
             print(f"  [write] {path}")
         else:

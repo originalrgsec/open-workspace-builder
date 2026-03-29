@@ -887,6 +887,111 @@ def _format_sast_text(report) -> str:  # noqa: ANN001
     return "\n".join(lines)
 
 
+# ── owb security drift ───────────────────────────────────────────────────────
+
+
+@security.command("drift")
+@click.argument("workspace_path", type=click.Path(exists=True), default=".")
+@click.option(
+    "--update-baseline",
+    is_flag=True,
+    default=False,
+    help="Recompute and store the drift baseline.",
+)
+@click.option(
+    "--json",
+    "json_output",
+    is_flag=True,
+    default=False,
+    help="Output machine-readable JSON.",
+)
+@click.option(
+    "--files",
+    "file_glob",
+    default=None,
+    help="Glob pattern to restrict which files are checked.",
+)
+@click.option(
+    "--baseline",
+    "baseline_path",
+    default=None,
+    type=click.Path(),
+    help="Path to baseline file (default: ~/.owb/drift-baseline.json).",
+)
+def security_drift(
+    workspace_path: str,
+    update_baseline: bool = False,
+    json_output: bool = False,
+    file_glob: str | None = None,
+    baseline_path: str | None = None,
+) -> None:
+    """Detect modifications to workspace directive files since last baseline.
+
+    Compares SHA-256 hashes of CLAUDE.md, agent definitions, ECC rules, and
+    other directive files against a stored baseline. Reports modified, added,
+    and deleted files.
+
+    Exit codes: 0 = no drift, 1 = drift detected, 2 = no baseline exists.
+    """
+    from open_workspace_builder.security.drift import check_drift
+    from open_workspace_builder.security.drift import update_baseline as do_update_baseline
+
+    workspace = Path(workspace_path).resolve()
+    bp = Path(baseline_path) if baseline_path else Path.home() / ".owb" / "drift-baseline.json"
+
+    if update_baseline:
+        do_update_baseline(workspace, bp)
+        click.echo(f"Baseline updated: {bp}")
+        return
+
+    report = check_drift(workspace, bp, file_glob=file_glob)
+
+    if json_output:
+        click.echo(report.to_json())
+    else:
+        _format_drift_report(report)
+
+    if report.exit_code != 0:
+        sys.exit(report.exit_code)
+
+
+def _format_drift_report(report) -> None:  # noqa: ANN001
+    """Format a DriftReport as human-readable text."""
+    from open_workspace_builder.security.drift import DriftReport
+
+    if not isinstance(report, DriftReport):
+        return
+
+    if report.exit_code == 2:
+        click.echo("No baseline found. Run 'owb security drift --update-baseline' first.")
+        return
+
+    click.echo("Directive Drift Report")
+    click.echo("=" * 22)
+    if report.baseline_timestamp:
+        click.echo(f"Baseline: {report.baseline_timestamp}")
+    click.echo()
+
+    for entry in report.modified:
+        click.echo(f"MODIFIED  {entry.rel_path}    ({entry.message})")
+    for entry in report.added:
+        click.echo(f"ADDED     {entry.rel_path}    (not in baseline)")
+    for entry in report.deleted:
+        click.echo(f"DELETED   {entry.rel_path}    (missing from disk)")
+    for entry in report.unchanged:
+        click.echo(f"OK        {entry.rel_path}")
+    for entry in report.errors:
+        click.echo(f"ERROR     {entry.rel_path}    ({entry.message})")
+
+    click.echo()
+    click.echo(
+        f"Summary: {len(report.modified)} modified, {len(report.added)} added, "
+        f"{len(report.deleted)} deleted, {len(report.unchanged)} unchanged"
+    )
+    if report.errors:
+        click.echo(f"  Errors: {len(report.errors)}")
+
+
 # ── owb auth ─────────────────────────────────────────────────────────────────
 
 
