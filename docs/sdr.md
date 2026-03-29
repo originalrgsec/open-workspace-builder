@@ -714,6 +714,11 @@ class ReputationLedger:
 - Goal: Token tracking Level C (local ledger with file locking, monthly forecasting, budget alerts, per-story attribution, sync command). Model hosting research spike (4 US providers, 6 models, 4 local frameworks, 7-scenario cost model). Documentation sweep for v0.7.0 (CLI reference, configuration guide, phase model page, ADRs, README, SDR sync).
 - Tests: 1213 → 1253 (+40)
 
+### Sprint 14: Phase 1 Hardening
+- Stories: OWB-S081 (S), OWB-S079 (L), OWB-S067 (S/M)
+- Goal: Fix remaining Phase 1 defects and add two missing Phase 1 capabilities. S081 fixed stealth-004 regex alternation precedence bug. S079 added bootstrap stage tracking (stages 0-3) with StageConfig, StageEvaluator, CLI commands (owb stage status/promote), wizard stage detection, and vault-meta.json output. S067 added hook-based policy enforcement as Phase 2 opt-in: EnforcementConfig, policy manifest generator, hook script deployment, settings.json registration. Also fixed _with_resolved_paths silently dropping the tokens field (pre-existing bug).
+- Tests: 1283 → 1356 (+73)
+
 ## Open Questions
 
 1. Should the CLI use `click` or `argparse`? Click provides a cleaner subcommand model but adds a dependency. Argparse is stdlib but verbose for this many subcommands. Recommendation: click.

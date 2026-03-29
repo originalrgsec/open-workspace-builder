@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-03-29
+
+### Added
+- Bootstrap stage tracking system (OWB-S079):
+  - `StageConfig` frozen dataclass with four PRD stages (0: Cold Start, 1: Interactive
+    Operation, 2: Build Farm, 3: Director Model)
+  - `StageEvaluator` with automated exit criteria checks for Stage 0 → 1 (structural
+    files, context populated, project scaffolded) and manual verification gates for
+    stages 1→2 and 2→3
+  - `owb stage status` command — shows current stage and exit criteria pass/fail
+  - `owb stage promote` command — verifies criteria and advances stage
+  - Wizard `_step_stage_selection()` detects starting stage from existing vaults
+  - Builder writes `vault-meta.json` with stage, version, and builder name
+- Hook-based policy enforcement for Phase 2 workspaces (OWB-S067):
+  - `EnforcementConfig` frozen dataclass (`hooks_enabled` flag)
+  - Policy manifest generator scans `content/policies/` and writes
+    `~/.owb/policy-manifest.yaml` with file paths and one-line summaries
+  - `policy-reminder.sh` hook script deployed to `.owb/hooks/`, registered in
+    `.claude/settings.json` as a `UserPromptSubmit` hook
+  - Phase-gated: only deploys when stage >= 2 and `--enable-hooks` passed to
+    `owb stage promote`
+  - `remove_hook_registration()` removes hook entry while preserving script files
+- 73 new tests (1283 → 1356)
+
+### Fixed
+- `_with_resolved_paths` now preserves `tokens` and `stage` config fields
+  (previously silently dropped `tokens` on path resolution)
+- stealth-004 regex alternation precedence bug in security scanner patterns (OWB-S081)
+
 ## [0.8.2] - 2026-03-29
 
 ### Fixed
