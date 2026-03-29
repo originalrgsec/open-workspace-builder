@@ -13,9 +13,12 @@ from open_workspace_builder.config import (
     ModelsConfig,
     PathsConfig,
     SecurityConfig,
+    StageConfig,
+    TokensConfig,
     TrustConfig,
     _detect_cli_name,
     _resolve_paths,
+    _with_resolved_paths,
     load_config,
 )
 
@@ -62,6 +65,15 @@ class TestNewSectionDefaults:
         assert isinstance(config.marketplace, MarketplaceConfig)
         assert isinstance(config.paths, PathsConfig)
 
+    def test_stage_defaults(self) -> None:
+        s = StageConfig()
+        assert s.current_stage == 0
+
+    def test_config_includes_stage(self) -> None:
+        config = Config()
+        assert isinstance(config.stage, StageConfig)
+        assert config.stage.current_stage == 0
+
     def test_new_sections_are_frozen(self) -> None:
         with pytest.raises(AttributeError):
             ModelsConfig().classify = "x"  # type: ignore[misc]
@@ -73,6 +85,8 @@ class TestNewSectionDefaults:
             MarketplaceConfig().format = "x"  # type: ignore[misc]
         with pytest.raises(AttributeError):
             PathsConfig().config_dir = "x"  # type: ignore[misc]
+        with pytest.raises(AttributeError):
+            StageConfig().current_stage = 1  # type: ignore[misc]
 
 
 # ---------------------------------------------------------------------------
@@ -153,6 +167,26 @@ class TestPathsResolution:
         config = load_config(cli_name="owb")
         home = str(Path.home())
         assert config.paths.config_dir == f"{home}/.owb"
+
+    def test_resolved_paths_preserves_all_fields(self) -> None:
+        """Regression: _with_resolved_paths must not drop any Config field."""
+        config = Config(
+            target="custom",
+            models=ModelsConfig(classify="test/model"),
+            security=SecurityConfig(scanner_layers=(1,)),
+            trust=TrustConfig(active_policies=("strict",)),
+            marketplace=MarketplaceConfig(format="anthropic"),
+            tokens=TokensConfig(budget_threshold=50.0),
+            stage=StageConfig(current_stage=2),
+        )
+        resolved = _with_resolved_paths(config, "owb")
+        assert resolved.target == "custom"
+        assert resolved.models.classify == "test/model"
+        assert resolved.security.scanner_layers == (1,)
+        assert resolved.trust.active_policies == ("strict",)
+        assert resolved.marketplace.format == "anthropic"
+        assert resolved.tokens.budget_threshold == 50.0
+        assert resolved.stage.current_stage == 2
 
 
 # ---------------------------------------------------------------------------
@@ -260,6 +294,18 @@ class TestMergeNewSections:
         config = load_config(cfg, cli_name="owb")
         assert config.paths.config_dir == "/opt/owb"
         assert config.paths.data_dir == "/opt/owb/data"
+
+    def test_stage_overlay(self, tmp_path: Path) -> None:
+        cfg = tmp_path / "c.yaml"
+        cfg.write_text("stage:\n  current_stage: 2\n", encoding="utf-8")
+        config = load_config(cfg, cli_name="owb")
+        assert config.stage.current_stage == 2
+
+    def test_stage_overlay_preserves_default_when_absent(self, tmp_path: Path) -> None:
+        cfg = tmp_path / "c.yaml"
+        cfg.write_text("target: my-output\n", encoding="utf-8")
+        config = load_config(cfg, cli_name="owb")
+        assert config.stage.current_stage == 0
 
 
 # ---------------------------------------------------------------------------

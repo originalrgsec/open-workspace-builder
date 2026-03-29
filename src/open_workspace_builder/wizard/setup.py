@@ -14,6 +14,7 @@ from open_workspace_builder.config import (
     PathsConfig,
     SecretsConfig,
     SecurityConfig,
+    StageConfig,
     TrustConfig,
     _resolve_paths,
 )
@@ -290,6 +291,44 @@ def _step_trust_policy() -> TrustConfig:
     return TrustConfig()
 
 
+def _step_stage_selection(vault_path: Path | None = None) -> StageConfig:
+    """Detect starting stage from existing vault, or default to Stage 0.
+
+    Priority:
+    1. vault-meta.json stage field (explicit prior promotion)
+    2. StageEvaluator assessment (vault meets exit criteria)
+    3. Stage 0 (no vault or empty vault)
+    """
+    import json
+
+    if vault_path is None or not vault_path.is_dir():
+        return StageConfig(current_stage=0)
+
+    # Check vault-meta.json first
+    meta_path = vault_path / "vault-meta.json"
+    if meta_path.is_file():
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            if isinstance(meta.get("stage"), int):
+                return StageConfig(current_stage=meta["stage"])
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    # Assess vault against Stage 0 → 1 criteria
+    from open_workspace_builder.stage import StageEvaluator
+
+    config = Config(stage=StageConfig(current_stage=0))
+    try:
+        evaluator = StageEvaluator(vault_path=vault_path, config=config)
+        assessment = evaluator.assess_current()
+        if assessment.can_promote:
+            return StageConfig(current_stage=assessment.target_stage)
+    except (FileNotFoundError, OSError):
+        pass
+
+    return StageConfig(current_stage=0)
+
+
 def _write_config_yaml(config: Config, config_path: Path) -> None:
     """Serialize Config to YAML and write to disk."""
     import yaml  # type: ignore[import-untyped]
@@ -319,6 +358,10 @@ def _write_config_yaml(config: Config, config_path: Path) -> None:
 
     if config.trust.active_policies != ("owb-default",):
         data["trust"] = {"active_policies": list(config.trust.active_policies)}
+
+    # Only write stage config if non-default
+    if config.stage.current_stage != 0:
+        data["stage"] = {"current_stage": config.stage.current_stage}
 
     # Only write secrets config if non-default
     if config.secrets.backend != "env":

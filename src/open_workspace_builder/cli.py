@@ -2181,6 +2181,120 @@ def metrics_by_story(
 
 
 @owb.group()
+@click.pass_context
+def stage(ctx: click.Context) -> None:
+    """Bootstrap stage assessment and promotion."""
+    ctx.ensure_object(dict)
+
+
+@stage.command("status")
+@click.option("--vault", default=None, type=click.Path(exists=True), help="Path to vault directory.")
+@click.option(
+    "--config",
+    "-c",
+    "config_path",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to YAML config file.",
+)
+def stage_status(vault: str | None, config_path: str | None) -> None:
+    """Show current bootstrap stage and exit criteria for the next stage."""
+    from open_workspace_builder.stage import StageEvaluator
+
+    config = load_config(config_path)
+    vault_path = Path(vault) if vault else Path(config.target)
+    if not vault_path.is_dir():
+        click.echo(f"Error: Vault path does not exist: {vault_path}")
+        sys.exit(1)
+
+    evaluator = StageEvaluator(vault_path=vault_path, config=config)
+    assessment = evaluator.assess_current()
+
+    click.echo(f"Current: Stage {assessment.current_stage}")
+    if assessment.current_stage == assessment.target_stage:
+        click.echo("Maximum stage reached. No further promotion available.")
+        return
+
+    click.echo(f"Next:    Stage {assessment.target_stage}")
+    click.echo()
+
+    if not assessment.criteria:
+        return
+
+    click.echo("Exit criteria:")
+    for criterion in assessment.criteria:
+        status = "PASS" if criterion.passed else "FAIL"
+        click.echo(f"  [{status}] {criterion.name}")
+        if not criterion.passed:
+            click.echo(f"         {criterion.detail}")
+
+    passed = sum(1 for c in assessment.criteria if c.passed)
+    total = len(assessment.criteria)
+    click.echo()
+    click.echo(f"{passed}/{total} criteria met.")
+    if assessment.can_promote:
+        click.echo("Ready to promote. Run: owb stage promote")
+
+
+@stage.command("promote")
+@click.option("--vault", default=None, type=click.Path(exists=True), help="Path to vault directory.")
+@click.option(
+    "--config",
+    "-c",
+    "config_path",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to YAML config file.",
+)
+def stage_promote(vault: str | None, config_path: str | None) -> None:
+    """Promote to the next bootstrap stage after verifying exit criteria."""
+    import yaml
+
+    from open_workspace_builder.stage import StageEvaluator
+
+    resolved_config_path = Path(config_path) if config_path else None
+    config = load_config(config_path)
+    vault_path = Path(vault) if vault else Path(config.target)
+    if not vault_path.is_dir():
+        click.echo(f"Error: Vault path does not exist: {vault_path}")
+        sys.exit(1)
+
+    evaluator = StageEvaluator(vault_path=vault_path, config=config)
+    assessment = evaluator.assess_current()
+
+    if assessment.current_stage == assessment.target_stage:
+        click.echo(f"Already at maximum Stage {assessment.current_stage}. Nothing to promote.")
+        sys.exit(1)
+
+    if not assessment.can_promote:
+        click.echo(f"Cannot promote from Stage {assessment.current_stage} to Stage {assessment.target_stage}.")
+        click.echo()
+        click.echo("Criteria not met:")
+        for criterion in assessment.criteria:
+            if not criterion.passed:
+                click.echo(f"  [FAIL] {criterion.name}")
+                click.echo(f"         {criterion.detail}")
+        sys.exit(1)
+
+    # Write updated stage to config file
+    new_stage = assessment.target_stage
+    if resolved_config_path and resolved_config_path.exists():
+        raw = yaml.safe_load(resolved_config_path.read_text(encoding="utf-8")) or {}
+        raw.setdefault("stage", {})["current_stage"] = new_stage
+        resolved_config_path.write_text(
+            yaml.dump(raw, default_flow_style=False, sort_keys=False),
+            encoding="utf-8",
+        )
+    elif resolved_config_path is None:
+        click.echo(
+            "Warning: no config file specified — stage not persisted. "
+            "Pass --config to save."
+        )
+
+    click.echo(f"Promoted to Stage {new_stage}")
+
+
+@owb.group()
 def mcp() -> None:
     """MCP (Model Context Protocol) server commands."""
 

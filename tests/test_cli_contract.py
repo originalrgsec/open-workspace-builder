@@ -30,6 +30,8 @@ GROUP_COMMANDS = [
     ["auth"],
     ["audit"],
     ["context"],
+    ["metrics"],
+    ["stage"],
     ["mcp"],
 ]
 
@@ -53,6 +55,17 @@ SUBCOMMANDS = [
     # context
     ["context", "migrate"],
     ["context", "status"],
+    # metrics
+    ["metrics", "tokens"],
+    ["metrics", "export"],
+    ["metrics", "record"],
+    ["metrics", "forecast"],
+    ["metrics", "budget-check"],
+    ["metrics", "sync"],
+    ["metrics", "by-story"],
+    # stage
+    ["stage", "status"],
+    ["stage", "promote"],
     # mcp
     ["mcp", "serve"],
 ]

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from open_workspace_builder.config import Config
@@ -45,6 +46,7 @@ class WorkspaceBuilder:
             self._ecc.install(target)
         self._skills.install(target)
         self._context.deploy(target)
+        self._write_vault_meta(target)
 
         created_dirs = len(self._vault.created_dirs) + len(self._skills.created_dirs)
         created_files = len(self._vault.created_files) + len(self._context.created_files)
@@ -55,3 +57,30 @@ class WorkspaceBuilder:
         print(f"  Directories created: {created_dirs}")
         print(f"  Files created:       {created_files}")
         print(f"  Files copied:        {copied_files}")
+
+    def _write_vault_meta(self, target: Path) -> None:
+        """Write vault-meta.json to the vault root with stage and version."""
+        if self._dry_run:
+            return
+
+        from importlib.metadata import version
+
+        try:
+            pkg_version = version("open-workspace-builder")
+        except Exception:
+            pkg_version = "unknown"
+
+        vault_root = target / self._config.vault.name
+        if not vault_root.is_dir():
+            return
+
+        meta = {
+            "version": pkg_version,
+            "stage": self._config.stage.current_stage,
+            "builder": "open-workspace-builder",
+        }
+        meta_path = vault_root / "vault-meta.json"
+        meta_path.write_text(
+            json.dumps(meta, indent=2) + "\n",
+            encoding="utf-8",
+        )

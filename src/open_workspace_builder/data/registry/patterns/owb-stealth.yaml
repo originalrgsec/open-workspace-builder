@@ -23,7 +23,7 @@ payload:
       description: "Identity manipulation instruction"
       false_positive_hint: "Legitimate in roleplay or testing documentation"
     - id: stealth-004
-      pattern: "(?i)secretly|covertly|silently\\s+(add|install|run|execute|modify)"
+      pattern: "(?i)(secretly|covertly|silently)\\s+(add|install|run|execute|modify)"
       severity: critical
       description: "Instruction to perform hidden action"
       false_positive_hint: "None — almost always malicious in workspace content"

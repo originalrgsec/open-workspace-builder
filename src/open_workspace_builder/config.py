@@ -200,6 +200,13 @@ class TokensConfig:
 
 
 @dataclass(frozen=True)
+class StageConfig:
+    """Bootstrap stage tracking (PRD stages 0-3)."""
+
+    current_stage: int = 0
+
+
+@dataclass(frozen=True)
 class PathsConfig:
     """Directory paths for config, data, and credentials."""
 
@@ -223,6 +230,7 @@ class Config:
     marketplace: MarketplaceConfig = field(default_factory=MarketplaceConfig)
     secrets: SecretsConfig = field(default_factory=SecretsConfig)
     tokens: TokensConfig = field(default_factory=TokensConfig)
+    stage: StageConfig = field(default_factory=StageConfig)
     paths: PathsConfig = field(default_factory=PathsConfig)
 
 
@@ -240,6 +248,7 @@ _SECTION_CLASSES: dict[str, type] = {
     "marketplace": MarketplaceConfig,
     "secrets": SecretsConfig,
     "tokens": TokensConfig,
+    "stage": StageConfig,
     "paths": PathsConfig,
 }
 
@@ -354,6 +363,8 @@ def _with_resolved_paths(config: Config, cli_name: str) -> Config:
         sources=config.sources,
         marketplace=config.marketplace,
         secrets=config.secrets,
+        tokens=config.tokens,
+        stage=config.stage,
         paths=resolved,
     )
 
