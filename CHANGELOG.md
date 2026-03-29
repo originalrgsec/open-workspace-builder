@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-03-29
+
+### Added
+- Directive drift detection (`owb security drift`) for workspace config files (OWB-S082):
+  - SHA-256 baseline comparison for CLAUDE.md, agents, rules, and commands
+  - `--update-baseline` creates/updates the drift baseline
+  - `--json` flag for machine-readable output
+  - `--files <glob>` restricts check to matching paths
+  - Exit codes: 0 (clean), 1 (drift detected), 2 (no baseline)
+  - Closes Vector 8 gap from AWS Bedrock attack vector research
+- First-party ECC trust manifest for migrate operations (OWB-S061):
+  - `security/trust.py` computes SHA-256 checksums of vendor/ecc/ files
+  - Migrator skips scanning for unmodified first-party content
+  - Modified first-party files still go through normal security scanning
+- Registry `min_owb_version` gate and unknown field warnings (OWB-S083):
+  - Registry items can declare `min_owb_version` in metadata envelope
+  - Items requiring a newer OWB version are skipped with a warning
+  - Unknown fields produce warnings but don't block loading (graceful degradation)
+- 50 new tests (1356 → 1405)
+
+### Fixed
+- `owb init` no longer overwrites existing vault scaffold files (OWB-S060):
+  - `_bootstrap.md`, `_index.md`, status files, templates, and policies are
+    preserved if they already exist
+  - Dry-run output shows `[skip]` for existing files
+- `owb init` detects when target is an existing vault directory (OWB-S063):
+  - Checks for vault markers (`_bootstrap.md`, `_templates/`) before building
+  - Raises clear error instead of creating nested `Obsidian/` scaffold
+
 ## [1.0.0] - 2026-03-29
 
 ### Added
