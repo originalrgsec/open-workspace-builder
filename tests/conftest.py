@@ -15,8 +15,8 @@ def tmp_target(tmp_path: Path) -> Path:
 
 @pytest.fixture
 def content_root() -> Path:
-    """Return the project content root (repo root with content/ and vendor/)."""
-    root = Path(__file__).resolve().parent.parent
+    """Return the package content root (src/open_workspace_builder/ with content/ and vendor/)."""
+    root = Path(__file__).resolve().parent.parent / "src" / "open_workspace_builder"
     assert (root / "content").is_dir(), f"content/ not found at {root}"
     assert (root / "vendor").is_dir(), f"vendor/ not found at {root}"
     return root

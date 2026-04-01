@@ -80,6 +80,8 @@ QA is layered:
 3. **Integration tests** — Exercise the full data flow with mock data sources and real modules. Catches the "modules tested in isolation but never wired" failure class.
 4. **Pipeline smoke test** — Run the primary commands and verify end-to-end output. Part of the sprint acceptance gate.
 5. **OSS health check** — Before adopting any new dependency, evaluate it against the [[code/oss-health-policy]].
+6. **Secrets scanning** — Run the secrets scanner (gitleaks or ggshield) against staged changes before every commit. Pre-commit hooks enforce this automatically. See [[code/supply-chain-protection]].
+7. **Supply chain verification** — Enforce 7-day package quarantine via `uv exclude-newer`, run `owb audit deps` and `owb audit package` before adopting dependencies, verify lockfile integrity. See [[code/supply-chain-protection]].
 
 ### Phase 6: Retrospective
 
@@ -123,6 +125,7 @@ Workspace moves, config changes, and infrastructure updates follow the standing 
 | Integration Verification | `code/integration-verification-policy.md` | Quality gates, acceptance criteria standards |
 | OSS Health Policy | `code/oss-health-policy.md` | Dependency adoption risk evaluation |
 | Allowed Licenses | `code/allowed-licenses.md` | Permitted open source licenses |
+| Supply Chain Protection | `code/supply-chain-protection.md` | 7-day quarantine, lockfile integrity, SCA/secrets scanning |
 | Setup Journal | `self/setup-journal.md` | Configuration history and standing procedures |
 | Retro Log | `self/retro-log.md` | Global retrospective index |
 

@@ -9,6 +9,8 @@ import pytest
 
 AUDIT_SCRIPT = (
     Path(__file__).resolve().parent.parent
+    / "src"
+    / "open_workspace_builder"
     / "content"
     / "skills"
     / "vault-audit"

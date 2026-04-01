@@ -340,7 +340,10 @@ class TestRealCustomSkills:
 
     @pytest.fixture()
     def content_skills_dir(self) -> Path:
-        candidate = Path(__file__).resolve().parent.parent.parent
+        candidate = (
+            Path(__file__).resolve().parent.parent.parent
+            / "src" / "open_workspace_builder"
+        )
         skills_dir = candidate / "content" / "skills"
         if not skills_dir.exists():
             pytest.skip("content/skills/ not found in repo")

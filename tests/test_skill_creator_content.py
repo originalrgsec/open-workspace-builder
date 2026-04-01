@@ -8,7 +8,10 @@ import pytest
 import yaml
 
 
-SKILL_DIR = Path(__file__).resolve().parent.parent / "content" / "skills" / "skill-creator"
+SKILL_DIR = (
+    Path(__file__).resolve().parent.parent
+    / "src" / "open_workspace_builder" / "content" / "skills" / "skill-creator"
+)
 SKILL_MD = SKILL_DIR / "SKILL.md"
 
 

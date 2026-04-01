@@ -15,18 +15,19 @@ from open_workspace_builder.engine.builder import WorkspaceBuilder
 def _find_content_root() -> Path:
     """Find the package content root (where vendor/ and content/ live).
 
-    Walks up from this file's location to find the project root that contains
-    the content/ and vendor/ directories. Raises FileNotFoundError if neither
-    candidate contains the required directories.
+    Content and vendor directories are co-located with the Python package at
+    src/open_workspace_builder/. This works for pip installs, editable installs,
+    and git clones because the directories are inside the package itself.
     """
-    candidates = [
-        Path(__file__).resolve().parent.parent.parent,  # src/open_workspace_builder/ -> repo root
-        Path.cwd(),
-    ]
-    for candidate in candidates:
-        if (candidate / "content").is_dir() and (candidate / "vendor").is_dir():
-            return candidate
-    checked = ", ".join(str(c) for c in candidates)
+    # Primary: content/ and vendor/ live alongside this file in the package
+    package_dir = Path(__file__).resolve().parent
+    if (package_dir / "content").is_dir() and (package_dir / "vendor").is_dir():
+        return package_dir
+    # Fallback: check cwd for development setups with non-standard layouts
+    cwd = Path.cwd()
+    if (cwd / "content").is_dir() and (cwd / "vendor").is_dir():
+        return cwd
+    checked = f"{package_dir}, {cwd}"
     raise FileNotFoundError(
         f"Could not find content/ and vendor/ directories. "
         f"Checked: {checked}. "

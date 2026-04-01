@@ -21,8 +21,8 @@ from open_workspace_builder.security.scanner import ScanFlag, ScanVerdict
 
 @pytest.fixture
 def content_root() -> Path:
-    """Return the project content root."""
-    root = Path(__file__).resolve().parent.parent
+    """Return the package content root."""
+    root = Path(__file__).resolve().parent.parent / "src" / "open_workspace_builder"
     assert (root / "content").is_dir()
     assert (root / "vendor").is_dir()
     return root

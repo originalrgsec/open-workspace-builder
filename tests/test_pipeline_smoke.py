@@ -25,7 +25,7 @@ def runner() -> CliRunner:
 
 @pytest.fixture()
 def content_root() -> Path:
-    root = Path(__file__).resolve().parent.parent
+    root = Path(__file__).resolve().parent.parent / "src" / "open_workspace_builder"
     assert (root / "content").is_dir(), f"content/ not found at {root}"
     return root
 

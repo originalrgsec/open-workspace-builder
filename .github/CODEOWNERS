@@ -11,4 +11,4 @@
 /.github/CODEOWNERS @VolcanixLLC
 
 # Vendored ECC content — owner only
-/vendor/ @VolcanixLLC
+/src/open_workspace_builder/vendor/ @VolcanixLLC

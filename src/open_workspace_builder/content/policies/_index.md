@@ -17,3 +17,4 @@ by the vault engine during workspace initialization.
 - [[integration-verification-policy]] — Quality gates: workflow-level acceptance criteria, pipeline smoke tests, CLI contract verification
 - [[oss-health-policy]] — Dependency health evaluation: Green/Yellow/Red scoring with six evaluation criteria
 - [[allowed-licenses]] — Permitted open source licenses with enforcement workflow and audit tools
+- [[supply-chain-protection]] — Supply chain attack defense: 7-day quarantine, lockfile integrity, SCA scanning, secrets scanning, per-ecosystem controls

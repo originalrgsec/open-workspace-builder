@@ -62,29 +62,29 @@ open-workspace-builder/
 │       │   ├── discovery.py          # Config-driven file discovery
 │       │   ├── audit.py              # Repo-level security audit
 │       │   └── updater.py            # Multi-source update pipeline
-├── vendor/
-│   └── ecc/
-│       ├── .upstream-meta.json      # Upstream repo URL, commit hash, fetch date
-│       ├── .content-hashes.json     # SHA-256 per file, generated at accept time
-│       ├── .update-log.jsonl        # Append-only audit trail
-│       ├── LICENSE                  # MIT license (Affaan Mustafa copyright)
-│       ├── agents/                  # 16 agent definitions
-│       ├── commands/                # 15 slash command definitions
-│       └── rules/                   # 16 rules (common/, python/, golang/)
-├── content/
-│   ├── skills/
-│   │   ├── mobile-inbox-triage/
-│   │   │   └── SKILL.md
-│   │   ├── vault-audit/
-│   │   │   ├── SKILL.md
-│   │   │   └── audit.sh
-│   │   └── oss-health-check/
-│   │       ├── SKILL.md
-│   │       └── health_check.py
-│   ├── templates/                   # 18 vault templates (markdown files)
-│   │   ├── adr.md
-│   │   ├── prd.md
-│   │   ├── sdr.md
+│       ├── vendor/                      # Vendored third-party content (inside package)
+│       │   └── ecc/
+│       │       ├── .upstream-meta.json  # Upstream repo URL, commit hash, fetch date
+│       │       ├── .content-hashes.json # SHA-256 per file, generated at accept time
+│       │       ├── .update-log.jsonl    # Append-only audit trail
+│       │       ├── LICENSE              # MIT license (Affaan Mustafa copyright)
+│       │       ├── agents/              # 16 agent definitions
+│       │       ├── commands/            # 15 slash command definitions
+│       │       └── rules/               # 16 rules (common/, python/, golang/)
+│       ├── content/                     # Project-owned content (inside package)
+│       │   ├── skills/
+│       │   │   ├── mobile-inbox-triage/
+│       │   │   │   └── SKILL.md
+│       │   │   ├── vault-audit/
+│       │   │   │   ├── SKILL.md
+│       │   │   │   └── audit.sh
+│       │   │   └── oss-health-check/
+│       │   │       ├── SKILL.md
+│       │   │       └── health_check.py
+│       │   ├── templates/               # 22 vault templates (markdown files)
+│       │   │   ├── adr.md
+│       │   │   ├── prd.md
+│       │   │   ├── sdr.md
 │   │   ├── threat-model.md
 │   │   └── ... (14 more)
 │   ├── policies/                    # Cross-project development policies
@@ -93,12 +93,13 @@ open-workspace-builder/
 │   │   ├── development-process.md
 │   │   ├── integration-verification-policy.md
 │   │   ├── oss-health-policy.md
-│   │   └── allowed-licenses.md
-│   └── context/                     # Context file templates
-│       ├── about-me.template.md
-│       ├── brand-voice.template.md
-│       ├── working-style.template.md
-│       └── claude-md.template.md
+│       │   │   ├── allowed-licenses.md
+│       │   │   └── supply-chain-protection.md
+│       │   └── context/                 # Context file templates
+│       │       ├── about-me.template.md
+│       │       ├── brand-voice.template.md
+│       │       ├── working-style.template.md
+│       │       └── claude-md.template.md
 ├── tests/
 │   ├── unit/
 │   │   ├── test_config.py

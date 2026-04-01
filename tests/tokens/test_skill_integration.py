@@ -10,7 +10,7 @@ class TestTokenAnalysisSkill:
 
     def _skill_path(self) -> Path:
         """Resolve the skill directory."""
-        repo_root = Path(__file__).resolve().parent.parent.parent
+        repo_root = Path(__file__).resolve().parent.parent.parent / "src" / "open_workspace_builder"
         return repo_root / "content" / "skills" / "token-analysis"
 
     def test_skill_directory_exists(self) -> None:
@@ -67,14 +67,14 @@ class TestSprintCompleteIntegration:
     """Verify sprint-complete skill references token-analysis."""
 
     def test_sprint_complete_references_token_analysis(self) -> None:
-        repo_root = Path(__file__).resolve().parent.parent.parent
+        repo_root = Path(__file__).resolve().parent.parent.parent / "src" / "open_workspace_builder"
         skill_file = repo_root / "content" / "skills" / "sprint-complete" / "SKILL.md"
         content = skill_file.read_text(encoding="utf-8")
         assert "token-analysis" in content
         assert "Token Consumption" in content or "token consumption" in content.lower()
 
     def test_sprint_complete_has_token_sub_item(self) -> None:
-        repo_root = Path(__file__).resolve().parent.parent.parent
+        repo_root = Path(__file__).resolve().parent.parent.parent / "src" / "open_workspace_builder"
         skill_file = repo_root / "content" / "skills" / "sprint-complete" / "SKILL.md"
         content = skill_file.read_text(encoding="utf-8")
         assert "5a:" in content or "5a." in content
@@ -85,13 +85,13 @@ class TestSprintPlanIntegration:
     """Verify sprint-plan skill references token-analysis."""
 
     def test_sprint_plan_references_token_analysis(self) -> None:
-        repo_root = Path(__file__).resolve().parent.parent.parent
+        repo_root = Path(__file__).resolve().parent.parent.parent / "src" / "open_workspace_builder"
         skill_file = repo_root / "content" / "skills" / "sprint-plan" / "SKILL.md"
         content = skill_file.read_text(encoding="utf-8")
         assert "token-analysis" in content
 
     def test_sprint_plan_has_cost_estimate_step(self) -> None:
-        repo_root = Path(__file__).resolve().parent.parent.parent
+        repo_root = Path(__file__).resolve().parent.parent.parent / "src" / "open_workspace_builder"
         skill_file = repo_root / "content" / "skills" / "sprint-plan" / "SKILL.md"
         content = skill_file.read_text(encoding="utf-8")
         assert "Cost Estimate" in content
