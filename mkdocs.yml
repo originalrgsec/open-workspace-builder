@@ -108,6 +108,9 @@ nav:
     - Threat Model: threat-model.md
   - Credits: credits.md
   - Releases:
+    - v1.2.0: releases/v1.2.0.md
+    - v1.1.0: releases/v1.1.0.md
+    - v1.0.0: releases/v1.0.0.md
     - v0.8.0: releases/v0.8.0.md
     - v0.7.0: releases/v0.7.0.md
     - v0.6.0: releases/v0.6.0.md
