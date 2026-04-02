@@ -37,6 +37,13 @@ open-workspace-builder/
 │       │   ├── sast.py              # SAST: Semgrep CLI wrapper
 │       │   ├── suppression_monitor.py # CVE suppression OSV API checker
 │       │   ├── suppressions_schema.py # Suppression registry dataclass/loader
+│       │   ├── drift.py              # Directive drift detection (SHA-256 baseline)
+│       │   ├── trust.py              # First-party ECC trust manifest
+│       │   ├── hooks.py              # Pre-commit config generation and management
+│       │   ├── quarantine.py         # Package quarantine (uv exclude-newer)
+│       │   ├── secrets_scanner.py    # Secrets scanning (gitleaks/ggshield backends)
+│       │   ├── gate.py               # Programmatic pre-install SCA gate
+│       │   ├── trivy.py              # Trivy multi-ecosystem SCA wrapper
 │       │   └── data/
 │       │       ├── patterns.yaml    # Pattern library for Layer 2
 │       │       ├── dep_audit_suppressions.yaml  # GuardDog false positives
@@ -57,6 +64,9 @@ open-workspace-builder/
 │       │       ├── org_layer_examples.yaml
 │       │       └── trust_policies/
 │       │           └── owb-default.yaml
+│       ├── metrics/
+│       │   ├── __init__.py
+│       │   └── baseline.py           # Baseline code quality metrics collection
 │       ├── sources/
 │       │   ├── __init__.py
 │       │   ├── discovery.py          # Config-driven file discovery
@@ -720,6 +730,18 @@ class ReputationLedger:
 - Goal: Fix remaining Phase 1 defects and add two missing Phase 1 capabilities. S081 fixed stealth-004 regex alternation precedence bug. S079 added bootstrap stage tracking (stages 0-3) with StageConfig, StageEvaluator, CLI commands (owb stage status/promote), wizard stage detection, and vault-meta.json output. S067 added hook-based policy enforcement as Phase 2 opt-in: EnforcementConfig, policy manifest generator, hook script deployment, settings.json registration. Also fixed _with_resolved_paths silently dropping the tokens field (pre-existing bug).
 - Version: v1.0.0
 - Tests: 1283 → 1356 (+73)
+
+### Sprint 15: Hardening + Drift Detection
+- Stories: OWB-S060 (S), OWB-S063 (S), OWB-S082 (M), OWB-S061 (M), OWB-S083 (S)
+- Goal: Close user-facing init/migrate bugs, add directive drift detection as a new security capability (closing Vector 8 gap from Bedrock research), lay groundwork for registry versioning. S060 and S063 fixed init overwrite and vault nesting bugs. S082 added security/drift.py with SHA-256 baseline comparison and owb security drift CLI. S061 added security/trust.py for first-party ECC trust during migrate. S083 added min_owb_version gate and unknown field warnings to registry. PRD Q1-Q5 all resolved.
+- Version: v1.1.0
+- Tests: 1356 → 1405 (+50)
+
+### Sprint 16: AppSec & Quality
+- Stories: OWB-S088 (M), OWB-S089 (S), OWB-S092 (S), OWB-S086 (M), OWB-S090 (S), OWB-S091 (M), OWB-S093 (S), OWB-S062 (XS), OWB-S049 (M), OWB-S094 (M)
+- Goal: Harden OWB's security posture across the full development lifecycle. S088 added pre-commit hook framework with gitleaks and ruff. S089 added 7-day package quarantine via uv.toml exclude-newer and owb audit pins for safe pin advancement. S092 changed SCA/SAST defaults to enabled and wired reputation ledger into SourceUpdater and Scanner. S086 added configurable secrets scanner with gitleaks default and ggshield opt-in. S090 added programmatic pre-install SCA gate with 5-check battery. S091 integrated Trivy pinned to safe v0.69.3 with version safety enforcement. S093 updated PLC/SDLC documentation across all ecosystems. S062 fixed dry-run detect/skip reporting. S049 added baseline metrics CLI. S094 moved content/ and vendor/ inside the Python package for pip distribution.
+- Version: v1.2.0
+- Tests: 1405 → 1549 (+144)
 
 ## Open Questions
 

@@ -490,6 +490,40 @@ Risk scoring follows NIST SP 800-30 Rev. 1. Each identified threat is rated on l
 - **Status:** implemented
 - **Residual risk:** Subtle prompt injection that looks benign in a diff review could be preserved. The three-layer content scanner (M-006) is the compensating control for content injected into context files.
 
+### M-024: Secrets Scanning Gate (gitleaks/ggshield)
+
+- **Threat(s) addressed:** T-028
+- **Description:** `owb security secrets` scans paths for hardcoded credentials using gitleaks (default, zero-config, fully local) or ggshield (opt-in, API-backed). Pre-commit hooks block commits containing detected secrets. Integrates into the unified scan via `owb security scan --secrets` or `--all`.
+- **NIST 800-53 Control:** IA-5 Authenticator Management, SA-12 Supply Chain Protection
+- **Implementation:** `security/secrets_scanner.py` (GitleaksBackend, GgshieldBackend), `.pre-commit-config.yaml`, `cli.py` (owb security secrets)
+- **Status:** implemented
+
+### M-025: Package Quarantine (7-Day Window)
+
+- **Threat(s) addressed:** T-028
+- **Description:** A 7-day quarantine period is enforced on all package installations via `uv.toml exclude-newer`. No package version published within the last 7 days can enter the lock file. `owb audit pins` checks for safe pin advancements where both current and candidate versions exceed the quarantine window. Emergency bypasses are logged to `.owb/quarantine-bypasses.jsonl`.
+- **NIST 800-53 Control:** SA-12 Supply Chain Protection, CM-7 Least Functionality
+- **Implementation:** `security/quarantine.py`, `uv.toml`, `cli.py` (owb audit pins)
+- **Status:** implemented
+- **Residual risk:** Attacks that persist undetected beyond 7 days will bypass the quarantine. The pre-install gate (M-026) and dependency scanning (M-019, M-020) provide compensating coverage.
+
+### M-026: Programmatic Pre-Install SCA Gate
+
+- **Threat(s) addressed:** T-028, T-029
+- **Description:** `owb audit gate <package>` runs a 5-check battery before any new dependency is accepted: pip-audit (CVEs), GuardDog (malware heuristics), OSS health check, license audit, and quarantine verification. Replaces the prompt-only pre-install gate with programmatic enforcement. Gate failures are recorded to the reputation ledger.
+- **NIST 800-53 Control:** SA-12 Supply Chain Protection, RA-5 Vulnerability Monitoring and Scanning
+- **Implementation:** `security/gate.py` (run_gate, run_gate_batch), `cli.py` (owb audit gate)
+- **Status:** implemented
+
+### M-027: Multi-Ecosystem SCA via Trivy
+
+- **Threat(s) addressed:** T-029
+- **Description:** Trivy provides vulnerability scanning across npm, Go, Rust, and container ecosystems, supplementing pip-audit for Python. Pinned to v0.69.3 (last known-safe version before CVE-2026-33634 compromise). Version safety enforcement hard-blocks compromised versions 0.69.4-0.69.6.
+- **NIST 800-53 Control:** RA-5 Vulnerability Monitoring and Scanning, SA-12 Supply Chain Protection
+- **Implementation:** `security/trivy.py`, `cli.py` (owb security trivy, --trivy flag)
+- **Status:** implemented
+- **Residual risk:** Trivy DB freshness depends on network access for first-run download. Pinned version cannot receive rule updates until a verified safe release is published.
+
 ## Residual Risk Summary
 
 | Threat ID | Original Risk | Mitigation | Residual Risk | Accepted? | Accepted By |

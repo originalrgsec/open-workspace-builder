@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-04-02
+
+### Added
+- Pre-commit hook framework with gitleaks and ruff hooks (OWB-S088):
+  - `owb init` generates `.pre-commit-config.yaml` at workspace root
+  - `owb security hooks install` and `owb security hooks status` commands
+  - `owb security scan --all` enables all scanners at once
+  - `pre-commit` added as `[hooks]` optional dependency
+- Package quarantine enforcement with 7-day window (OWB-S089):
+  - `owb init` generates `uv.toml` with `exclude-newer` set to 7 days ago
+  - `owb audit pins` checks for safe pin advancement candidates via PyPI
+  - `--auto-advance` and `--bypass` with JSONL audit trail
+  - OWB's own `uv.toml` enforces quarantine at `2026-03-25`
+- Configurable secrets scanner with gitleaks/ggshield backends (OWB-S086):
+  - `owb security secrets` scans paths for hardcoded credentials
+  - Gitleaks as zero-config default, ggshield as opt-in with API key
+  - `--secrets` flag on `owb security scan`
+- Programmatic pre-install SCA gate with 5-check battery (OWB-S090):
+  - `owb audit gate <package>` runs pip-audit, GuardDog, OSS health, license,
+    and quarantine checks with consolidated pass/fail
+  - `--all` mode checks all direct dependencies from pyproject.toml
+  - Gate failures recorded to reputation ledger
+- Trivy integration pinned to safe v0.69.3 (OWB-S091):
+  - `owb security trivy` scans for multi-ecosystem vulnerabilities
+  - Version safety enforcement blocks compromised versions 0.69.4-0.69.6
+  - `--trivy` flag on `owb security scan`
+- Baseline metrics CLI command (OWB-S049):
+  - `owb metrics baseline` collects source LOC, test LOC, test count, commits,
+    date range, and per-module breakdown
+  - `--tag-range`, `--json`, `--output-dir` options
+- 144 new tests (1405 → 1549)
+
+### Changed
+- SCA and SAST scanning enabled by default in SecurityConfig (OWB-S092):
+  - `sca_enabled` and `sast_enabled` now default to `True`
+  - Reputation ledger wired into SourceUpdater (blocks above threshold)
+  - Scanner records FlagEvents for malicious verdicts when source is known
+- Moved `content/` and `vendor/` inside `src/open_workspace_builder/` for pip
+  distribution (OWB-S094)
+- `_find_content_root()` resolves via `__file__` instead of walking to repo root
+- `dependency-security.md` updated to cover Python, npm, Rust, Go with quarantine
+- PLC Phase 5 QA and sprint completion checklist include supply chain verification
+- `vault-policies.md` references `supply-chain-protection.md` (OWB-S093)
+
+### Fixed
+- Dry-run now reports `[skip]` for existing files instead of `[write]` (OWB-S062)
+
 ## [1.1.0] - 2026-03-29
 
 ### Added
