@@ -547,6 +547,19 @@ def security() -> None:
     default=False,
     help="Run cross-file correlation analysis on directories (requires Layer 3).",
 )
+@click.option(
+    "--secrets",
+    is_flag=True,
+    default=False,
+    help="Run secrets scanning (gitleaks/ggshield) on the target path.",
+)
+@click.option(
+    "--all",
+    "run_all",
+    is_flag=True,
+    default=False,
+    help="Run all optional scanners (SCA, SAST, secrets).",
+)
 @click.pass_context
 def scan(
     ctx: click.Context,
@@ -557,6 +570,8 @@ def scan(
     sca: bool,
     sast: bool,
     correlate: bool,
+    secrets: bool,
+    run_all: bool,
 ) -> None:
     """Scan a file or directory for security issues.
 
@@ -575,9 +590,10 @@ def scan(
         else None
     )
 
-    # Resolve SCA/SAST from flags or config defaults
-    run_sca = sca or config.security.sca_enabled
-    run_sast = sast or config.security.sast_enabled
+    # Resolve SCA/SAST/Secrets from flags, --all, or config defaults
+    run_sca = sca or run_all or config.security.sca_enabled
+    run_sast = sast or run_all or config.security.sast_enabled
+    run_secrets = secrets or run_all or config.security.secrets_enabled
 
     # Construct ModelBackend for Layer 3 if requested.
     backend = None
@@ -657,6 +673,13 @@ def scan(
         sast_data = _run_sast_scan(target)
         report_data["sast"] = sast_data
         if any(f.get("severity") == "ERROR" for f in sast_data.get("findings", [])):
+            has_issues = True
+
+    # Secrets scanning
+    if run_secrets:
+        secrets_data = _run_secrets_scan(target, config)
+        report_data["secrets"] = secrets_data
+        if secrets_data.get("findings"):
             has_issues = True
 
     if output_file:
@@ -770,6 +793,40 @@ def _run_sast_scan(target: Path) -> dict:
         "errors": list(report.errors),
         "rules_run": report.rules_run,
     }
+
+
+def _run_secrets_scan(target: Path, config: "Config") -> dict:
+    """Run secrets scanning and return JSON-compatible dict."""
+    from open_workspace_builder.security.secrets_scanner import get_secrets_backend
+
+    scanner_name = config.security.secrets_scanner
+    click.echo(f"\n--- Secrets: Running {scanner_name} on {target} ---")
+
+    backend = get_secrets_backend(scanner_name)
+    if not backend.is_available():
+        click.echo(f"  [skip] {scanner_name} not available")
+        return {"findings": [], "scanner": scanner_name, "error": f"{scanner_name} not available"}
+
+    findings, _exit_code = backend.scan_path(target)
+    findings_data = [
+        {
+            "file": f.file,
+            "line": f.line,
+            "rule_id": f.rule_id,
+            "description": f.description,
+            "match": f.match,
+        }
+        for f in findings
+    ]
+
+    if findings:
+        click.echo(f"\n[SECRETS] {len(findings)} finding(s):")
+        for f in findings:
+            click.echo(f"  [{f.rule_id}] {f.file}:{f.line} — {f.description}")
+    else:
+        click.echo("\n[SECRETS-OK] No secrets found.")
+
+    return {"findings": findings_data, "scanner": scanner_name}
 
 
 def _print_verdict(file_path: str, verdict: str, flag_count: int) -> None:
@@ -886,6 +943,83 @@ def _format_sast_text(report) -> str:  # noqa: ANN001
         f"Summary: {counts['ERROR']} error, {counts['WARNING']} warning, {counts['INFO']} info"
     )
     return "\n".join(lines)
+
+
+# ── owb security secrets ────────────────────────────────────────────────────
+
+
+@security.command("secrets")
+@click.argument("path", type=click.Path(exists=True), default=".")
+@click.option(
+    "--scanner",
+    type=click.Choice(["gitleaks", "ggshield"]),
+    default=None,
+    help="Secrets scanner backend (default: from config or gitleaks).",
+)
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format.",
+)
+@click.option(
+    "--config",
+    "-c",
+    "config_path",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to YAML config file.",
+)
+@click.pass_context
+def security_secrets(
+    ctx: click.Context,
+    path: str,
+    scanner: str | None,
+    output_format: str,
+    config_path: str | None,
+) -> None:
+    """Scan for hardcoded secrets and credentials."""
+    from open_workspace_builder.security.secrets_scanner import get_secrets_backend
+
+    config = load_config(config_path, cli_name=ctx.obj.get("cli_name"))
+
+    # CLI flag > config > default
+    scanner_name = scanner or config.security.secrets_scanner
+
+    backend = get_secrets_backend(scanner_name)
+    if not backend.is_available():
+        click.echo(
+            f"Error: {scanner_name} is not available. "
+            f"Install it or choose a different scanner.",
+            err=True,
+        )
+        sys.exit(1)
+
+    target = Path(path)
+    findings, _exit_code = backend.scan_path(target)
+
+    if output_format == "json":
+        data = [
+            {
+                "file": f.file,
+                "line": f.line,
+                "rule_id": f.rule_id,
+                "description": f.description,
+                "match": f.match,
+            }
+            for f in findings
+        ]
+        click.echo(json.dumps(data, indent=2))
+    else:
+        if findings:
+            click.echo(f"[SECRETS] {len(findings)} finding(s):")
+            for f in findings:
+                click.echo(f"  [{f.rule_id}] {f.file}:{f.line} — {f.description}")
+        else:
+            click.echo("[SECRETS-OK] No secrets found.")
+
+    sys.exit(2 if findings else 0)
 
 
 # ── owb security drift ───────────────────────────────────────────────────────

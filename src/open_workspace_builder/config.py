@@ -141,6 +141,8 @@ class SecurityConfig:
     scanner_layers: tuple[int, ...] = (1, 2, 3)
     sca_enabled: bool = False
     sast_enabled: bool = False
+    secrets_scanner: str = "gitleaks"  # "gitleaks" or "ggshield"
+    secrets_enabled: bool = False  # off by default until tool is installed
     trusted_upstream_urls: tuple[str, ...] = (
         "https://github.com/affaan-m/everything-claude-code",
     )
