@@ -52,3 +52,6 @@ documents are available in the project's vault or documentation directory.
 | Adding a dependency | oss-health-policy, allowed-licenses |
 | Writing tests | integration-verification-policy (workflow-level AC) |
 | Release preparation | development-process (release notes, versioning) |
+| Installing packages or dependencies | supply-chain-protection (quarantine, SCA) |
+| Configuring pre-commit hooks | supply-chain-protection (secrets scanning) |
+| Starting a session on any project | supply-chain-protection (pin advancement check) |
