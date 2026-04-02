@@ -69,14 +69,17 @@ owb security sast ./path --json       # JSON output
 
 ### `owb security drift`
 
-Check for directive drift against a stored baseline.
+Check for directive drift against a stored baseline. The baseline is stored per-workspace at `<workspace>/.owb/drift-baseline.json`, so each project tracks its own directive state independently.
 
 ```bash
 owb security drift ./workspace            # check for directive drift
 owb security drift ./workspace --update-baseline  # create/update baseline
 owb security drift ./workspace --json     # JSON output
 owb security drift ./workspace --files "*.md"  # filter by glob
+owb security drift ./workspace --baseline /custom/path.json  # custom baseline path
 ```
+
+Exit codes: 0 (no drift), 1 (drift detected), 2 (no baseline exists).
 
 ### `owb security secrets`
 

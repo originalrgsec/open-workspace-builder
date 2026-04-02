@@ -37,7 +37,7 @@ open-workspace-builder/
 │       │   ├── sast.py              # SAST: Semgrep CLI wrapper
 │       │   ├── suppression_monitor.py # CVE suppression OSV API checker
 │       │   ├── suppressions_schema.py # Suppression registry dataclass/loader
-│       │   ├── drift.py              # Directive drift detection (SHA-256 baseline)
+│       │   ├── drift.py              # Directive drift detection (SHA-256 per-workspace baseline)
 │       │   ├── trust.py              # First-party ECC trust manifest
 │       │   ├── hooks.py              # Pre-commit config generation and management
 │       │   ├── quarantine.py         # Package quarantine (uv exclude-newer)

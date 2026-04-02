@@ -83,6 +83,21 @@ The gate is available programmatically via `owb audit gate`. This replaces the e
 
 The security scanner feeds a reputation ledger that tracks source trustworthiness over time. When the scanner returns a malicious verdict, it records a FlagEvent against the source. The SourceUpdater consults the ledger and blocks sources that exceed the configured flag threshold. Pre-install gate failures also feed the ledger, creating a cumulative risk signal that influences future trust decisions.
 
+## Directive Drift Detection
+
+Workspace directive files (CLAUDE.md, agents, rules, commands) are security-sensitive because they act as system prompts for Claude. An unauthorized modification to any of these files could alter agent behavior in ways that bypass user oversight.
+
+`owb security drift` computes SHA-256 hashes of all tracked directive files and compares them against a stored baseline. It reports files that have been modified, added, or deleted since the last known-good state. The baseline is stored per-workspace at `<workspace>/.owb/drift-baseline.json`, so each project maintains an independent record.
+
+Tracked file patterns:
+
+- `CLAUDE.md` and `.claude/CLAUDE.md`
+- `.claude/agents/*.md`
+- `.claude/rules/**/*.md`
+- `.claude/commands/**/*.md`
+
+Run `owb security drift --update-baseline` after any intentional directive change to re-establish the known-good state. Between baselines, any modification triggers a drift alert on the next check.
+
 ## SCA and SAST Defaults
 
 As of v1.2.0, SCA (software composition analysis) and SAST (static application security testing) are enabled by default for all workspaces. Previous versions required opt-in via `security.sca_enabled` and `security.sast_enabled`. Existing configs that explicitly set these to `false` will continue to be respected.
