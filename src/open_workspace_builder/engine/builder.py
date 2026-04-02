@@ -47,6 +47,7 @@ class WorkspaceBuilder:
             self._ecc.install(target)
         self._skills.install(target)
         self._context.deploy(target)
+        self._deploy_precommit_config(target)
         self._write_vault_meta(target)
 
         created_dirs = len(self._vault.created_dirs) + len(self._skills.created_dirs)
@@ -76,6 +77,25 @@ class WorkspaceBuilder:
                     f"(found '{marker}'). Use the workspace root as the target "
                     f"instead, not the vault directory itself."
                 )
+
+    def _deploy_precommit_config(self, target: Path) -> None:
+        """Generate .pre-commit-config.yaml at the workspace root.
+
+        Skips if the file already exists (same pattern as vault files).
+        """
+        if self._dry_run:
+            return
+
+        config_path = target / ".pre-commit-config.yaml"
+        if config_path.is_file():
+            print("  [skip]  .pre-commit-config.yaml (exists)")
+            return
+
+        from open_workspace_builder.security.hooks import generate_precommit_config
+
+        content = generate_precommit_config()
+        config_path.write_text(content, encoding="utf-8")
+        print("  Created .pre-commit-config.yaml")
 
     def _write_vault_meta(self, target: Path) -> None:
         """Write vault-meta.json to the vault root with stage and version."""

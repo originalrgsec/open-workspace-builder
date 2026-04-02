@@ -63,12 +63,16 @@ sheets = [
 xlsx = [
     "xlsxwriter>=3.0",
 ]
+hooks = [
+    "pre-commit>=3.0",
+]
 dev = [
     "pytest>=7.0",
     "ruff>=0.1.0",
     "build",
     "pip-audit>=2.7.0",
     "semgrep>=1.50.0",
+    "pre-commit>=3.0",
 ]
 
 [project.urls]
