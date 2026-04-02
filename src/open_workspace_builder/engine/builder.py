@@ -47,6 +47,7 @@ class WorkspaceBuilder:
             self._ecc.install(target)
         self._skills.install(target)
         self._context.deploy(target)
+        self._deploy_uv_toml(target)
         self._write_vault_meta(target)
 
         created_dirs = len(self._vault.created_dirs) + len(self._skills.created_dirs)
@@ -76,6 +77,25 @@ class WorkspaceBuilder:
                     f"(found '{marker}'). Use the workspace root as the target "
                     f"instead, not the vault directory itself."
                 )
+
+    def _deploy_uv_toml(self, target: Path) -> None:
+        """Generate uv.toml with quarantine exclude-newer at the workspace root.
+
+        Uses the same skip-if-exists pattern as vault files.
+        """
+        uv_toml_path = target / "uv.toml"
+        if uv_toml_path.exists():
+            print(f"  [skip]  uv.toml (exists)")
+            return
+        if self._dry_run:
+            print(f"  [write] uv.toml")
+            return
+
+        from open_workspace_builder.security.quarantine import render_uv_toml
+
+        uv_toml_path.parent.mkdir(parents=True, exist_ok=True)
+        uv_toml_path.write_text(render_uv_toml(), encoding="utf-8")
+        print(f"  [write] uv.toml (quarantine: exclude-newer)")
 
     def _write_vault_meta(self, target: Path) -> None:
         """Write vault-meta.json to the vault root with stage and version."""
