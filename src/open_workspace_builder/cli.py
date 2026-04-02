@@ -1676,6 +1676,116 @@ def _print_audit_text(report: object, *, include_fix: bool) -> None:
         click.echo("\nAll checks passed.")
 
 
+@audit.command("gate")
+@click.argument("package", required=False)
+@click.option("--version", "pkg_version", default=None, help="Specific version to check.")
+@click.option("--all", "check_all", is_flag=True, help="Check all direct dependencies from pyproject.toml.")
+@click.option("--json", "json_output", is_flag=True, help="JSON output.")
+def audit_gate(
+    package: str | None,
+    pkg_version: str | None,
+    check_all: bool,
+    json_output: bool,
+) -> None:
+    """Run full pre-install security gate on a package.
+
+    Executes a 5-check battery: pip-audit, guarddog, oss-health, license,
+    and quarantine. Exit code 0 if all pass, 2 if any fail.
+
+    Hook integration: add ``owb audit gate <pkg>`` to your pre-install
+    hook (S067 hook infrastructure) to enforce the gate automatically.
+    """
+    from open_workspace_builder.security.gate import (
+        _parse_direct_deps,
+        run_gate,
+        run_gate_batch,
+    )
+
+    if check_all:
+        try:
+            deps = _parse_direct_deps()
+        except FileNotFoundError as exc:
+            click.echo(f"Error: {exc}")
+            sys.exit(1)
+
+        if not deps:
+            click.echo("No direct dependencies found in pyproject.toml.")
+            sys.exit(0)
+
+        results = run_gate_batch(deps)
+        _display_gate_batch(results, json_output)
+        any_failed = any(not r.passed for r in results)
+        sys.exit(2 if any_failed else 0)
+
+    if not package:
+        click.echo("Error: provide a PACKAGE argument or use --all.")
+        sys.exit(1)
+
+    result = run_gate(package, version=pkg_version)
+    _display_gate_result(result, json_output)
+    sys.exit(2 if not result.passed else 0)
+
+
+def _display_gate_result(result: object, json_output: bool) -> None:
+    """Display a single GateResult."""
+    if json_output:
+        import json as json_mod
+
+        data = {
+            "package": result.package,  # type: ignore[union-attr]
+            "version": result.version,  # type: ignore[union-attr]
+            "passed": result.passed,  # type: ignore[union-attr]
+            "checks": [
+                {"name": c.name, "passed": c.passed, "details": c.details}
+                for c in result.checks  # type: ignore[union-attr]
+            ],
+        }
+        click.echo(json_mod.dumps(data, indent=2))
+        return
+
+    pkg_label = f"{result.package}=={result.version}" if result.version else result.package  # type: ignore[union-attr]
+    status = "PASS" if result.passed else "FAIL"  # type: ignore[union-attr]
+    click.echo(f"\n=== SCA Gate: {pkg_label} [{status}] ===\n")
+    for c in result.checks:  # type: ignore[union-attr]
+        icon = "PASS" if c.passed else "FAIL"
+        click.echo(f"  [{icon}] {c.name}: {c.details}")
+    click.echo()
+
+
+def _display_gate_batch(results: list, json_output: bool) -> None:
+    """Display batch GateResult list."""
+    if json_output:
+        import json as json_mod
+
+        data = [
+            {
+                "package": r.package,
+                "version": r.version,
+                "passed": r.passed,
+                "checks": [
+                    {"name": c.name, "passed": c.passed, "details": c.details}
+                    for c in r.checks
+                ],
+            }
+            for r in results
+        ]
+        click.echo(json_mod.dumps(data, indent=2))
+        return
+
+    passed = sum(1 for r in results if r.passed)
+    failed = sum(1 for r in results if not r.passed)
+    click.echo(f"\n=== SCA Gate Batch: {len(results)} packages ===")
+    click.echo(f"Passed: {passed} | Failed: {failed}\n")
+    for r in results:
+        status = "PASS" if r.passed else "FAIL"
+        click.echo(f"  [{status}] {r.package}")
+        if not r.passed:
+            for c in r.checks:
+                if not c.passed:
+                    click.echo(f"         {c.name}: {c.details}")
+    click.echo()
+
+
 # ── owb context ──────────────────────────────────────────────────────────
 
 
