@@ -46,6 +46,7 @@ SUBCOMMANDS = [
     ["security", "hooks", "install"],
     ["security", "hooks", "status"],
     ["security", "secrets"],
+    ["security", "trivy"],
     # auth
     ["auth", "store-key"],
     ["auth", "get-key"],
