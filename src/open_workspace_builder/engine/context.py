@@ -150,7 +150,7 @@ class ContextDeployer:
             deployed_name = filename.replace(".template", "")
             dest = context_dir / deployed_name
 
-            if not self._dry_run and dest.exists():
+            if dest.exists():
                 print(
                     f"  [exists] {dest} — skipping"
                     " (use 'owb context migrate' to reformat)"
@@ -166,7 +166,7 @@ class ContextDeployer:
 
         dest = target / self._agent_config.directory / self._agent_config.filename
 
-        if not self._dry_run and dest.exists():
+        if dest.exists():
             print(f"  [exists] {dest} — skipping")
             return
 
