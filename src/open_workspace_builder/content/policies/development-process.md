@@ -45,11 +45,15 @@ The CHANGELOG entry links to the manifest for the full picture.
 
 Tag the release after the PR merges.
 
-### 4. Vault Audit
+### 4. Supply Chain Verification
+
+Verify all dependencies pass the quarantine window and scan battery before the sprint closes. Run `owb audit pins` to confirm no dependency was published within the 7-day quarantine window. Run `owb audit gate --all` to confirm all direct dependencies pass the full scan battery (CVEs, malware indicators, advisory flags). If any dependency fails, resolve it before merging the final PR. See `supply-chain-protection.md` for the full policy.
+
+### 5. Vault Audit
 
 Run the vault-audit skill (or equivalent mechanical + semantic checks) before declaring the sprint closed. Sprint-level documentation changes (status.md, bootstrap, retro-log, decisions index, policy files) are high-risk for link rot and structural drift. The audit catches issues introduced during close-out itself, not just during active development. Origin: RETRO-006 — vault audit was omitted from Sprint 9 close-out until the owner caught it.
 
-### 5. Metrics Recorded (If Pipeline Metrics Are Active)
+### 6. Metrics Recorded (If Pipeline Metrics Are Active)
 
 For projects with an active metrics system (currently workspace-builder), record metrics entries for each pipeline run completed during the sprint. This is not a retroactive data entry exercise; metrics should be recorded as runs complete throughout the sprint.
 
