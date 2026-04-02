@@ -1185,7 +1185,7 @@ def security_trivy(path: str, severity: str, json_output: bool) -> None:
     "baseline_path",
     default=None,
     type=click.Path(),
-    help="Path to baseline file (default: ~/.owb/drift-baseline.json).",
+    help="Path to baseline file (default: <workspace>/.owb/drift-baseline.json).",
 )
 def security_drift(
     workspace_path: str,
@@ -1206,7 +1206,7 @@ def security_drift(
     from open_workspace_builder.security.drift import update_baseline as do_update_baseline
 
     workspace = Path(workspace_path).resolve()
-    bp = Path(baseline_path) if baseline_path else Path.home() / ".owb" / "drift-baseline.json"
+    bp = Path(baseline_path) if baseline_path else workspace / ".owb" / "drift-baseline.json"
 
     if update_baseline:
         do_update_baseline(workspace, bp)

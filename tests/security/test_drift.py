@@ -353,3 +353,52 @@ class TestDriftErrorHandling:
             assert len(report.errors) > 0
         finally:
             agent_file.chmod(0o644)
+
+
+# ---------------------------------------------------------------------------
+# CLI default baseline path (per-workspace)
+# ---------------------------------------------------------------------------
+
+
+class TestDriftBaselinePerWorkspace:
+    """Bug fix: default baseline must be per-workspace, not global."""
+
+    def test_default_baseline_path_is_inside_workspace(self) -> None:
+        """The CLI should derive the baseline path from the workspace, not ~/.owb/."""
+        from click.testing import CliRunner
+
+        from open_workspace_builder.cli import owb
+
+        runner = CliRunner()
+        with runner.isolated_filesystem() as td:
+            ws = Path(td) / "project-a"
+            (ws / ".claude" / "agents").mkdir(parents=True)
+            (ws / "CLAUDE.md").write_text("# A\n", encoding="utf-8")
+
+            result = runner.invoke(owb, ["security", "drift", "--update-baseline", str(ws)])
+            assert result.exit_code == 0
+
+            expected = ws / ".owb" / "drift-baseline.json"
+            assert expected.is_file(), f"Baseline should be at {expected}"
+
+    def test_two_workspaces_get_separate_baselines(self) -> None:
+        """Each workspace must have its own baseline file."""
+        from click.testing import CliRunner
+
+        from open_workspace_builder.cli import owb
+
+        runner = CliRunner()
+        with runner.isolated_filesystem() as td:
+            for name in ("project-a", "project-b"):
+                ws = Path(td) / name
+                (ws / ".claude" / "agents").mkdir(parents=True)
+                (ws / "CLAUDE.md").write_text(f"# {name}\n", encoding="utf-8")
+                result = runner.invoke(owb, ["security", "drift", "--update-baseline", str(ws)])
+                assert result.exit_code == 0
+
+            baseline_a = Path(td) / "project-a" / ".owb" / "drift-baseline.json"
+            baseline_b = Path(td) / "project-b" / ".owb" / "drift-baseline.json"
+
+            assert baseline_a.is_file()
+            assert baseline_b.is_file()
+            assert baseline_a.read_text() != baseline_b.read_text()
