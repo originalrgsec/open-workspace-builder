@@ -547,6 +547,13 @@ def security() -> None:
     default=False,
     help="Run cross-file correlation analysis on directories (requires Layer 3).",
 )
+@click.option(
+    "--all",
+    "run_all",
+    is_flag=True,
+    default=False,
+    help="Enable all scanners (three-layer + SCA + SAST).",
+)
 @click.pass_context
 def scan(
     ctx: click.Context,
@@ -557,14 +564,15 @@ def scan(
     sca: bool,
     sast: bool,
     correlate: bool,
+    run_all: bool,
 ) -> None:
     """Scan a file or directory for security issues.
 
     Runs a three-layer scanner: structural validation, pattern matching, and
     (optionally) semantic analysis via LLM. Use --layers to select which
     layers to run. Use --sca for dependency scanning, --sast for Semgrep
-    static analysis, and --correlate for cross-file correlation on directories.
-    Returns exit code 2 if any issues are found.
+    static analysis, --correlate for cross-file correlation, and --all to
+    enable all scanners at once. Returns exit code 2 if any issues are found.
     """
     from open_workspace_builder.security.scanner import Scanner
 
@@ -576,8 +584,8 @@ def scan(
     )
 
     # Resolve SCA/SAST from flags or config defaults
-    run_sca = sca or config.security.sca_enabled
-    run_sast = sast or config.security.sast_enabled
+    run_sca = run_all or sca or config.security.sca_enabled
+    run_sast = run_all or sast or config.security.sast_enabled
 
     # Construct ModelBackend for Layer 3 if requested.
     backend = None
@@ -991,6 +999,118 @@ def _format_drift_report(report) -> None:  # noqa: ANN001
     )
     if report.errors:
         click.echo(f"  Errors: {len(report.errors)}")
+
+
+# ── owb security hooks ──────────────────────────────────────────────────────
+
+
+@security.group()
+def hooks() -> None:
+    """Pre-commit hook management."""
+
+
+@hooks.command()
+@click.argument("path", type=click.Path(exists=True), default=".")
+def install(path: str) -> None:
+    """Install pre-commit hooks in the workspace.
+
+    Generates .pre-commit-config.yaml (if missing), runs ``pre-commit install``,
+    and executes ``pre-commit run --all-files`` as a validation pass.
+    """
+    import subprocess
+
+    from open_workspace_builder.security.hooks import (
+        generate_precommit_config,
+        merge_precommit_config,
+        default_hooks,
+    )
+
+    workspace = Path(path).resolve()
+
+    # 1. Check pre-commit availability
+    try:
+        subprocess.run(
+            ["pre-commit", "--version"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        click.echo(
+            "Error: pre-commit is not installed.\n"
+            "Install it with: uv pip install pre-commit",
+            err=True,
+        )
+        sys.exit(1)
+
+    # 2. Generate or merge .pre-commit-config.yaml
+    config_path = workspace / ".pre-commit-config.yaml"
+    if config_path.is_file():
+        existing = config_path.read_text(encoding="utf-8")
+        merged = merge_precommit_config(existing, default_hooks())
+        config_path.write_text(merged, encoding="utf-8")
+        click.echo("Merged OWB hooks into existing .pre-commit-config.yaml")
+    else:
+        config_path.write_text(generate_precommit_config(), encoding="utf-8")
+        click.echo("Created .pre-commit-config.yaml")
+
+    # 3. Run pre-commit install
+    result = subprocess.run(
+        ["pre-commit", "install"],
+        cwd=str(workspace),
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        click.echo(f"pre-commit install failed: {result.stderr}", err=True)
+        sys.exit(1)
+    click.echo(result.stdout.strip())
+
+    # 4. Run pre-commit run --all-files
+    result = subprocess.run(
+        ["pre-commit", "run", "--all-files"],
+        cwd=str(workspace),
+        capture_output=True,
+        text=True,
+    )
+    click.echo(result.stdout.strip())
+    if result.returncode != 0:
+        click.echo("Some hooks reported issues (see output above).")
+
+
+@hooks.command()
+@click.argument("path", type=click.Path(exists=True), default=".")
+def status(path: str) -> None:
+    """Show installed hook status."""
+    import yaml as _yaml
+
+    workspace = Path(path).resolve()
+    config_path = workspace / ".pre-commit-config.yaml"
+
+    if not config_path.is_file():
+        click.echo("No .pre-commit-config.yaml found.")
+        return
+
+    try:
+        parsed = _yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        click.echo(f"Error reading config: {exc}", err=True)
+        sys.exit(1)
+
+    repos = parsed.get("repos", [])
+    click.echo(f"Pre-commit config: {config_path}")
+    click.echo(f"Repos configured: {len(repos)}")
+    click.echo()
+
+    for repo in repos:
+        click.echo(f"  repo: {repo.get('repo', 'unknown')}")
+        click.echo(f"  rev:  {repo.get('rev', 'N/A')}")
+        for hook in repo.get("hooks", []):
+            hook_id = hook.get("id", "unknown")
+            args = hook.get("args", [])
+            args_str = f" (args: {args})" if args else ""
+            click.echo(f"    - {hook_id}{args_str}")
+        click.echo()
 
 
 # ── owb auth ─────────────────────────────────────────────────────────────────
