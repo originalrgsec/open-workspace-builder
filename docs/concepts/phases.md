@@ -22,6 +22,12 @@ Phase 1 is fully operational. This is the standard OWB experience:
 - **Token tracking**: `owb metrics tokens` reports consumption and API-equivalent costs
 - **Cost management**: Local ledger, budget alerts, monthly forecasting, per-story attribution
 - **Supply chain scanning**: `owb audit deps` and `owb audit package` scan dependencies
+- **Stage tracking**: `owb stage status` and `owb stage promote` manage workspace maturity progression
+- **Pre-commit hooks and secrets scanning**: `owb init` deploys `.pre-commit-config.yaml` with gitleaks and ruff hooks
+- **Package quarantine and pin advancement**: 7-day quarantine via `uv.toml`, `owb audit pins` checks for stale pins
+- **Pre-install SCA gate**: `owb audit package` blocks installation of packages that fail health or license checks
+- **Trivy multi-ecosystem scanning**: `owb audit deps` uses Trivy for vulnerability scanning across Python, Node, Go, and Rust ecosystems
+- **Baseline metrics collection**: `owb metrics baseline` captures workspace health snapshots for trend tracking
 
 All CLI commands documented in the [CLI Reference](../reference/cli.md) are Phase 1 features.
 
@@ -61,12 +67,12 @@ Phase 3 envisions an orchestrator that manages multiple agents working on differ
 - Delegation policies controlling which tasks route to which agents
 - Sandbox and permission boundaries per agent
 - Team infrastructure for shared model serving
-- Stage promotion via `owb stage status` and `owb stage promote`
+- Delegation policies controlling which tasks route to which agents (stage promotion moved to Phase 1)
 
 Phase 3 depends on orchestrator ecosystem maturity (e.g., Claude Agent Teams, which remain experimental as of March 2026).
 
 ## Checking Your Phase
 
-Currently, OWB does not enforce phases — all features are available regardless of maturity. A future `owb stage status` command (planned in S079) will evaluate exit criteria and recommend when to advance.
+Use `owb stage status` to evaluate exit criteria for your current phase. Use `owb stage promote` to advance when all criteria are met.
 
-For now, the practical guide is: if you ran `owb init` and are using the workspace in interactive sessions, you are in Phase 1.
+If you ran `owb init` and are using the workspace in interactive sessions, you are in Phase 1.

@@ -10,7 +10,7 @@ The first layer validates file properties without reading content. It catches bi
 
 ### Layer 2: Pattern Matching
 
-The second layer applies regex patterns against file content. The default pattern set (`owb-default`) includes 42 patterns organized across 9 categories: shell injection, credential harvesting, data exfiltration, prompt injection, privilege escalation, persistence mechanisms, evasion techniques, known-malicious signatures, and steganography indicators.
+The second layer applies regex patterns against file content. The default pattern set (`owb-default`) includes 58 patterns organized across 9 categories: shell injection, credential harvesting, data exfiltration, prompt injection, privilege escalation, persistence mechanisms, evasion techniques, known-malicious signatures, and steganography indicators.
 
 Patterns are loaded from an extensible registry. You can add project-specific pattern files to the registry overlay directory for custom detection rules.
 
@@ -44,3 +44,45 @@ OWB supports configurable trust policies that define minimum scanner requirement
 The pattern registry is designed for extension. Each pattern file is a YAML document containing one or more patterns with metadata: name, category, severity, regex, and a human-readable description of what the pattern catches.
 
 To add custom patterns, place YAML files in the registry overlay directory specified in your config. OWB merges them with the default set at scan time. Custom patterns can reference the same severity levels and categories as the built-in set.
+
+## Secrets Scanning
+
+OWB integrates pre-commit secrets detection to prevent credentials from entering version control. The default backend is **gitleaks**, which provides zero-config operation with 800+ built-in patterns and runs fully locally. An opt-in alternative is **ggshield** (GitGuardian), which requires a GitGuardian API key for cloud-based detection.
+
+The secrets scanner hooks into pre-commit to block commits containing detected secrets. On-demand scanning is available via `owb security secrets`.
+
+The active backend is controlled by the `security.secrets_scanner` config key (default: `gitleaks`).
+
+## Trivy Integration
+
+**Trivy** provides multi-ecosystem software composition analysis (SCA), covering npm, Go, Rust, and container images. It supplements pip-audit, which remains the primary scanner for Python dependencies. Together they give OWB coverage across all supported ecosystems.
+
+Trivy is pinned to **v0.69.3**. Versions 0.69.4 through 0.69.6 are blocked due to CVE-2026-33634, a supply-chain compromise affecting those releases. OWB enforces this version constraint automatically and will refuse to run a blocked version.
+
+On-demand scanning is available via `owb security trivy`.
+
+## Package Quarantine
+
+OWB enforces a 7-day quarantine window on new package versions via `uv.toml exclude-newer`. No package published within the last 7 days can enter the lock file. This provides a buffer against supply-chain attacks that rely on rapid adoption of compromised releases.
+
+Safe advancement of pinned dates is handled by `owb audit pins`, which checks whether advancing the window would introduce packages with known issues. Emergency bypass is supported with a mandatory audit trail.
+
+## Pre-Install Gate
+
+Before any new dependency enters the project, a 5-check battery runs automatically:
+
+1. **pip-audit** — known vulnerability check
+2. **GuardDog** — malicious package heuristics
+3. **OSS health** — maintenance and community health scoring
+4. **License** — allowed-license policy enforcement
+5. **Quarantine** — 7-day publication window check
+
+The gate is available programmatically via `owb audit gate`. This replaces the earlier prompt-only pre-install rule with an enforceable automated check.
+
+## Reputation Ledger
+
+The security scanner feeds a reputation ledger that tracks source trustworthiness over time. When the scanner returns a malicious verdict, it records a FlagEvent against the source. The SourceUpdater consults the ledger and blocks sources that exceed the configured flag threshold. Pre-install gate failures also feed the ledger, creating a cumulative risk signal that influences future trust decisions.
+
+## SCA and SAST Defaults
+
+As of v1.2.0, SCA (software composition analysis) and SAST (static application security testing) are enabled by default for all workspaces. Previous versions required opt-in via `security.sca_enabled` and `security.sast_enabled`. Existing configs that explicitly set these to `false` will continue to be respected.

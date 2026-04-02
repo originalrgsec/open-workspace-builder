@@ -47,10 +47,65 @@ Run the three-layer content scanner on files or directories.
 ```bash
 owb security scan ./path              # scan file or directory
 owb security scan ./path --layers 1,2 # structural + pattern only
+owb security scan ./path --sca        # run SCA (pip-audit + GuardDog)
+owb security scan ./path --sast       # run Semgrep SAST
+owb security scan ./path --secrets    # run secrets scanning (gitleaks/ggshield)
+owb security scan ./path --trivy      # run Trivy multi-ecosystem scan
+owb security scan ./path --all        # enable all scanners
+owb security scan ./path --correlate  # cross-file correlation (requires Layer 3)
 owb security scan ./path -o report.json  # write JSON report
 ```
 
-Layers: 1 (structural), 2 (pattern), 3 (semantic/LLM). Layer 3 requires the `llm` package extra and a configured model.
+Layers: 1 (structural), 2 (pattern), 3 (semantic/LLM). Layer 3 requires the `llm` package extra and a configured model. SCA and SAST scanners are enabled by default as of v1.2.0.
+
+### `owb security sast`
+
+Run Semgrep SAST on a target path.
+
+```bash
+owb security sast ./path              # run Semgrep on target
+owb security sast ./path --json       # JSON output
+```
+
+### `owb security drift`
+
+Check for directive drift against a stored baseline.
+
+```bash
+owb security drift ./workspace            # check for directive drift
+owb security drift ./workspace --update-baseline  # create/update baseline
+owb security drift ./workspace --json     # JSON output
+owb security drift ./workspace --files "*.md"  # filter by glob
+```
+
+### `owb security secrets`
+
+Scan for hardcoded secrets. Default scanner: gitleaks (zero-config, fully local). Opt-in: ggshield (requires `GITGUARDIAN_API_KEY`).
+
+```bash
+owb security secrets ./path               # scan for hardcoded secrets
+owb security secrets ./path --scanner ggshield  # use ggshield instead
+owb security secrets ./path --format json      # JSON output
+```
+
+### `owb security trivy`
+
+Run a multi-ecosystem vulnerability scan via Trivy. Requires Trivy v0.69.3 installed. Blocks compromised versions (0.69.4-0.69.6).
+
+```bash
+owb security trivy ./path                 # multi-ecosystem vulnerability scan
+owb security trivy ./path --severity CRITICAL  # filter by severity
+owb security trivy ./path --json          # JSON output
+```
+
+### `owb security hooks`
+
+Manage pre-commit hook installation for supply chain protection.
+
+```bash
+owb security hooks install ./workspace    # install pre-commit hooks
+owb security hooks status ./workspace     # show hook status
+```
 
 ## `owb update`
 
@@ -82,6 +137,22 @@ owb audit deps                        # pip-audit + GuardDog scan
 owb audit package <name>              # audit a single package before install
 owb audit licenses                    # check dependency licenses
 owb audit check-suppressions          # review suppression registry
+owb audit pins                        # check pin advancement opportunities
+owb audit pins --auto-advance         # auto-advance clean candidates
+owb audit pins --bypass pkg==1.0      # bypass quarantine with justification
+owb audit gate <package>              # run full pre-install security gate
+owb audit gate <package> --version 1.0    # check specific version
+owb audit gate --all                  # check all direct dependencies
+owb audit gate --json                 # JSON output
+```
+
+## `owb stage`
+
+Show or advance the current product lifecycle stage.
+
+```bash
+owb stage status                          # show current stage and exit criteria
+owb stage promote                         # verify criteria and advance stage
 ```
 
 ## `owb auth`
@@ -108,6 +179,17 @@ owb validate ./skills/                # validate all skills in directory
 ## `owb metrics`
 
 Token consumption tracking, cost analysis, and budget management.
+
+### `owb metrics baseline`
+
+Collect code quality baseline metrics for a project.
+
+```bash
+owb metrics baseline ./project            # collect code quality baseline
+owb metrics baseline ./project --tag-range v1.0.0..v1.2.0  # scoped to range
+owb metrics baseline ./project --json     # JSON output
+owb metrics baseline ./project --output-dir ./reports  # custom output
+```
 
 ### `owb metrics tokens`
 
@@ -207,16 +289,12 @@ Requires sessions to have been recorded with `--story` tags via `owb metrics rec
 Install extras for additional functionality:
 
 ```bash
-pip install "open-workspace-builder[sheets]"  # Google Sheets export
-pip install "open-workspace-builder[xlsx]"    # Excel export
-pip install "open-workspace-builder[llm]"     # Layer 3 semantic scanner
-pip install "open-workspace-builder[mcp]"     # MCP server
+pip install "open-workspace-builder[sheets]"   # Google Sheets export
+pip install "open-workspace-builder[xlsx]"     # Excel export
+pip install "open-workspace-builder[llm]"      # Layer 3 semantic scanner
+pip install "open-workspace-builder[mcp]"      # MCP server
+pip install "open-workspace-builder[hooks]"    # Pre-commit hook management
+pip install "open-workspace-builder[audit]"    # pip-audit dependency scanning
+pip install "open-workspace-builder[sast]"     # Semgrep SAST
+pip install "open-workspace-builder[secrets]"  # ggshield (optional, gitleaks needs no extra)
 ```
-
-| Flag | Description |
-|------|-------------|
-| `--config PATH` | Use a specific config file instead of auto-detected |
-| `--dry-run` | Preview actions without writing files |
-| `--verbose` | Enable detailed output |
-| `--version` | Print version and exit |
-| `--help` | Show help for any command |

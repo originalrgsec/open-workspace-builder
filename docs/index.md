@@ -47,7 +47,7 @@ hide:
 <div class="rg-feature__icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
 <div class="rg-feature__title">Three-Layer Security Scanner</div>
 <div class="rg-feature__desc">
-Every file that enters the workspace — upstream updates, third-party skills, migrated content — runs through structural validation, pattern matching against 58 known attack signatures (including MCP manipulation and multi-file correlation), and optional LLM-powered semantic analysis. Prompt injection gets caught before it reaches your sessions.
+Every file that enters the workspace — upstream updates, third-party skills, migrated content — runs through structural validation, pattern matching against 58 known attack signatures (including MCP manipulation and multi-file correlation), and optional LLM-powered semantic analysis. Prompt injection gets caught before it reaches your sessions. The supply chain layer adds secrets scanning via gitleaks and ggshield, multi-ecosystem SCA via Trivy, pre-commit hook generation, and a 7-day package quarantine for newly published dependencies.
 </div>
 </div>
 

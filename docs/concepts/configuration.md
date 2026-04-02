@@ -19,7 +19,7 @@ The setup wizard (`owb init` on first run) generates `~/.owb/config.yaml` intera
 | `skills` | Which custom skills to install |
 | `agent_config` | Workspace config file directory and filename |
 | `models` | Per-operation LLM model strings (LiteLLM provider/model format) |
-| `security` | Active pattern sets, scanner layer selection |
+| `security` | Active pattern sets, scanner layer selection, SCA/SAST/Trivy/secrets toggles |
 | `trust` | Trust tier policy selection |
 | `marketplace` | Output format (generic, anthropic, openai) |
 | `secrets` | Secrets backend selection (env, keyring, age, bitwarden, onepassword) |
@@ -56,6 +56,21 @@ tokens:
   budget_threshold: 200.0      # monthly budget in dollars (0 = disabled)
   auto_record: false           # enable session-end hook recording
 ```
+
+## Security Configuration
+
+The `security` section controls which scanners are active in the unified scan pipeline:
+
+```yaml
+security:
+  sca_enabled: true               # SCA via pip-audit + Trivy (default: true as of v1.2.0)
+  sast_enabled: true              # SAST pattern matching (default: true as of v1.2.0)
+  trivy_enabled: false            # include Trivy in unified scan
+  secrets_enabled: false           # include secrets scanning in unified scan
+  secrets_scanner: "gitleaks"      # "gitleaks" (default, local) or "ggshield" (requires API key)
+```
+
+`sca_enabled` and `sast_enabled` defaulted to `false` in earlier versions. As of v1.2.0, both default to `true`. Existing configs that explicitly set these to `false` will continue to be respected.
 
 ### Custom Model Pricing
 

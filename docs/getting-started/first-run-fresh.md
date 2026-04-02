@@ -83,6 +83,13 @@ cat "$WORKSPACE/Obsidian/_bootstrap.md" | head -20
 
 You should see the vault scaffold with directories for projects, research, decisions, business, and a set of note templates.
 
+`owb init` also deploys supply chain protection files into the workspace:
+
+- **`.pre-commit-config.yaml`** — pre-commit hooks for gitleaks (secrets scanning) and ruff (Python linting), ready to activate with `pre-commit install`
+- **`uv.toml`** — configures a 7-day package quarantine so newly published packages are not installed until they have been available for at least a week
+
+SCA and SAST scanning are enabled by default. Run `owb audit deps` after installing dependencies to verify the supply chain posture.
+
 ## Step 4: Install and Configure Obsidian
 
 If you do not have Obsidian installed yet, download it from [obsidian.md](https://obsidian.md/) and install it.

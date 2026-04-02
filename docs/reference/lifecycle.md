@@ -82,7 +82,7 @@ graph TD
     end
 
     subgraph close ["Sprint Close"]
-        C1["<b>Completion Checklist</b><br/><i>Tests, docs, CHANGELOG,<br/>manifest, metrics</i>"]:::step
+        C1["<b>Completion Checklist</b><br/><i>Tests, docs, CHANGELOG,<br/>manifest, metrics,<br/>supply chain verification</i>"]:::step
         C2["<b>Retrospective</b><br/><i>Root cause analysis,<br/>linked deliverables</i>"]:::step
         C3["<b>Update Artifacts</b><br/><i>Status, bootstrap,<br/>session log, vault audit</i>"]:::step
         C1 --> C2 --> C3
@@ -144,7 +144,7 @@ When an AI agent begins work on a feature, these rules are already in its contex
 
 ## Agent Catalog
 
-The ECC ships 16 agents, 15 commands, and 7 skills. Each is designed for a specific phase of the lifecycle.
+The ECC ships 16 agents, 21 commands, and 7 skills. Each is designed for a specific phase of the lifecycle.
 
 ### Agents (Specialized Sub-Processes)
 
