@@ -1608,6 +1608,83 @@ def _find_policy_file() -> Path:
     )
 
 
+@audit.command("pins")
+@click.option("--auto-advance", is_flag=True, help="Auto-advance clean candidates")
+@click.option("--bypass", type=str, default=None, help="Bypass quarantine for package==version with justification")
+@click.option("--json", "json_output", is_flag=True, help="JSON output")
+def audit_pins(
+    auto_advance: bool,
+    bypass: str | None,
+    json_output: bool,
+) -> None:
+    """Check pinned dependencies for safe advancement opportunities."""
+    from open_workspace_builder.security.quarantine import (
+        QuarantineConfig,
+        check_pin_advancements,
+        record_bypass,
+    )
+
+    config = QuarantineConfig()
+
+    # Handle bypass recording
+    if bypass:
+        if "==" not in bypass:
+            click.echo("Error: --bypass must be in the format package==version")
+            sys.exit(1)
+        pkg, ver = bypass.split("==", 1)
+        justification = click.prompt("Justification for bypass")
+        record_bypass(pkg, ver, justification, config.bypass_log_path)
+        click.echo(f"Recorded bypass for {pkg}=={ver}")
+        sys.exit(0)
+
+    # Find uv.lock
+    lock_path = Path("uv.lock")
+    if not lock_path.exists():
+        click.echo("Error: uv.lock not found in current directory.")
+        sys.exit(1)
+
+    click.echo("Checking pinned dependencies against PyPI...")
+    results = check_pin_advancements(lock_path, config.quarantine_days)
+
+    if json_output:
+        output = [
+            {
+                "package": r.package,
+                "current_version": r.current_version,
+                "current_publish_date": r.current_publish_date,
+                "candidate_version": r.candidate_version,
+                "candidate_publish_date": r.candidate_publish_date,
+                "scan_passed": r.scan_passed,
+            }
+            for r in results
+        ]
+        click.echo(json.dumps(output, indent=2))
+    else:
+        advanceable = [r for r in results if r.candidate_version]
+        current = [r for r in results if not r.candidate_version]
+
+        if advanceable:
+            click.echo(f"\nAdvancement candidates ({len(advanceable)}):")
+            for r in advanceable:
+                click.echo(
+                    f"  {r.package}: {r.current_version} -> {r.candidate_version}"
+                    f"  (published {r.candidate_publish_date})"
+                )
+        else:
+            click.echo("\nNo advancement candidates found.")
+
+        click.echo(f"\nUp to date ({len(current)}):")
+        for r in current:
+            pub = f" (published {r.current_publish_date})" if r.current_publish_date else ""
+            click.echo(f"  {r.package}: {r.current_version}{pub}")
+
+    if auto_advance and any(r.candidate_version for r in results):
+        click.echo("\nAuto-advance is not yet implemented. "
+                    "Update pinned versions manually.")
+
+    sys.exit(0)
+
+
 def _format_full_report(report: object, *, include_fix: bool) -> dict:
     """Serialize a FullAuditReport to a JSON-compatible dict."""
     vuln = report.vuln_report  # type: ignore[union-attr]
