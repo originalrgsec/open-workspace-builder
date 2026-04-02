@@ -139,8 +139,8 @@ class SecurityConfig:
 
     active_patterns: tuple[str, ...] = ("owb-default",)
     scanner_layers: tuple[int, ...] = (1, 2, 3)
-    sca_enabled: bool = False
-    sast_enabled: bool = False
+    sca_enabled: bool = True
+    sast_enabled: bool = True
     trusted_upstream_urls: tuple[str, ...] = (
         "https://github.com/affaan-m/everything-claude-code",
     )

@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from open_workspace_builder.config import SecurityConfig
     from open_workspace_builder.llm.backend import ModelBackend
     from open_workspace_builder.registry.registry import Registry
+    from open_workspace_builder.security.reputation import ReputationLedger
 
 
 @dataclass(frozen=True)
@@ -62,6 +63,7 @@ class Scanner:
         patterns_path: Path | None = None,
         security_config: SecurityConfig | None = None,
         registry: Registry | None = None,
+        ledger: ReputationLedger | None = None,
     ) -> None:
         from open_workspace_builder.config import SecurityConfig as _SC
 
@@ -71,6 +73,7 @@ class Scanner:
         self._backend = backend
         self._patterns_path = patterns_path
         self._registry = registry
+        self._ledger = ledger
         self._loaded_patterns: list | None = None
 
     def _get_patterns(self) -> list:
@@ -187,12 +190,26 @@ class Scanner:
             summary=summary,
         )
 
-    def scan_directory(self, dir_path: Path, glob_pattern: str = "*.md") -> ScanReport:
-        """Scan all matching files in a directory, return aggregated report."""
+    def scan_directory(
+        self,
+        dir_path: Path,
+        glob_pattern: str = "*.md",
+        source: str | None = None,
+    ) -> ScanReport:
+        """Scan all matching files in a directory, return aggregated report.
+
+        Args:
+            dir_path: Directory to scan.
+            glob_pattern: Glob pattern for file matching.
+            source: Optional source name. When provided and a verdict is
+                malicious, a FlagEvent is recorded in the reputation ledger.
+        """
         verdicts: list[ScanVerdict] = []
         for file_path in sorted(dir_path.glob(glob_pattern)):
             if file_path.is_file():
-                verdicts.append(self.scan_file(file_path))
+                verdict = self.scan_file(file_path)
+                verdicts.append(verdict)
+                self._maybe_record_event(verdict, source)
 
         summary: dict[str, int] = {"clean": 0, "flagged": 0, "malicious": 0, "error": 0}
         for v in verdicts:
@@ -202,4 +219,26 @@ class Scanner:
             directory=str(dir_path),
             verdicts=tuple(verdicts),
             summary=summary,
+        )
+
+    def _maybe_record_event(self, verdict: ScanVerdict, source: str | None) -> None:
+        """Record a FlagEvent in the ledger for malicious verdicts."""
+        if source is None or self._ledger is None:
+            return
+        if verdict.verdict != "malicious":
+            return
+
+        from open_workspace_builder.security.reputation import FlagEvent
+
+        categories = {f.category for f in verdict.flags}
+        category_str = ", ".join(sorted(categories)) if categories else "unknown"
+        self._ledger.record_event(
+            FlagEvent.now(
+                source=source,
+                file_path=verdict.file_path,
+                flag_category=category_str,
+                severity="critical",
+                disposition="confirmed_malicious",
+                details=f"Malicious verdict from scanner: {len(verdict.flags)} flag(s)",
+            )
         )

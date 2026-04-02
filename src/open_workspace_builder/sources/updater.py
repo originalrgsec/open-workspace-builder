@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from open_workspace_builder.config import Config
+    from open_workspace_builder.security.reputation import ReputationLedger
     from open_workspace_builder.security.scanner import Scanner
     from open_workspace_builder.sources.audit import RepoAuditor
     from open_workspace_builder.sources.discovery import DiscoveredFile, SourceDiscovery
@@ -29,6 +30,7 @@ class UpdateSummary:
     files_blocked: tuple[str, ...]
     files_warned: tuple[str, ...]
     audit_verdict: str
+    reputation_blocked: bool = False
 
 
 class SourceUpdater:
@@ -40,11 +42,13 @@ class SourceUpdater:
         scanner: Scanner,
         discovery: SourceDiscovery,
         auditor: RepoAuditor,
+        ledger: ReputationLedger | None = None,
     ) -> None:
         self._config = config
         self._scanner = scanner
         self._discovery = discovery
         self._auditor = auditor
+        self._ledger = ledger
 
     def update(
         self,
@@ -53,10 +57,12 @@ class SourceUpdater:
         prompt_fn: object | None = None,
         dry_run: bool = False,
         vendor_dir: Path | None = None,
+        force: bool = False,
     ) -> UpdateSummary:
         """Execute the full update pipeline for a named source.
 
-        Pipeline: clone/fetch -> discover -> per-file scan -> repo audit -> apply.
+        Pipeline: reputation check -> clone/fetch -> discover -> per-file scan
+        -> repo audit -> apply.
 
         Args:
             source_name: Name of the registered source.
@@ -64,10 +70,23 @@ class SourceUpdater:
             prompt_fn: Callable(relative_path, verdict) -> str ("a"/"r"/"q").
             dry_run: If True, do not write files.
             vendor_dir: Override vendor directory (for testing).
+            force: If True, bypass the reputation threshold block.
 
         Returns:
             UpdateSummary with counts and audit verdict.
         """
+        # Reputation ledger check — block sources with too many confirmed-malicious files.
+        if not force and self._ledger is not None and self._ledger.check_threshold(source_name):
+            return UpdateSummary(
+                source_name=source_name,
+                files_accepted=(),
+                files_rejected=(),
+                files_blocked=(),
+                files_warned=(),
+                audit_verdict="reputation_blocked",
+                reputation_blocked=True,
+            )
+
         source_config = self._discovery.get_config(source_name)
 
         with tempfile.TemporaryDirectory() as tmp:

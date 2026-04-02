@@ -227,11 +227,12 @@ class TestScanBothFlags:
         assert "sast" in data
 
 
-# ── No extra flags (backward compat) ─────────────────────────────────────
+# ── Default flags (SCA/SAST enabled by default since OWB-S092) ───────────
 
 
-class TestScanNoExtraFlags:
-    def test_no_sca_sast_sections(self, runner: CliRunner, tmp_path: Path) -> None:
+class TestScanDefaultFlags:
+    def test_sca_sast_sections_present_by_default(self, runner: CliRunner, tmp_path: Path) -> None:
+        """SCA and SAST run by default since OWB-S092 changed defaults to True."""
         target = tmp_path / "src"
         target.mkdir()
         (target / "clean.txt").write_text("hello\n", encoding="utf-8")
@@ -240,8 +241,8 @@ class TestScanNoExtraFlags:
         result = runner.invoke(owb, ["security", "scan", str(target), "-o", str(out)])
         assert result.exit_code == 0
         data = json.loads(out.read_text(encoding="utf-8"))
-        assert "sca" not in data
-        assert "sast" not in data
+        assert "sca" in data
+        assert "sast" in data
 
 
 # ── Trust Tier Integration ────────────────────────────────────────────────
