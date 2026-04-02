@@ -547,6 +547,12 @@ def security() -> None:
     default=False,
     help="Run cross-file correlation analysis on directories (requires Layer 3).",
 )
+@click.option(
+    "--trivy",
+    is_flag=True,
+    default=False,
+    help="Run Trivy multi-ecosystem vulnerability scan.",
+)
 @click.pass_context
 def scan(
     ctx: click.Context,
@@ -557,13 +563,15 @@ def scan(
     sca: bool,
     sast: bool,
     correlate: bool,
+    trivy: bool,
 ) -> None:
     """Scan a file or directory for security issues.
 
     Runs a three-layer scanner: structural validation, pattern matching, and
     (optionally) semantic analysis via LLM. Use --layers to select which
     layers to run. Use --sca for dependency scanning, --sast for Semgrep
-    static analysis, and --correlate for cross-file correlation on directories.
+    static analysis, --trivy for multi-ecosystem vulnerability scanning,
+    and --correlate for cross-file correlation on directories.
     Returns exit code 2 if any issues are found.
     """
     from open_workspace_builder.security.scanner import Scanner
@@ -657,6 +665,14 @@ def scan(
         sast_data = _run_sast_scan(target)
         report_data["sast"] = sast_data
         if any(f.get("severity") == "ERROR" for f in sast_data.get("findings", [])):
+            has_issues = True
+
+    # Trivy scanning
+    run_trivy = trivy or config.security.trivy_enabled
+    if run_trivy:
+        trivy_data = _run_trivy_scan(target)
+        report_data["trivy"] = trivy_data
+        if trivy_data.get("findings"):
             has_issues = True
 
     if output_file:
@@ -769,6 +785,48 @@ def _run_sast_scan(target: Path) -> dict:
         "findings": findings_data,
         "errors": list(report.errors),
         "rules_run": report.rules_run,
+    }
+
+
+def _run_trivy_scan(target: Path) -> dict:
+    """Run Trivy scanning and return JSON-compatible dict."""
+    from open_workspace_builder.security.trivy import scan_filesystem
+
+    click.echo(f"\n--- Trivy: Scanning {target} ---")
+    try:
+        result = scan_filesystem(target)
+    except ImportError:
+        click.echo("  [skip] trivy not installed")
+        return {"findings": [], "errors": ["trivy not installed"]}
+    except RuntimeError as exc:
+        click.echo(f"  [error] {exc}")
+        return {"findings": [], "errors": [str(exc)]}
+
+    findings_data = [
+        {
+            "vulnerability_id": f.vulnerability_id,
+            "package_name": f.package_name,
+            "installed_version": f.installed_version,
+            "fixed_version": f.fixed_version,
+            "severity": f.severity,
+            "title": f.title,
+            "ecosystem": f.ecosystem,
+        }
+        for f in result.findings
+    ]
+
+    if result.findings:
+        click.echo(f"\n[TRIVY] {len(result.findings)} vulnerabilities found:")
+        for f in result.findings:
+            fix_str = f" (fix: {f.fixed_version})" if f.fixed_version else ""
+            click.echo(f"  [{f.severity}] {f.package_name} {f.vulnerability_id}{fix_str}")
+    else:
+        click.echo("\n[TRIVY-OK] No vulnerabilities found.")
+
+    return {
+        "findings": findings_data,
+        "trivy_version": result.trivy_version,
+        "ecosystems_scanned": list(result.ecosystems_scanned),
     }
 
 
@@ -886,6 +944,80 @@ def _format_sast_text(report) -> str:  # noqa: ANN001
         f"Summary: {counts['ERROR']} error, {counts['WARNING']} warning, {counts['INFO']} info"
     )
     return "\n".join(lines)
+
+
+# ── owb security trivy ──────────────────────────────────────────────────────
+
+
+@security.command("trivy")
+@click.argument("path", type=click.Path(exists=True), default=".")
+@click.option("--severity", default="CRITICAL,HIGH", help="Severity filter (comma-separated).")
+@click.option("--json", "json_output", is_flag=True, help="JSON output.")
+def security_trivy(path: str, severity: str, json_output: bool) -> None:
+    """Scan with Trivy for multi-ecosystem vulnerabilities."""
+    from open_workspace_builder.security.trivy import (
+        check_version_safety,
+        get_version,
+        is_available,
+        scan_filesystem,
+    )
+
+    if not is_available():
+        click.echo("Error: Trivy is not installed. Install with: brew install trivy", err=True)
+        sys.exit(1)
+
+    version = get_version()
+    if version is None:
+        click.echo("Error: Could not determine Trivy version.", err=True)
+        sys.exit(1)
+
+    is_safe, msg = check_version_safety(version)
+    if not is_safe:
+        click.echo(f"Error: {msg}", err=True)
+        sys.exit(1)
+
+    try:
+        result = scan_filesystem(Path(path), severity_filter=severity)
+    except (ImportError, RuntimeError) as exc:
+        click.echo(f"Error: {exc}", err=True)
+        sys.exit(1)
+
+    if json_output:
+        data = {
+            "findings": [
+                {
+                    "vulnerability_id": f.vulnerability_id,
+                    "package_name": f.package_name,
+                    "installed_version": f.installed_version,
+                    "fixed_version": f.fixed_version,
+                    "severity": f.severity,
+                    "title": f.title,
+                    "ecosystem": f.ecosystem,
+                }
+                for f in result.findings
+            ],
+            "target": result.target,
+            "trivy_version": result.trivy_version,
+            "ecosystems_scanned": list(result.ecosystems_scanned),
+        }
+        click.echo(json.dumps(data, indent=2))
+    else:
+        click.echo(f"=== Trivy Scan ({result.trivy_version}) ===")
+        click.echo(f"Target: {result.target}")
+        if result.ecosystems_scanned:
+            click.echo(f"Ecosystems: {', '.join(result.ecosystems_scanned)}")
+        click.echo("")
+        if result.findings:
+            for f in result.findings:
+                fix_str = f" (fix: {f.fixed_version})" if f.fixed_version else ""
+                click.echo(f"[{f.severity}] {f.vulnerability_id} — {f.package_name} {f.installed_version}{fix_str}")
+                click.echo(f"  {f.title} [{f.ecosystem}]")
+            click.echo(f"\n{len(result.findings)} vulnerabilities found.")
+        else:
+            click.echo("[TRIVY-OK] No vulnerabilities found.")
+
+    has_issues = any(f.severity in ("CRITICAL", "HIGH") for f in result.findings)
+    sys.exit(2 if has_issues else 0)
 
 
 # ── owb security drift ───────────────────────────────────────────────────────
