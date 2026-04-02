@@ -68,6 +68,7 @@ SUBCOMMANDS = [
     ["metrics", "budget-check"],
     ["metrics", "sync"],
     ["metrics", "by-story"],
+    ["metrics", "baseline"],
     # stage
     ["stage", "status"],
     ["stage", "promote"],

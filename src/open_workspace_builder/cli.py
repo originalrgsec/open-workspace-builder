@@ -2853,6 +2853,50 @@ def metrics_by_story(
             )
 
 
+@metrics.command("baseline")
+@click.argument("project_path", type=click.Path(exists=True), default=".")
+@click.option("--output-dir", default=None, help="Output directory (default: .owb/metrics/)")
+@click.option("--tag-range", default=None, help="Git tag range (e.g., v0.2.0..v0.3.0)")
+@click.option("--non-interactive", is_flag=True, help="Skip interactive prompts")
+@click.option("--json", "json_output", is_flag=True, help="JSON output")
+def metrics_baseline(
+    project_path: str,
+    output_dir: str | None,
+    tag_range: str | None,
+    non_interactive: bool,
+    json_output: bool,
+) -> None:
+    """Collect baseline code quality metrics for a project.
+
+    Scans a git repository to collect source LOC, test LOC, test count,
+    commit history, and per-module breakdown.
+    """
+    from open_workspace_builder.metrics.baseline import (
+        collect_baseline,
+        metrics_to_dict,
+        write_baseline,
+    )
+
+    resolved_path = Path(project_path).resolve()
+    resolved_output = Path(output_dir) if output_dir else resolved_path / ".owb"
+
+    metrics_data = collect_baseline(resolved_path, tag_range=tag_range)
+
+    if json_output:
+        click.echo(json.dumps(metrics_to_dict(metrics_data), indent=2))
+        return
+
+    written = write_baseline(metrics_data, resolved_output)
+    for p in written:
+        click.echo(f"Wrote: {p}")
+
+    click.echo(f"\nSource LOC: {metrics_data.source_loc:,}")
+    click.echo(f"Test LOC: {metrics_data.test_loc:,}")
+    click.echo(f"Test Count: {metrics_data.test_count:,}")
+    click.echo(f"Commits: {metrics_data.commit_count:,}")
+    click.echo(f"Date Range: {metrics_data.date_range[0]} to {metrics_data.date_range[1]}")
+
+
 @owb.group()
 @click.pass_context
 def stage(ctx: click.Context) -> None:
