@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from open_workspace_builder.registry.registry import Registry, RegistryItem
+from open_workspace_builder.registry.registry import Registry
 
 
 # ---------------------------------------------------------------------------
@@ -78,7 +78,8 @@ class TestVersionGateSkip:
 
     def test_item_with_future_version_skipped(self, tmp_path: Path) -> None:
         _write_registry_item(
-            tmp_path, "future.yaml",
+            tmp_path,
+            "future.yaml",
             item_id="future-item",
             min_owb_version="99.0.0",
         )
@@ -87,7 +88,8 @@ class TestVersionGateSkip:
 
     def test_skipped_item_produces_warning(self, tmp_path: Path) -> None:
         _write_registry_item(
-            tmp_path, "future.yaml",
+            tmp_path,
+            "future.yaml",
             item_id="future-item",
             min_owb_version="99.0.0",
         )
@@ -105,7 +107,8 @@ class TestVersionGatePass:
 
     def test_item_with_current_version_loads(self, tmp_path: Path) -> None:
         _write_registry_item(
-            tmp_path, "compat.yaml",
+            tmp_path,
+            "compat.yaml",
             item_id="compat-item",
             min_owb_version="0.1.0",
         )
@@ -115,13 +118,15 @@ class TestVersionGatePass:
     def test_item_with_exact_version_loads(self, tmp_path: Path) -> None:
         """Edge case: min_owb_version equals current version."""
         from importlib.metadata import version
+
         try:
             current = version("open-workspace-builder")
         except Exception:
             current = "0.1.0"
 
         _write_registry_item(
-            tmp_path, "exact.yaml",
+            tmp_path,
+            "exact.yaml",
             item_id="exact-item",
             min_owb_version=current,
         )
@@ -139,7 +144,8 @@ class TestUnknownFieldWarnings:
 
     def test_unknown_field_produces_warning(self, tmp_path: Path) -> None:
         _write_registry_item(
-            tmp_path, "extra.yaml",
+            tmp_path,
+            "extra.yaml",
             item_id="extra-item",
             extra_fields={"delegated_scan": True, "priority_override": 5},
         )
@@ -148,11 +154,13 @@ class TestUnknownFieldWarnings:
 
     def test_unknown_field_item_still_loads(self, tmp_path: Path) -> None:
         _write_registry_item(
-            tmp_path, "extra.yaml",
+            tmp_path,
+            "extra.yaml",
             item_id="extra-item",
             extra_fields={"delegated_scan": True},
         )
         import warnings
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             registry = Registry(base_dirs=[tmp_path])
@@ -163,6 +171,7 @@ class TestUnknownFieldWarnings:
         _write_registry_item(tmp_path, "clean.yaml", item_id="clean-item")
         # Should not warn about unknown fields
         import warnings
+
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             Registry(base_dirs=[tmp_path])

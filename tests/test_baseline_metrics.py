@@ -6,7 +6,6 @@ TDD: tests written first, then implementation.
 from __future__ import annotations
 
 import json
-import subprocess
 from pathlib import Path
 from unittest.mock import patch
 
@@ -98,8 +97,10 @@ class TestCollectBaseline:
         # git log outputs newest first
         fake_dates = "2025-07-01T00:00:00+00:00\n2025-06-01T00:00:00+00:00\n"
 
-        with patch("open_workspace_builder.metrics.baseline._git_log_oneline") as mock_log, \
-             patch("open_workspace_builder.metrics.baseline._git_log_dates") as mock_dates:
+        with (
+            patch("open_workspace_builder.metrics.baseline._git_log_oneline") as mock_log,
+            patch("open_workspace_builder.metrics.baseline._git_log_dates") as mock_dates,
+        ):
             mock_log.return_value = fake_log
             mock_dates.return_value = fake_dates
             metrics = collect_baseline(repo_root, tag_range="v0.1.0..v0.2.0")
@@ -190,7 +191,7 @@ class TestWriteBaseline:
             date_range=("2025-01-01", "2025-12-31"),
             modules=(),
         )
-        paths = write_baseline(metrics, tmp_path)
+        write_baseline(metrics, tmp_path)
 
         json_path = tmp_path / "metrics" / "baseline.json"
         assert json_path.exists()
@@ -217,22 +218,33 @@ class TestCliBaselineCommand:
     def test_cli_baseline_command(self, runner: CliRunner, tmp_path: Path) -> None:
         """Run baseline against the OWB repo with --non-interactive."""
         repo_root = str(Path(__file__).resolve().parent.parent)
-        result = runner.invoke(owb, [
-            "metrics", "baseline", repo_root,
-            "--output-dir", str(tmp_path),
-            "--non-interactive",
-        ])
+        result = runner.invoke(
+            owb,
+            [
+                "metrics",
+                "baseline",
+                repo_root,
+                "--output-dir",
+                str(tmp_path),
+                "--non-interactive",
+            ],
+        )
         assert result.exit_code == 0, f"CLI failed: {result.output}"
         assert (tmp_path / "metrics" / "baseline-summary.md").exists()
 
     def test_cli_baseline_json(self, runner: CliRunner) -> None:
         """Verify --json outputs parseable JSON."""
         repo_root = str(Path(__file__).resolve().parent.parent)
-        result = runner.invoke(owb, [
-            "metrics", "baseline", repo_root,
-            "--json",
-            "--non-interactive",
-        ])
+        result = runner.invoke(
+            owb,
+            [
+                "metrics",
+                "baseline",
+                repo_root,
+                "--json",
+                "--non-interactive",
+            ],
+        )
         assert result.exit_code == 0, f"CLI failed: {result.output}"
         data = json.loads(result.output)
         assert "source_loc" in data

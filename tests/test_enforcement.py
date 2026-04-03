@@ -6,7 +6,6 @@ import json
 import stat
 from pathlib import Path
 
-import pytest
 import yaml
 
 from open_workspace_builder.config import Config, EnforcementConfig, StageConfig
@@ -164,9 +163,7 @@ class TestDeployHooks:
             owb_dir=owb_dir,
             agent_config_dir=claude_dir,
         )
-        settings = json.loads(
-            (claude_dir / "settings.json").read_text(encoding="utf-8")
-        )
+        settings = json.loads((claude_dir / "settings.json").read_text(encoding="utf-8"))
         assert "hooks" in settings
         hooks = settings["hooks"]
         assert "UserPromptSubmit" in hooks
@@ -207,9 +204,7 @@ class TestDeployHooks:
         claude_dir = tmp_path / ".claude"
         claude_dir.mkdir(parents=True)
         existing = {"some_key": "some_value", "hooks": {"OtherHook": [{"command": "echo hi"}]}}
-        (claude_dir / "settings.json").write_text(
-            json.dumps(existing), encoding="utf-8"
-        )
+        (claude_dir / "settings.json").write_text(json.dumps(existing), encoding="utf-8")
         config = Config(
             enforcement=EnforcementConfig(hooks_enabled=True),
             stage=StageConfig(current_stage=2),
@@ -220,9 +215,7 @@ class TestDeployHooks:
             owb_dir=owb_dir,
             agent_config_dir=claude_dir,
         )
-        settings = json.loads(
-            (claude_dir / "settings.json").read_text(encoding="utf-8")
-        )
+        settings = json.loads((claude_dir / "settings.json").read_text(encoding="utf-8"))
         assert settings["some_key"] == "some_value"
         assert "OtherHook" in settings["hooks"]
         assert "UserPromptSubmit" in settings["hooks"]
@@ -245,13 +238,9 @@ class TestRemoveHookRegistration:
                 "OtherHook": [{"command": "echo hi"}],
             }
         }
-        (claude_dir / "settings.json").write_text(
-            json.dumps(settings), encoding="utf-8"
-        )
+        (claude_dir / "settings.json").write_text(json.dumps(settings), encoding="utf-8")
         remove_hook_registration(agent_config_dir=claude_dir)
-        updated = json.loads(
-            (claude_dir / "settings.json").read_text(encoding="utf-8")
-        )
+        updated = json.loads((claude_dir / "settings.json").read_text(encoding="utf-8"))
         assert "UserPromptSubmit" not in updated["hooks"]
         assert "OtherHook" in updated["hooks"]
 
@@ -264,11 +253,7 @@ class TestRemoveHookRegistration:
         claude_dir = tmp_path / ".claude"
         claude_dir.mkdir()
         settings = {"hooks": {"OtherHook": [{"command": "echo hi"}]}}
-        (claude_dir / "settings.json").write_text(
-            json.dumps(settings), encoding="utf-8"
-        )
+        (claude_dir / "settings.json").write_text(json.dumps(settings), encoding="utf-8")
         remove_hook_registration(agent_config_dir=claude_dir)
-        updated = json.loads(
-            (claude_dir / "settings.json").read_text(encoding="utf-8")
-        )
+        updated = json.loads((claude_dir / "settings.json").read_text(encoding="utf-8"))
         assert "OtherHook" in updated["hooks"]

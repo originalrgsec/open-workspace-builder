@@ -18,7 +18,7 @@ import json
 import subprocess
 import sys
 import os
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
@@ -30,14 +30,17 @@ from urllib.parse import quote
 
 THRESHOLDS = {
     "maintenance": {
-        "last_commit_days": {"green": 90, "yellow": 180},       # <90 green, 90-180 yellow, >180 red  (policy: 3mo/6mo/12mo, using conservative days)
-        "last_release_days": {"green": 180, "yellow": 365},     # <6mo green, 6-12mo yellow, >12mo red
+        "last_commit_days": {
+            "green": 90,
+            "yellow": 180,
+        },  # <90 green, 90-180 yellow, >180 red  (policy: 3mo/6mo/12mo, using conservative days)
+        "last_release_days": {"green": 180, "yellow": 365},  # <6mo green, 6-12mo yellow, >12mo red
         "median_issue_response_days": {"green": 7, "yellow": 30},
         "pr_staleness_days": {"green": 14, "yellow": 30},
     },
     "bus_factor": {
-        "contributors_with_merge": {"green": 3, "yellow": 2},   # >=3 green, 2 yellow, 1 red
-        "top_contributor_pct": {"green": 70, "yellow": 90},      # <70 green, 70-90 yellow, >90 red
+        "contributors_with_merge": {"green": 3, "yellow": 2},  # >=3 green, 2 yellow, 1 red
+        "top_contributor_pct": {"green": 70, "yellow": 90},  # <70 green, 70-90 yellow, >90 red
     },
     "community": {
         "stars": {"green": 1000, "yellow": 100},
@@ -53,6 +56,7 @@ THRESHOLDS = {
 # ---------------------------------------------------------------------------
 # HTTP helpers
 # ---------------------------------------------------------------------------
+
 
 def _get(url, token=None, accept="application/vnd.github+json"):
     headers = {"Accept": accept, "User-Agent": "oss-health-check/1.0"}
@@ -80,6 +84,7 @@ def _get_json(url, token=None):
 # ---------------------------------------------------------------------------
 # GitHub data collection
 # ---------------------------------------------------------------------------
+
 
 def get_repo_info(owner, repo, token=None):
     url = f"https://api.github.com/repos/{quote(owner)}/{quote(repo)}"
@@ -123,7 +128,11 @@ def get_open_prs(owner, repo, token=None, per_page=30):
 def check_file_exists(owner, repo, path, token=None):
     url = f"https://api.github.com/repos/{quote(owner)}/{quote(repo)}/contents/{quote(path)}"
     data = _get_json(url, token)
-    return data is not None and not isinstance(data, dict) or (isinstance(data, dict) and "error" not in data)
+    return (
+        data is not None
+        and not isinstance(data, dict)
+        or (isinstance(data, dict) and "error" not in data)
+    )
 
 
 def get_community_profile(owner, repo, token=None):
@@ -145,6 +154,7 @@ def get_dependabot_status(owner, repo, token=None):
 # Package registry data collection
 # ---------------------------------------------------------------------------
 
+
 def get_npm_stats(package_name):
     """Get npm weekly downloads and dependent count."""
     dl_url = f"https://api.npmjs.org/downloads/point/last-week/{quote(package_name)}"
@@ -153,10 +163,14 @@ def get_npm_stats(package_name):
 
     # Dependent packages count from npm search
     pkg_url = f"https://registry.npmjs.org/{quote(package_name)}"
-    pkg_data = _get_json(pkg_url)
+    _get_json(pkg_url)
     dependents = 0  # npm doesn't expose this directly via API easily
 
-    return {"weekly_downloads": weekly_downloads, "dependent_packages": dependents, "ecosystem": "npm"}
+    return {
+        "weekly_downloads": weekly_downloads,
+        "dependent_packages": dependents,
+        "ecosystem": "npm",
+    }
 
 
 def get_pypi_stats(package_name):
@@ -210,6 +224,7 @@ def get_package_stats(ecosystem, package_name):
 # Ecosystem auto-detection
 # ---------------------------------------------------------------------------
 
+
 def detect_ecosystem(owner, repo, token=None):
     """Guess ecosystem from repo contents."""
     checks = [
@@ -220,7 +235,9 @@ def detect_ecosystem(owner, repo, token=None):
         ("Cargo.toml", "crates"),
     ]
     for filename, eco in checks:
-        url = f"https://api.github.com/repos/{quote(owner)}/{quote(repo)}/contents/{quote(filename)}"
+        url = (
+            f"https://api.github.com/repos/{quote(owner)}/{quote(repo)}/contents/{quote(filename)}"
+        )
         data = _get_json(url, token)
         if data and isinstance(data, dict) and "error" not in data:
             return eco
@@ -230,6 +247,7 @@ def detect_ecosystem(owner, repo, token=None):
 # ---------------------------------------------------------------------------
 # Rating logic
 # ---------------------------------------------------------------------------
+
 
 def rate(value, green_threshold, yellow_threshold, lower_is_better=True):
     """
@@ -286,6 +304,7 @@ def compute_median_issue_response(issues):
 # Main evaluation
 # ---------------------------------------------------------------------------
 
+
 def evaluate(owner, repo, ecosystem=None, package_name=None, token=None):
     now = datetime.now(timezone.utc)
     report = {
@@ -298,19 +317,16 @@ def evaluate(owner, repo, ecosystem=None, package_name=None, token=None):
         "human_review_needed": [],
     }
 
-    errors = []
-
     # ---- Repo info ----
     repo_info = get_repo_info(owner, repo, token)
     if not repo_info or "error" in (repo_info if isinstance(repo_info, dict) else {}):
-        return {"error": f"Could not fetch repository {owner}/{repo}. Check the name and try again."}
+        return {
+            "error": f"Could not fetch repository {owner}/{repo}. Check the name and try again."
+        }
 
     stars = repo_info.get("stargazers_count", 0)
     open_issues_count = repo_info.get("open_issues_count", 0)  # includes PRs
-    has_wiki = repo_info.get("has_wiki", False)
-    license_info = repo_info.get("license", {})
     archived = repo_info.get("archived", False)
-    default_branch = repo_info.get("default_branch", "main")
 
     if archived:
         report["overall_rating"] = "RED"
@@ -318,7 +334,7 @@ def evaluate(owner, repo, ecosystem=None, package_name=None, token=None):
         report["categories"]["maintenance"] = {
             "rating": "RED",
             "signals": {"archived": True},
-            "note": "Repository is archived — no further development expected."
+            "note": "Repository is archived — no further development expected.",
         }
         return report
 
@@ -395,8 +411,12 @@ def evaluate(owner, repo, ecosystem=None, package_name=None, token=None):
     contributors = get_contributors(owner, repo, token, per_page=30)
     if isinstance(contributors, list) and len(contributors) > 0:
         total_contributions = sum(c.get("contributions", 0) for c in contributors)
-        top_contributor_pct = (contributors[0].get("contributions", 0) / max(total_contributions, 1)) * 100
-        num_significant = sum(1 for c in contributors if c.get("contributions", 0) >= total_contributions * 0.05)
+        top_contributor_pct = (
+            contributors[0].get("contributions", 0) / max(total_contributions, 1)
+        ) * 100
+        num_significant = sum(
+            1 for c in contributors if c.get("contributions", 0) >= total_contributions * 0.05
+        )
     else:
         top_contributor_pct = 100
         num_significant = 1
@@ -471,8 +491,6 @@ def evaluate(owner, repo, ecosystem=None, package_name=None, token=None):
     # ---- Funding ----
     # GitHub API doesn't expose funding model directly. Check for FUNDING.yml
     funding_file = check_file_exists(owner, repo, ".github/FUNDING.yml", token)
-    has_sponsors = repo_info.get("has_sponsorships", False) if isinstance(repo_info, dict) else False
-
     # Check if org-owned vs user-owned
     owner_type = repo_info.get("owner", {}).get("type", "User")
     is_org = owner_type == "Organization"
@@ -496,7 +514,9 @@ def evaluate(owner, repo, ecosystem=None, package_name=None, token=None):
         "signals": funding_signals,
         "note": "Funding assessment is approximate. Human review recommended for accuracy.",
     }
-    report["human_review_needed"].append("Funding model: verify corporate sponsorship or foundation backing manually.")
+    report["human_review_needed"].append(
+        "Funding model: verify corporate sponsorship or foundation backing manually."
+    )
 
     # ---- Documentation & API Stability ----
     # We can check for presence of key files but not quality
@@ -507,8 +527,18 @@ def evaluate(owner, repo, ecosystem=None, package_name=None, token=None):
     has_contributing = files.get("contributing") is not None if files else False
     has_changelog = any(
         check_file_exists(owner, repo, f, token)
-        for f in ["CHANGELOG.md", "CHANGES.md", "CHANGES.rst", "CHANGELOG.rst", "CHANGELOG",
-                  "HISTORY.md", "HISTORY.rst", "History.md", "Changes.md", "Changelog.md"]
+        for f in [
+            "CHANGELOG.md",
+            "CHANGES.md",
+            "CHANGES.rst",
+            "CHANGELOG.rst",
+            "CHANGELOG",
+            "HISTORY.md",
+            "HISTORY.rst",
+            "History.md",
+            "Changes.md",
+            "Changelog.md",
+        ]
     )
     has_code_of_conduct = files.get("code_of_conduct") is not None if files else False
 
@@ -534,11 +564,13 @@ def evaluate(owner, repo, ecosystem=None, package_name=None, token=None):
         "signals": doc_signals,
         "note": "Documentation quality and semver discipline require human review.",
     }
-    report["human_review_needed"].extend([
-        "Documentation quality: verify docs are comprehensive and current.",
-        "Semver discipline: check changelog for breaking changes without major bumps.",
-        "Migration guides: verify presence for major version upgrades.",
-    ])
+    report["human_review_needed"].extend(
+        [
+            "Documentation quality: verify docs are comprehensive and current.",
+            "Semver discipline: check changelog for breaking changes without major bumps.",
+            "Migration guides: verify presence for major version upgrades.",
+        ]
+    )
 
     # ---- Security Posture ----
     has_security_md = any(
@@ -572,25 +604,34 @@ def evaluate(owner, repo, ecosystem=None, package_name=None, token=None):
     elif is_org or stars > 1000:
         # Large org-backed or popular projects likely handle security at org level
         sec_overall = "YELLOW"
-        sec_signals["note"] = "No per-repo security policy found, but org backing suggests security may be handled at organization level."
+        sec_signals["note"] = (
+            "No per-repo security policy found, but org backing suggests security may be handled at organization level."
+        )
     else:
         sec_overall = "YELLOW"
-        sec_signals["note"] = "No security policy or dependency scanning detected. Manual CVE check strongly recommended."
+        sec_signals["note"] = (
+            "No security policy or dependency scanning detected. Manual CVE check strongly recommended."
+        )
 
     report["categories"]["security"] = {
         "rating": sec_overall,
         "signals": sec_signals,
         "note": "CVE response time and audit history require human review.",
     }
-    report["human_review_needed"].append("Security: check for known unpatched CVEs and third-party audit history.")
+    report["human_review_needed"].append(
+        "Security: check for known unpatched CVEs and third-party audit history."
+    )
 
     # ---- Overall Rating ----
-    all_ratings = [cat["rating"] for cat in report["categories"].values()]
     red_categories = [name for name, cat in report["categories"].items() if cat["rating"] == "RED"]
-    yellow_categories = [name for name, cat in report["categories"].items() if cat["rating"] == "YELLOW"]
+    yellow_categories = [
+        name for name, cat in report["categories"].items() if cat["rating"] == "YELLOW"
+    ]
 
-    if "RED" in [report["categories"].get("maintenance", {}).get("rating"),
-                  report["categories"].get("security", {}).get("rating")]:
+    if "RED" in [
+        report["categories"].get("maintenance", {}).get("rating"),
+        report["categories"].get("security", {}).get("rating"),
+    ]:
         report["overall_rating"] = "RED"
         report["recommendation"] = (
             f"REJECT. Red flag in critical category: {', '.join(c for c in red_categories if c in ('maintenance', 'security'))}. "
@@ -624,6 +665,7 @@ def evaluate(owner, repo, ecosystem=None, package_name=None, token=None):
 # ---------------------------------------------------------------------------
 # OWB audit integration (CLI agent only)
 # ---------------------------------------------------------------------------
+
 
 def _run_owb_command(args_list):
     """Run an owb CLI command and return parsed JSON output.
@@ -710,15 +752,13 @@ def collect_dep_audit():
     }
 
 
-def evaluate_with_owb(owner, repo, ecosystem=None, package_name=None,
-                      token=None, policy_path=None):
+def evaluate_with_owb(owner, repo, ecosystem=None, package_name=None, token=None, policy_path=None):
     """Run full evaluation including OWB audit dimensions.
 
     Extends the base evaluate() with license_compliance and dependency_health
     categories sourced from owb audit commands.
     """
-    report = evaluate(owner, repo, ecosystem=ecosystem,
-                      package_name=package_name, token=token)
+    report = evaluate(owner, repo, ecosystem=ecosystem, package_name=package_name, token=token)
 
     if "error" in report:
         return report
@@ -752,11 +792,10 @@ def evaluate_with_owb(owner, repo, ecosystem=None, package_name=None,
         )
 
     # Recompute overall rating with new dimensions
-    all_ratings = [cat["rating"] for cat in report["categories"].values()]
-    red_categories = [name for name, cat in report["categories"].items()
-                      if cat["rating"] == "RED"]
-    yellow_categories = [name for name, cat in report["categories"].items()
-                         if cat["rating"] == "YELLOW"]
+    red_categories = [name for name, cat in report["categories"].items() if cat["rating"] == "RED"]
+    yellow_categories = [
+        name for name, cat in report["categories"].items() if cat["rating"] == "YELLOW"
+    ]
 
     critical_cats = ("maintenance", "security")
     if any(report["categories"].get(c, {}).get("rating") == "RED" for c in critical_cats):
@@ -795,25 +834,30 @@ def evaluate_with_owb(owner, repo, ecosystem=None, package_name=None,
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="OSS Health Check — evaluate open source project health "
-                    "against the OSS health policy."
+        "against the OSS health policy."
     )
-    parser.add_argument("--repo", required=True,
-                        help="GitHub owner/repo (e.g., pallets/flask)")
-    parser.add_argument("--ecosystem", choices=["npm", "pypi", "crates"],
-                        default=None,
-                        help="Package ecosystem for download stats")
-    parser.add_argument("--package", default=None,
-                        help="Package name if different from repo name")
-    parser.add_argument("--github-token", default=None,
-                        help="GitHub personal access token")
-    parser.add_argument("--owb-audit", action="store_true", default=False,
-                        help="Include license and dependency audits via owb CLI "
-                             "(requires owb to be installed)")
-    parser.add_argument("--policy", default=None,
-                        help="Path to allowed-licenses.md (used with --owb-audit)")
+    parser.add_argument("--repo", required=True, help="GitHub owner/repo (e.g., pallets/flask)")
+    parser.add_argument(
+        "--ecosystem",
+        choices=["npm", "pypi", "crates"],
+        default=None,
+        help="Package ecosystem for download stats",
+    )
+    parser.add_argument("--package", default=None, help="Package name if different from repo name")
+    parser.add_argument("--github-token", default=None, help="GitHub personal access token")
+    parser.add_argument(
+        "--owb-audit",
+        action="store_true",
+        default=False,
+        help="Include license and dependency audits via owb CLI (requires owb to be installed)",
+    )
+    parser.add_argument(
+        "--policy", default=None, help="Path to allowed-licenses.md (used with --owb-audit)"
+    )
     args = parser.parse_args()
 
     # Also check environment variable
@@ -828,7 +872,8 @@ def main():
 
     if args.owb_audit:
         result = evaluate_with_owb(
-            owner, repo,
+            owner,
+            repo,
             ecosystem=args.ecosystem,
             package_name=args.package,
             token=token,
@@ -836,7 +881,8 @@ def main():
         )
     else:
         result = evaluate(
-            owner, repo,
+            owner,
+            repo,
             ecosystem=args.ecosystem,
             package_name=args.package,
             token=token,

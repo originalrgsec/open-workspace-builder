@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import tempfile
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from fnmatch import fnmatch
 from pathlib import Path
@@ -226,10 +226,10 @@ def check_drift(
 
     # Apply glob filter if specified
     if file_glob is not None:
-        baseline_files = {
-            k: v for k, v in baseline_files.items() if fnmatch(k, file_glob)
-        }
-        current_files = [f for f in current_files if fnmatch(str(f.relative_to(workspace)), file_glob)]
+        baseline_files = {k: v for k, v in baseline_files.items() if fnmatch(k, file_glob)}
+        current_files = [
+            f for f in current_files if fnmatch(str(f.relative_to(workspace)), file_glob)
+        ]
         current_rel_paths = {str(f.relative_to(workspace)) for f in current_files}
 
     modified: list[DriftEntry] = []
@@ -248,19 +248,23 @@ def check_drift(
         try:
             current_hash = _sha256(full_path)
         except OSError as exc:
-            errors.append(DriftEntry(
-                rel_path=rel_path,
-                status="error",
-                message=str(exc),
-            ))
+            errors.append(
+                DriftEntry(
+                    rel_path=rel_path,
+                    status="error",
+                    message=str(exc),
+                )
+            )
             continue
 
         if current_hash != entry["sha256"]:
-            modified.append(DriftEntry(
-                rel_path=rel_path,
-                status="modified",
-                message="hash mismatch",
-            ))
+            modified.append(
+                DriftEntry(
+                    rel_path=rel_path,
+                    status="modified",
+                    message="hash mismatch",
+                )
+            )
         else:
             unchanged.append(DriftEntry(rel_path=rel_path, status="ok"))
 

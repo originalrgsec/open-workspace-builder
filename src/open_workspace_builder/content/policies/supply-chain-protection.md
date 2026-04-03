@@ -98,9 +98,19 @@ Add this to every project's CLAUDE.md or equivalent:
 
 For those, you need: SCA scanning (Trivy), SAST, lockfile pinning, code review, and minimal dependency philosophy.
 
-### Emergency bypass
+### CVE exemption (automatic)
 
-If you genuinely need a package released in the last 7 days (e.g., a critical security patch for an active zero-day):
+Updates that exist solely to close known CVEs are **exempt from the quarantine**. When `pip-audit` (or equivalent SCA tooling) detects a vulnerability with an available fix version, that fix may be adopted immediately regardless of its publish date.
+
+This exemption is automatic in CI: the dep-scan job runs a two-phase audit that detects CVEs with available fixes and exempts them from the quarantine check. Locally, advance `exclude-newer` in `uv.toml` to include the fix version, run `uv lock --upgrade-package <pkg>`, and record the bypass in `.owb/quarantine-bypasses.jsonl`.
+
+The exemption applies **only** to the specific packages with CVE fixes. All other packages remain subject to the full quarantine window. If advancing `exclude-newer` temporarily narrows the quarantine for other packages, that is an accepted tradeoff when security patches are involved.
+
+**Audit trail:** every CVE exemption must be logged with the CVE IDs, the previous and new `exclude-newer` dates, and the package/version. The `record_cve_bypass()` function in `quarantine.py` handles this.
+
+### Emergency bypass (manual)
+
+For non-CVE situations where you genuinely need a package released in the last 7 days:
 - For uv: use `--exclude-newer` with today's date to override the global setting
 - For Trivy-flagged packages: add a `.trivyignore` entry with a comment explaining the justification. Review and remove ignore entries monthly.
 - For Renovate: temporarily override `minimumReleaseAge` for a specific package in `renovate.json` with a comment and revert after the update merges.

@@ -60,7 +60,7 @@ def render_uv_toml(quarantine_days: int = 7) -> str:
 _PACKAGE_RE = re.compile(r"^\[\[package\]\]", re.MULTILINE)
 _NAME_RE = re.compile(r'^name\s*=\s*"([^"]+)"', re.MULTILINE)
 _VERSION_RE = re.compile(r'^version\s*=\s*"([^"]+)"', re.MULTILINE)
-_SOURCE_RE = re.compile(r'^source\s*=\s*\{([^}]+)\}', re.MULTILINE)
+_SOURCE_RE = re.compile(r"^source\s*=\s*\{([^}]+)\}", re.MULTILINE)
 
 
 @dataclass(frozen=True)
@@ -89,11 +89,13 @@ def _parse_lock(lock_text: str) -> list[_LockEntry]:
         if source_m and "editable" in source_m.group(1):
             editable = True
 
-        entries.append(_LockEntry(
-            name=name_m.group(1),
-            version=version_m.group(1),
-            editable=editable,
-        ))
+        entries.append(
+            _LockEntry(
+                name=name_m.group(1),
+                version=version_m.group(1),
+                editable=editable,
+            )
+        )
 
     return entries
 
@@ -169,9 +171,7 @@ def check_pin_advancements(
 
         # Fetch current version info
         current_data = _fetch_pypi_json(entry.name, entry.version)
-        current_publish_date = (
-            _extract_publish_date(current_data) if current_data else None
-        )
+        current_publish_date = _extract_publish_date(current_data) if current_data else None
 
         # Fetch latest version info
         latest_data = _fetch_pypi_json(entry.name)
@@ -186,14 +186,16 @@ def check_pin_advancements(
                     candidate_version = latest_version
                     candidate_publish_date = latest_pub_date
 
-        results.append(PinStatus(
-            package=entry.name,
-            current_version=entry.version,
-            current_publish_date=current_publish_date,
-            candidate_version=candidate_version,
-            candidate_publish_date=candidate_publish_date,
-            scan_passed=None,
-        ))
+        results.append(
+            PinStatus(
+                package=entry.name,
+                current_version=entry.version,
+                current_publish_date=current_publish_date,
+                candidate_version=candidate_version,
+                candidate_publish_date=candidate_publish_date,
+                scan_passed=None,
+            )
+        )
 
     return results
 
@@ -219,3 +221,82 @@ def record_bypass(
 
     with open(log_path, "a", encoding="utf-8") as f:
         f.write(json.dumps(record, sort_keys=True) + "\n")
+
+
+def record_cve_bypass(
+    package: str,
+    version: str,
+    cve_ids: list[str],
+    previous_exclude_newer: str,
+    new_exclude_newer: str,
+    log_path: Path,
+) -> None:
+    """Record a quarantine bypass for a CVE-motivated upgrade.
+
+    CVE-closing updates are exempt from the quarantine policy. This function
+    logs the exemption with full audit context: which CVEs drove the upgrade,
+    what the quarantine date was before and after, and when it happened.
+    """
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+
+    record = {
+        "timestamp": date.today().isoformat(),
+        "package": package,
+        "version": version,
+        "reason": "cve_exemption",
+        "cve_ids": cve_ids,
+        "justification": (
+            f"CVE exemption: {len(cve_ids)} CVE(s) in {package} fixed in {version}. "
+            f"Quarantine advanced from {previous_exclude_newer} to {new_exclude_newer}."
+        ),
+        "previous_exclude_newer": previous_exclude_newer,
+        "new_exclude_newer": new_exclude_newer,
+    }
+
+    with open(log_path, "a", encoding="utf-8") as f:
+        f.write(json.dumps(record, sort_keys=True) + "\n")
+
+
+# ── CVE exemption for CI ────────────────────────────────────────────────
+
+
+@dataclass(frozen=True)
+class CveAuditFinding:
+    """A single CVE finding from pip-audit with fix information."""
+
+    package: str
+    version: str
+    vuln_id: str
+    fix_version: str | None
+
+
+def parse_pip_audit_json(audit_json: str) -> list[CveAuditFinding]:
+    """Parse pip-audit JSON output into structured findings.
+
+    Expected format: ``{"dependencies": [{"name": ..., "version": ...,
+    "vulns": [{"id": ..., "fix_versions": [...]}]}]}``.
+    """
+    try:
+        data = json.loads(audit_json)
+    except json.JSONDecodeError:
+        return []
+
+    findings: list[CveAuditFinding] = []
+    for dep in data.get("dependencies", []):
+        for vuln in dep.get("vulns", []):
+            fix_versions = vuln.get("fix_versions", [])
+            findings.append(
+                CveAuditFinding(
+                    package=dep.get("name", ""),
+                    version=dep.get("version", ""),
+                    vuln_id=vuln.get("id", ""),
+                    fix_version=fix_versions[0] if fix_versions else None,
+                )
+            )
+
+    return findings
+
+
+def collect_cve_exemptions(findings: list[CveAuditFinding]) -> list[str]:
+    """Return vuln IDs that qualify for CVE exemption (have a fix version)."""
+    return [f.vuln_id for f in findings if f.fix_version is not None]

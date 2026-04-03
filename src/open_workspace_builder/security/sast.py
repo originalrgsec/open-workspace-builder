@@ -67,10 +67,19 @@ def run_semgrep(
         If the semgrep process times out.
     """
     fmt_flag = "--sarif" if sarif else "--json"
+
+    # Semgrep's "auto" config requires metrics=on (phones home).
+    # Expand to concrete registry rulesets so scans work offline and
+    # without a Semgrep account.
+    if config == "auto":
+        config_args = ["--config", "p/python", "--config", "p/owasp-top-ten"]
+    else:
+        config_args = ["--config", config]
+
     cmd = [
         "semgrep",
-        "--config",
-        config,
+        *config_args,
+        "--metrics=off",
         fmt_flag,
         str(target),
     ]
@@ -87,9 +96,7 @@ def run_semgrep(
             "semgrep is not installed. Install it with: pip install semgrep"
         ) from None
     except subprocess.TimeoutExpired as exc:
-        raise RuntimeError(
-            f"semgrep timed out after {timeout}s"
-        ) from exc
+        raise RuntimeError(f"semgrep timed out after {timeout}s") from exc
 
     if sarif:
         return result.stdout

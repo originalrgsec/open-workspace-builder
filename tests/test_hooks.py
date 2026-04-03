@@ -147,15 +147,17 @@ class TestMergePrecommitConfig:
     """Merges new hooks into existing config without overwriting user hooks."""
 
     def test_merges_new_repo(self) -> None:
-        existing = yaml.dump({
-            "repos": [
-                {
-                    "repo": "https://github.com/user/custom",
-                    "rev": "v1.0",
-                    "hooks": [{"id": "custom-lint"}],
-                }
-            ]
-        })
+        existing = yaml.dump(
+            {
+                "repos": [
+                    {
+                        "repo": "https://github.com/user/custom",
+                        "rev": "v1.0",
+                        "hooks": [{"id": "custom-lint"}],
+                    }
+                ]
+            }
+        )
         new_hooks = default_hooks()
         result = merge_precommit_config(existing, new_hooks)
         parsed = yaml.safe_load(result)
@@ -174,17 +176,19 @@ class TestMergePrecommitConfig:
 
     def test_preserves_user_hooks_in_same_repo(self) -> None:
         """If user already has a repo with extra hooks, preserve them."""
-        existing = yaml.dump({
-            "repos": [
-                {
-                    "repo": "https://github.com/astral-sh/ruff-pre-commit",
-                    "rev": "v0.10.0",
-                    "hooks": [
-                        {"id": "ruff", "args": ["--select", "E"]},
-                    ],
-                }
-            ]
-        })
+        existing = yaml.dump(
+            {
+                "repos": [
+                    {
+                        "repo": "https://github.com/astral-sh/ruff-pre-commit",
+                        "rev": "v0.10.0",
+                        "hooks": [
+                            {"id": "ruff", "args": ["--select", "E"]},
+                        ],
+                    }
+                ]
+            }
+        )
         new_hooks = default_hooks()
         result = merge_precommit_config(existing, new_hooks)
         parsed = yaml.safe_load(result)
@@ -206,9 +210,7 @@ class TestMergePrecommitConfig:
 class TestBuilderDeploysPrecommitConfig:
     """AC-1: WorkspaceBuilder generates .pre-commit-config.yaml during init."""
 
-    def test_generates_precommit_config(
-        self, tmp_target: Path, content_root: Path
-    ) -> None:
+    def test_generates_precommit_config(self, tmp_target: Path, content_root: Path) -> None:
         from open_workspace_builder.config import Config
         from open_workspace_builder.engine.builder import WorkspaceBuilder
 
@@ -220,9 +222,7 @@ class TestBuilderDeploysPrecommitConfig:
         parsed = yaml.safe_load(precommit_path.read_text(encoding="utf-8"))
         assert "repos" in parsed
 
-    def test_skips_existing_precommit_config(
-        self, tmp_target: Path, content_root: Path
-    ) -> None:
+    def test_skips_existing_precommit_config(self, tmp_target: Path, content_root: Path) -> None:
         from open_workspace_builder.config import Config
         from open_workspace_builder.engine.builder import WorkspaceBuilder
 
@@ -268,7 +268,7 @@ class TestScanAllFlag:
         test_file.write_text("Hello world", encoding="utf-8")
 
         runner = CliRunner()
-        result = runner.invoke(owb, ["security", "scan", "--all", str(test_file)])
+        runner.invoke(owb, ["security", "scan", "--all", str(test_file)])
         # Both SCA and SAST should have been called
         mock_sca.assert_called_once()
         mock_sast.assert_called_once()
@@ -298,14 +298,12 @@ class TestHooksCli:
         assert result.exit_code == 0
 
     @patch("subprocess.run")
-    def test_hooks_install_generates_config(
-        self, mock_run: MagicMock, tmp_path: Path
-    ) -> None:
+    def test_hooks_install_generates_config(self, mock_run: MagicMock, tmp_path: Path) -> None:
         # Mock pre-commit availability and execution
         mock_run.return_value = MagicMock(returncode=0, stdout="pre-commit 3.0.0\n")
 
         runner = CliRunner()
-        result = runner.invoke(owb, ["security", "hooks", "install", str(tmp_path)])
+        runner.invoke(owb, ["security", "hooks", "install", str(tmp_path)])
         precommit_path = tmp_path / ".pre-commit-config.yaml"
         assert precommit_path.is_file()
 

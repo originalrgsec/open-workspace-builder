@@ -86,17 +86,17 @@ class WorkspaceBuilder:
         """
         uv_toml_path = target / "uv.toml"
         if uv_toml_path.exists():
-            print(f"  [skip]  uv.toml (exists)")
+            print("  [skip]  uv.toml (exists)")
             return
         if self._dry_run:
-            print(f"  [write] uv.toml")
+            print("  [write] uv.toml")
             return
 
         from open_workspace_builder.security.quarantine import render_uv_toml
 
         uv_toml_path.parent.mkdir(parents=True, exist_ok=True)
         uv_toml_path.write_text(render_uv_toml(), encoding="utf-8")
-        print(f"  [write] uv.toml (quarantine: exclude-newer)")
+        print("  [write] uv.toml (quarantine: exclude-newer)")
 
     def _deploy_precommit_config(self, target: Path) -> None:
         """Generate .pre-commit-config.yaml at the workspace root.

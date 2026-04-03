@@ -5,10 +5,14 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import click
 
 from open_workspace_builder.config import load_config
+
+if TYPE_CHECKING:
+    from open_workspace_builder.config import Config
 from open_workspace_builder.engine.builder import WorkspaceBuilder
 
 
@@ -671,11 +675,7 @@ def scan(
         _print_verdict(verdict.file_path, verdict.verdict, len(verdict.flags))
         has_issues = verdict.verdict in ("flagged", "malicious")
     else:
-        report = (
-            scanner.scan_package(target)
-            if correlate
-            else scanner.scan_directory(target)
-        )
+        report = scanner.scan_package(target) if correlate else scanner.scan_directory(target)
         report_data = {
             "directory": report.directory,
             "summary": report.summary,
@@ -760,21 +760,25 @@ def _run_sca_scan(target: Path) -> dict:
             report = audit_single_package(pkg)
             scanned.append(pkg)
             for f in report.vuln_report.findings:
-                all_vulns.append({
-                    "package": f.package,
-                    "installed_version": f.installed_version,
-                    "vuln_id": f.vuln_id,
-                    "fix_version": f.fix_version,
-                    "description": f.description,
-                })
+                all_vulns.append(
+                    {
+                        "package": f.package,
+                        "installed_version": f.installed_version,
+                        "vuln_id": f.vuln_id,
+                        "fix_version": f.fix_version,
+                        "description": f.description,
+                    }
+                )
             for f in report.guarddog_report.flagged:
-                all_flagged.append({
-                    "package": f.package,
-                    "rule_name": f.rule_name,
-                    "severity": f.severity,
-                    "file_path": f.file_path,
-                    "evidence": f.evidence,
-                })
+                all_flagged.append(
+                    {
+                        "package": f.package,
+                        "rule_name": f.rule_name,
+                        "severity": f.severity,
+                        "file_path": f.file_path,
+                        "evidence": f.evidence,
+                    }
+                )
         except (ImportError, RuntimeError) as exc:
             click.echo(f"  [skip] {pkg}: {exc}")
 
@@ -1082,8 +1086,7 @@ def security_secrets(
     backend = get_secrets_backend(scanner_name)
     if not backend.is_available():
         click.echo(
-            f"Error: {scanner_name} is not available. "
-            f"Install it or choose a different scanner.",
+            f"Error: {scanner_name} is not available. Install it or choose a different scanner.",
             err=True,
         )
         sys.exit(1)
@@ -1332,8 +1335,7 @@ def install(path: str) -> None:
         )
     except (FileNotFoundError, subprocess.CalledProcessError):
         click.echo(
-            "Error: pre-commit is not installed.\n"
-            "Install it with: uv pip install pre-commit",
+            "Error: pre-commit is not installed.\nInstall it with: uv pip install pre-commit",
             err=True,
         )
         sys.exit(1)
@@ -1373,9 +1375,9 @@ def install(path: str) -> None:
         click.echo("Some hooks reported issues (see output above).")
 
 
-@hooks.command()
+@hooks.command("status")
 @click.argument("path", type=click.Path(exists=True), default=".")
-def status(path: str) -> None:
+def hooks_status(path: str) -> None:
     """Show installed hook status."""
     import yaml as _yaml
 
@@ -1612,7 +1614,9 @@ def auth_backends() -> None:
         if BitwardenBackend.is_available():
             click.echo("  bitwarden : available")
         else:
-            click.echo("  bitwarden : not available (install bw CLI: https://bitwarden.com/help/cli/)")
+            click.echo(
+                "  bitwarden : not available (install bw CLI: https://bitwarden.com/help/cli/)"
+            )
     except ImportError:
         click.echo("  bitwarden : not available (install bw CLI: https://bitwarden.com/help/cli/)")
 
@@ -1623,9 +1627,13 @@ def auth_backends() -> None:
         if OnePasswordBackend.is_available():
             click.echo("  onepassword: available")
         else:
-            click.echo("  onepassword: not available (install op CLI: https://developer.1password.com/docs/cli/)")
+            click.echo(
+                "  onepassword: not available (install op CLI: https://developer.1password.com/docs/cli/)"
+            )
     except ImportError:
-        click.echo("  onepassword: not available (install op CLI: https://developer.1password.com/docs/cli/)")
+        click.echo(
+            "  onepassword: not available (install op CLI: https://developer.1password.com/docs/cli/)"
+        )
 
 
 @auth.command("google-store")
@@ -1779,9 +1787,7 @@ def audit_deps(
         _run_license_check_inline(policy, fmt)
 
     if output_file:
-        Path(output_file).write_text(
-            json.dumps(report_data, indent=2) + "\n", encoding="utf-8"
-        )
+        Path(output_file).write_text(json.dumps(report_data, indent=2) + "\n", encoding="utf-8")
         click.echo(f"Report written to {output_file}")
 
     sys.exit(2 if has_findings else 0)
@@ -1854,9 +1860,7 @@ def audit_package(
         _print_audit_text(report, include_fix=False)
 
     if output_file:
-        Path(output_file).write_text(
-            json.dumps(report_data, indent=2) + "\n", encoding="utf-8"
-        )
+        Path(output_file).write_text(json.dumps(report_data, indent=2) + "\n", encoding="utf-8")
         click.echo(f"Report written to {output_file}")
 
     sys.exit(2 if has_findings else 0)
@@ -1914,7 +1918,11 @@ def check_suppressions(registry: str | None, fmt: str) -> None:
         click.echo("CVE Suppression Status Report")
         click.echo("=" * 30)
         for s in statuses:
-            pinned = f"pinned {s.suppression.pinned_version}" if s.suppression.pinned_version else "unpinned"
+            pinned = (
+                f"pinned {s.suppression.pinned_version}"
+                if s.suppression.pinned_version
+                else "unpinned"
+            )
             if s.fix_available:
                 status_str = f"FIX AVAILABLE: {s.fixed_version}"
             elif s.error:
@@ -1931,9 +1939,7 @@ def check_suppressions(registry: str | None, fmt: str) -> None:
                     f"remove {s.suppression.ci_flag or s.suppression.cve} from CI"
                 )
         click.echo("-" * 30)
-        click.echo(
-            f"Summary: {len(statuses)} suppression(s), {fixes_available} fix(es) available"
-        )
+        click.echo(f"Summary: {len(statuses)} suppression(s), {fixes_available} fix(es) available")
 
     sys.exit(1 if fixes_available else 0)
 
@@ -1993,9 +1999,7 @@ def audit_licenses_cmd(
 
     if output_file:
         report_data = format_license_report(report)
-        Path(output_file).write_text(
-            json.dumps(report_data, indent=2) + "\n", encoding="utf-8"
-        )
+        Path(output_file).write_text(json.dumps(report_data, indent=2) + "\n", encoding="utf-8")
         click.echo(f"Report written to {output_file}")
 
     has_fail = any(f.status in ("fail", "unknown") for f in report.findings)
@@ -2018,14 +2022,18 @@ def _find_policy_file() -> Path:
         if candidate.is_file():
             return candidate
     raise ValueError(
-        "Could not find allowed-licenses.md policy file. "
-        "Use --policy to specify the path."
+        "Could not find allowed-licenses.md policy file. Use --policy to specify the path."
     )
 
 
 @audit.command("pins")
 @click.option("--auto-advance", is_flag=True, help="Auto-advance clean candidates")
-@click.option("--bypass", type=str, default=None, help="Bypass quarantine for package==version with justification")
+@click.option(
+    "--bypass",
+    type=str,
+    default=None,
+    help="Bypass quarantine for package==version with justification",
+)
 @click.option("--json", "json_output", is_flag=True, help="JSON output")
 def audit_pins(
     auto_advance: bool,
@@ -2094,8 +2102,7 @@ def audit_pins(
             click.echo(f"  {r.package}: {r.current_version}{pub}")
 
     if auto_advance and any(r.candidate_version for r in results):
-        click.echo("\nAuto-advance is not yet implemented. "
-                    "Update pinned versions manually.")
+        click.echo("\nAuto-advance is not yet implemented. Update pinned versions manually.")
 
     sys.exit(0)
 
@@ -2171,7 +2178,9 @@ def _print_audit_text(report: object, *, include_fix: bool) -> None:
 @audit.command("gate")
 @click.argument("package", required=False)
 @click.option("--version", "pkg_version", default=None, help="Specific version to check.")
-@click.option("--all", "check_all", is_flag=True, help="Check all direct dependencies from pyproject.toml.")
+@click.option(
+    "--all", "check_all", is_flag=True, help="Check all direct dependencies from pyproject.toml."
+)
 @click.option("--json", "json_output", is_flag=True, help="JSON output.")
 def audit_gate(
     package: str | None,
@@ -2255,8 +2264,7 @@ def _display_gate_batch(results: list, json_output: bool) -> None:
                 "version": r.version,
                 "passed": r.passed,
                 "checks": [
-                    {"name": c.name, "passed": c.passed, "details": c.details}
-                    for c in r.checks
+                    {"name": c.name, "passed": c.passed, "details": c.details} for c in r.checks
                 ],
             }
             for r in results
@@ -2635,9 +2643,7 @@ def metrics_record(
         click.echo(f"Error: Claude Code projects directory not found: {projects_dir}")
         sys.exit(1)
 
-    resolved_ledger = Path(
-        ledger_path or Path.home() / ".owb" / "data" / "ledger.jsonl"
-    )
+    resolved_ledger = Path(ledger_path or Path.home() / ".owb" / "data" / "ledger.jsonl")
 
     recorded, _ = _record_sessions(projects_dir, resolved_ledger, story_id)
     click.echo(f"Recorded {recorded} session(s) to {resolved_ledger}")
@@ -2676,9 +2682,7 @@ def metrics_forecast(
     from open_workspace_builder.tokens.forecast import forecast_monthly
     from open_workspace_builder.tokens.ledger import read_entries
 
-    resolved_ledger = Path(
-        ledger_path or Path.home() / ".owb" / "data" / "ledger.jsonl"
-    )
+    resolved_ledger = Path(ledger_path or Path.home() / ".owb" / "data" / "ledger.jsonl")
     resolved_date = current_date or date.today().isoformat()
 
     entries = read_entries(resolved_ledger)
@@ -2743,9 +2747,7 @@ def metrics_budget_check(
     from open_workspace_builder.tokens.budget import check_budget
     from open_workspace_builder.tokens.ledger import read_entries
 
-    resolved_ledger = Path(
-        ledger_path or Path.home() / ".owb" / "data" / "ledger.jsonl"
-    )
+    resolved_ledger = Path(ledger_path or Path.home() / ".owb" / "data" / "ledger.jsonl")
     resolved_date = current_date or date.today().isoformat()
 
     entries = read_entries(resolved_ledger)
@@ -2795,13 +2797,9 @@ def metrics_sync(
         click.echo(f"Error: Claude Code projects directory not found: {projects_dir}")
         sys.exit(1)
 
-    resolved_ledger = Path(
-        ledger_path or Path.home() / ".owb" / "data" / "ledger.jsonl"
-    )
+    resolved_ledger = Path(ledger_path or Path.home() / ".owb" / "data" / "ledger.jsonl")
 
-    recorded, all_session_data = _record_sessions(
-        projects_dir, resolved_ledger, story_id
-    )
+    recorded, all_session_data = _record_sessions(projects_dir, resolved_ledger, story_id)
     click.echo(f"Recorded {recorded} session(s) to {resolved_ledger}")
 
     if sheet_id:
@@ -2853,18 +2851,14 @@ def metrics_by_story(
 
     from open_workspace_builder.tokens.ledger import read_entries
 
-    resolved_ledger = Path(
-        ledger_path or Path.home() / ".owb" / "data" / "ledger.jsonl"
-    )
+    resolved_ledger = Path(ledger_path or Path.home() / ".owb" / "data" / "ledger.jsonl")
 
     entries = read_entries(resolved_ledger, since=since, until=until)
     if not entries:
         click.echo("No ledger data found.")
         sys.exit(0)
 
-    story_costs: dict[str, dict] = defaultdict(
-        lambda: {"total_cost": 0.0, "sessions": 0}
-    )
+    story_costs: dict[str, dict] = defaultdict(lambda: {"total_cost": 0.0, "sessions": 0})
     for entry in entries:
         tag = entry.story_id or "(untagged)"
         story_costs[tag]["total_cost"] += entry.cost.total
@@ -2940,7 +2934,9 @@ def stage(ctx: click.Context) -> None:
 
 
 @stage.command("status")
-@click.option("--vault", default=None, type=click.Path(exists=True), help="Path to vault directory.")
+@click.option(
+    "--vault", default=None, type=click.Path(exists=True), help="Path to vault directory."
+)
 @click.option(
     "--config",
     "-c",
@@ -2989,7 +2985,9 @@ def stage_status(vault: str | None, config_path: str | None) -> None:
 
 
 @stage.command("promote")
-@click.option("--vault", default=None, type=click.Path(exists=True), help="Path to vault directory.")
+@click.option(
+    "--vault", default=None, type=click.Path(exists=True), help="Path to vault directory."
+)
 @click.option(
     "--config",
     "-c",
@@ -3028,7 +3026,9 @@ def stage_promote(
         sys.exit(1)
 
     if not assessment.can_promote:
-        click.echo(f"Cannot promote from Stage {assessment.current_stage} to Stage {assessment.target_stage}.")
+        click.echo(
+            f"Cannot promote from Stage {assessment.current_stage} to Stage {assessment.target_stage}."
+        )
         click.echo()
         click.echo("Criteria not met:")
         for criterion in assessment.criteria:
@@ -3052,8 +3052,7 @@ def stage_promote(
         )
     elif resolved_config_path is None:
         click.echo(
-            "Warning: no config file specified — stage not persisted. "
-            "Pass --config to save."
+            "Warning: no config file specified — stage not persisted. Pass --config to save."
         )
 
     # Deploy hooks if promoting to Stage 2+ with hooks enabled

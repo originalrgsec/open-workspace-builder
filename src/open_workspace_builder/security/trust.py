@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import Any
 
 
 def _sha256(path: Path) -> str:

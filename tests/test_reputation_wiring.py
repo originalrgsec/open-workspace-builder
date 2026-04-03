@@ -107,14 +107,16 @@ class TestUpdaterReputationBlock:
         """Update should be blocked when the source exceeds the reputation threshold."""
         # Seed the ledger with 4 confirmed-malicious files (threshold default = 3).
         for i in range(4):
-            ledger.record_event(FlagEvent.now(
-                source="test-source",
-                file_path=f"/tmp/bad_{i}.md",
-                flag_category="exfiltration",
-                severity="critical",
-                disposition="confirmed_malicious",
-                details=f"test event {i}",
-            ))
+            ledger.record_event(
+                FlagEvent.now(
+                    source="test-source",
+                    file_path=f"/tmp/bad_{i}.md",
+                    flag_category="exfiltration",
+                    severity="critical",
+                    disposition="confirmed_malicious",
+                    details=f"test event {i}",
+                )
+            )
 
         updater = SourceUpdater(
             config=mock_config,
@@ -143,14 +145,16 @@ class TestUpdaterReputationBlock:
         """Update should proceed when the source is below the reputation threshold."""
         # Only 2 events — below the default threshold of 3.
         for i in range(2):
-            ledger.record_event(FlagEvent.now(
-                source="test-source",
-                file_path=f"/tmp/bad_{i}.md",
-                flag_category="exfiltration",
-                severity="critical",
-                disposition="confirmed_malicious",
-                details=f"test event {i}",
-            ))
+            ledger.record_event(
+                FlagEvent.now(
+                    source="test-source",
+                    file_path=f"/tmp/bad_{i}.md",
+                    flag_category="exfiltration",
+                    severity="critical",
+                    disposition="confirmed_malicious",
+                    details=f"test event {i}",
+                )
+            )
 
         updater = SourceUpdater(
             config=mock_config,
@@ -177,14 +181,16 @@ class TestUpdaterReputationBlock:
     ) -> None:
         """--force should bypass the reputation block."""
         for i in range(4):
-            ledger.record_event(FlagEvent.now(
-                source="test-source",
-                file_path=f"/tmp/bad_{i}.md",
-                flag_category="exfiltration",
-                severity="critical",
-                disposition="confirmed_malicious",
-                details=f"test event {i}",
-            ))
+            ledger.record_event(
+                FlagEvent.now(
+                    source="test-source",
+                    file_path=f"/tmp/bad_{i}.md",
+                    flag_category="exfiltration",
+                    severity="critical",
+                    disposition="confirmed_malicious",
+                    details=f"test event {i}",
+                )
+            )
 
         updater = SourceUpdater(
             config=mock_config,
@@ -220,14 +226,12 @@ class TestScannerRecordsFlagEvents:
         scanner = Scanner(layers=(1,), ledger=ledger)
         scanner.scan_directory(tmp_path, glob_pattern="*.md", source="my-source")
 
-        history = ledger.get_history("my-source")
+        ledger.get_history("my-source")
         # At minimum, the structural layer should flag 'curl | bash'.
         # If no flags fire from L1, the test still validates wiring —
         # we force a malicious verdict below for certainty.
 
-    def test_records_event_forced_malicious(
-        self, tmp_path: Path, ledger: ReputationLedger
-    ) -> None:
+    def test_records_event_forced_malicious(self, tmp_path: Path, ledger: ReputationLedger) -> None:
         """Directly verify the wiring by mocking scan_file to return malicious."""
         target = tmp_path / "file.md"
         target.write_text("content\n")

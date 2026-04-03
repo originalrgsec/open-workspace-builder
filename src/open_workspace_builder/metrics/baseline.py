@@ -111,11 +111,13 @@ def _discover_modules(src_dir: Path) -> tuple[ModuleMetric, ...]:
         for sub in sorted(pkg_dir.iterdir()):
             if sub.is_dir() and (sub / "__init__.py").exists():
                 loc = _count_loc_in_tree(sub)
-                modules.append(ModuleMetric(
-                    name=sub.name,
-                    loc=loc,
-                    path=str(sub.relative_to(src_dir.parent)),
-                ))
+                modules.append(
+                    ModuleMetric(
+                        name=sub.name,
+                        loc=loc,
+                        path=str(sub.relative_to(src_dir.parent)),
+                    )
+                )
     return tuple(modules)
 
 
@@ -177,8 +179,8 @@ def render_baseline_summary(metrics: BaselineMetrics) -> str:
         "",
         "## Overview",
         "",
-        f"| Metric | Value |",
-        f"|--------|-------|",
+        "| Metric | Value |",
+        "|--------|-------|",
         f"| Source LOC | {metrics.source_loc:,} |",
         f"| Test LOC | {metrics.test_loc:,} |",
         f"| Test Count | {metrics.test_count:,} |",
@@ -188,12 +190,14 @@ def render_baseline_summary(metrics: BaselineMetrics) -> str:
     ]
 
     if metrics.modules:
-        lines.extend([
-            "## Module Breakdown",
-            "",
-            "| Module | LOC | Path |",
-            "|--------|-----|------|",
-        ])
+        lines.extend(
+            [
+                "## Module Breakdown",
+                "",
+                "| Module | LOC | Path |",
+                "|--------|-----|------|",
+            ]
+        )
         for mod in metrics.modules:
             lines.append(f"| {mod.name} | {mod.loc:,} | `{mod.path}` |")
         lines.append("")

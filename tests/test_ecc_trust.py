@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 
 import pytest
@@ -26,9 +25,7 @@ class TestFirstPartyEccTrust:
         builder.build(target)
         return target
 
-    def test_unmodified_ecc_not_blocked(
-        self, workspace_with_ecc: Path, content_root: Path
-    ) -> None:
+    def test_unmodified_ecc_not_blocked(self, workspace_with_ecc: Path, content_root: Path) -> None:
         """AC-1: First-party ECC files matching the trust manifest are not blocked."""
         config = Config()
         report = migrate_workspace(
@@ -57,7 +54,7 @@ class TestFirstPartyEccTrust:
                 )
 
         config = Config()
-        report = migrate_workspace(
+        migrate_workspace(
             workspace_with_ecc,
             config=config,
             content_root=content_root,
@@ -105,7 +102,9 @@ class TestTrustManifest:
                 f"Hash mismatch for {rel_path}"
             )
 
-    def test_is_trusted_returns_true_for_unmodified(self, content_root: Path, tmp_path: Path) -> None:
+    def test_is_trusted_returns_true_for_unmodified(
+        self, content_root: Path, tmp_path: Path
+    ) -> None:
         """Unmodified first-party file is recognized as trusted."""
         from open_workspace_builder.security.trust import (
             load_trust_manifest,
@@ -128,7 +127,9 @@ class TestTrustManifest:
 
         assert is_trusted(dest, first_entry, manifest) is True
 
-    def test_is_trusted_returns_false_for_modified(self, content_root: Path, tmp_path: Path) -> None:
+    def test_is_trusted_returns_false_for_modified(
+        self, content_root: Path, tmp_path: Path
+    ) -> None:
         """Modified file is not recognized as trusted."""
         from open_workspace_builder.security.trust import (
             load_trust_manifest,

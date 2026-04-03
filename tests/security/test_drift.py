@@ -5,12 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
 
 from open_workspace_builder.security.drift import (
-    DriftEntry,
-    DriftReport,
-    DriftStatus,
     check_drift,
     update_baseline,
 )
@@ -178,9 +174,7 @@ class TestCheckDrift:
         update_baseline(ws, baseline_path)
 
         # Add a new agent
-        (ws / ".claude" / "agents" / "new-agent.md").write_text(
-            "# New agent\n", encoding="utf-8"
-        )
+        (ws / ".claude" / "agents" / "new-agent.md").write_text("# New agent\n", encoding="utf-8")
 
         report = check_drift(ws, baseline_path)
 
@@ -219,9 +213,7 @@ class TestCheckDrift:
 
         (ws / "CLAUDE.md").write_text("# Modified\n", encoding="utf-8")
         (ws / ".claude" / "agents" / "planner.md").unlink()
-        (ws / ".claude" / "rules" / "new-rule.md").write_text(
-            "# New\n", encoding="utf-8"
-        )
+        (ws / ".claude" / "rules" / "new-rule.md").write_text("# New\n", encoding="utf-8")
 
         report = check_drift(ws, baseline_path)
 

@@ -12,7 +12,6 @@ import pytest
 
 from open_workspace_builder.config import (
     AgentConfigConfig,
-    Config,
     ContextTemplatesConfig,
     VaultConfig,
 )
@@ -107,11 +106,14 @@ class TestContextDryRunSkip:
 
         output = capsys.readouterr().out
         # The existing file must NOT show as [write]
-        assert "[write]" not in output or "about-me.md" not in output.split("[write]")[-1].split("\n")[0]
+        assert (
+            "[write]" not in output
+            or "about-me.md" not in output.split("[write]")[-1].split("\n")[0]
+        )
         # Must show a skip/exists indicator for about-me.md
         lines = output.splitlines()
-        about_me_lines = [l for l in lines if "about-me.md" in l]
-        assert any("[skip]" in l or "[exists]" in l for l in about_me_lines), (
+        about_me_lines = [line for line in lines if "about-me.md" in line]
+        assert any("[skip]" in line or "[exists]" in line for line in about_me_lines), (
             f"Expected [skip] or [exists] for about-me.md, got: {about_me_lines}"
         )
 
@@ -138,8 +140,8 @@ class TestContextDryRunSkip:
 
         output = capsys.readouterr().out
         lines = output.splitlines()
-        claude_lines = [l for l in lines if "CLAUDE.md" in l]
-        assert any("[skip]" in l or "[exists]" in l for l in claude_lines), (
+        claude_lines = [line for line in lines if "CLAUDE.md" in line]
+        assert any("[skip]" in line or "[exists]" in line for line in claude_lines), (
             f"Expected [skip] or [exists] for CLAUDE.md, got: {claude_lines}"
         )
 
@@ -195,7 +197,7 @@ class TestDryRunMatchesRealRun:
         lines = output.splitlines()
 
         # Every vault file line should be [skip], not [write]
-        write_lines = [l for l in lines if "[write]" in l]
+        write_lines = [line for line in lines if "[write]" in line]
         assert write_lines == [], (
             f"Dry-run reported [write] for files that already exist: {write_lines}"
         )
