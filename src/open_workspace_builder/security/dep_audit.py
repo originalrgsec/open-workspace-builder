@@ -171,7 +171,7 @@ def _run_guarddog(package: str) -> dict:
     env = {**os.environ, "SEMGREP_SEND_METRICS": "off"}
     try:
         proc = subprocess.run(
-            ["uvx", "guarddog", "pypi", "scan", package],
+            ["uvx", "guarddog", "pypi", "scan", package, "--output-format", "json"],
             capture_output=True,
             text=True,
             timeout=120,
@@ -188,17 +188,14 @@ def _run_guarddog(package: str) -> dict:
     if not stdout:
         if proc.returncode != 0:
             raise RuntimeError(
-                f"guarddog failed for {package} (exit {proc.returncode}): "
-                f"{proc.stderr.strip()}"
+                f"guarddog failed for {package} (exit {proc.returncode}): {proc.stderr.strip()}"
             )
         return {}
 
     try:
         return json.loads(stdout)  # type: ignore[no-any-return]
     except json.JSONDecodeError:
-        raise RuntimeError(
-            f"guarddog returned non-JSON for {package}: {stdout[:200]}"
-        ) from None
+        raise RuntimeError(f"guarddog returned non-JSON for {package}: {stdout[:200]}") from None
 
 
 def _parse_guarddog_output(
@@ -272,7 +269,9 @@ def audit_malicious_code(
         Path to suppressions YAML for acknowledged false positives.
         Defaults to the bundled ``dep_audit_suppressions.yaml``.
     """
-    effective_path = suppressions_file if suppressions_file is not None else _default_suppressions_path()
+    effective_path = (
+        suppressions_file if suppressions_file is not None else _default_suppressions_path()
+    )
     suppressions = _load_suppressions(effective_path)
     all_flagged: list[GuardDogFinding] = []
     clean: list[str] = []
@@ -356,6 +355,4 @@ def _installed_package_names() -> list[str]:
     """Get list of installed package names via importlib.metadata."""
     from importlib.metadata import distributions
 
-    return sorted(
-        {dist.metadata["Name"] for dist in distributions() if dist.metadata["Name"]}
-    )
+    return sorted({dist.metadata["Name"] for dist in distributions() if dist.metadata["Name"]})
