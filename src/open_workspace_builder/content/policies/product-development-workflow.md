@@ -69,7 +69,9 @@ Implementation follows TDD (test-driven development). The AI agent reads the `.c
 
 The execution model uses CLI prompts. Each prompt specifies a target branch, the stories to implement, the files to read for context, and the test/lint commands to run.
 
-Sprint completion follows the checklist in [[code/development-process]]: stories pass acceptance criteria, project docs are updated, release notes written, and (if applicable) metrics recorded.
+Sprint completion follows the checklist in [[code/development-process]]: stories pass acceptance criteria, project docs are updated, release notes written, and metrics recorded.
+
+**Metrics rhythm:** At sprint start, run `owb metrics record` to flush unrecorded sessions into the ledger. During the sprint, tag sessions with story IDs (`owb metrics record --story {PREFIX}-S{NNN}`) at natural breakpoints. At sprint end, run a final `owb metrics record` and generate a cost summary with `owb metrics by-story --since {sprint-start-date}`. This applies to every project, every sprint. When a new project repo is created, run `owb metrics baseline` once to establish the zero-point snapshot.
 
 ### Phase 5: Quality Assurance
 

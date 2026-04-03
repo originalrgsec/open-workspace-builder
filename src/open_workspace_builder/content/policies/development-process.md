@@ -53,9 +53,17 @@ Verify all dependencies pass the quarantine window and scan battery before the s
 
 Run the vault-audit skill (or equivalent mechanical + semantic checks) before declaring the sprint closed. Sprint-level documentation changes (status.md, bootstrap, retro-log, decisions index, policy files) are high-risk for link rot and structural drift. The audit catches issues introduced during close-out itself, not just during active development. Origin: RETRO-006 — vault audit was omitted from Sprint 9 close-out until the owner caught it.
 
-### 6. Metrics Recorded (If Pipeline Metrics Are Active)
+### 6. Metrics Recorded
 
-For projects with an active metrics system (currently workspace-builder), record metrics entries for each pipeline run completed during the sprint. This is not a retroactive data entry exercise; metrics should be recorded as runs complete throughout the sprint.
+Metrics recording is mandatory for every sprint on every project with a git repo.
+
+**Sprint start:** Run `owb metrics record` to flush any unrecorded sessions from prior work into the ledger. This ensures the ledger is clean before the sprint begins and that session costs from the previous sprint are not misattributed.
+
+**During sprint:** Tag sessions with story IDs as you work: `owb metrics record --story {PREFIX}-S{NNN}`. Run this at the end of each session or at natural breakpoints. The command is idempotent — it discovers all Claude Code session files, parses token usage, and appends entries to the ledger, skipping sessions already recorded.
+
+**Sprint end:** Run `owb metrics record` to capture all remaining sessions. Then run `owb metrics by-story --since {sprint-start-date}` to produce the sprint cost summary. Include the total sprint cost in the release notes manifest.
+
+The `--story` tag enables cost attribution at the story level. Sprint-level aggregation comes from grouping the story IDs that belong to the sprint. The `owb metrics by-story` command produces this breakdown from the ledger.
 
 ## Project Documentation Standards
 
@@ -140,6 +148,12 @@ When a new project is created, assign a unique three-character prefix and add it
 ## Release Versioning
 
 Projects use Semantic Versioning (https://semver.org/). For projects not yet at 1.0 (all current Volcanix projects), minor version bumps indicate feature additions (sprint completion) and patch bumps indicate bug fixes.
+
+## Metrics Initialization
+
+When a new project repo is created, run `owb metrics baseline <project-path>` to establish the zero-point snapshot. This records source LOC, test LOC, test count, commit count, and per-module breakdown at the project's starting state. The baseline is a one-time operation; subsequent sprints rely on session recording (checklist item 6) for ongoing cost and effort tracking.
+
+For existing projects that have not yet established a baseline, run `owb metrics baseline` once. Future baselines can be compared against this initial snapshot to measure growth over time.
 
 ## Applying This Policy
 
