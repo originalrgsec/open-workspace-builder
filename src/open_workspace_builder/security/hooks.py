@@ -32,6 +32,8 @@ class HookEntry:
 # Pinned versions for default hooks
 _GITLEAKS_REV = "v8.22.1"
 _RUFF_REV = "v0.11.4"
+_TRIVY_REV = "v0.69.3"
+_SEMGREP_REV = "v1.156.0"
 
 
 def default_hooks() -> tuple[HookEntry, ...]:
@@ -62,30 +64,64 @@ def default_hooks() -> tuple[HookEntry, ...]:
             entry="ruff format",
             language="python",
         ),
+        HookEntry(
+            repo="local",
+            rev=None,
+            hook_id="trivy",
+            name="trivy vulnerability scan",
+            entry="trivy fs --scanners vuln",
+            language="system",
+            pass_filenames=False,
+        ),
+        HookEntry(
+            repo="https://github.com/semgrep/pre-commit",
+            rev=_SEMGREP_REV,
+            hook_id="semgrep",
+            name="semgrep",
+            entry="semgrep scan --config auto",
+            language="python",
+            types=("python",),
+        ),
     )
 
 
 def _hook_to_yaml_dict(hook: HookEntry) -> dict:
-    """Convert a HookEntry to the YAML dict for a single hook within a repo."""
+    """Convert a HookEntry to the YAML dict for a single hook within a repo.
+
+    Local hooks require additional fields (name, entry, language, etc.)
+    because pre-commit cannot derive them from a remote manifest.
+    """
     entry: dict = {"id": hook.hook_id}
     if hook.args:
         entry["args"] = list(hook.args)
+    if hook.repo == "local":
+        entry["name"] = hook.name
+        entry["entry"] = hook.entry
+        entry["language"] = hook.language
+        if not hook.pass_filenames:
+            entry["pass_filenames"] = False
+        if hook.types != ("text",):
+            entry["types"] = list(hook.types)
+        if hook.stages != ("pre-commit",):
+            entry["stages"] = list(hook.stages)
     return entry
 
 
 def _group_hooks_by_repo(hooks: tuple[HookEntry, ...]) -> list[dict]:
-    """Group HookEntry objects by repo URL and produce the repos list."""
+    """Group HookEntry objects by repo URL and produce the repos list.
+
+    Local hooks (repo == "local") omit the rev field.
+    """
     repo_order: list[str] = []
     repo_map: dict[str, dict] = {}
 
     for hook in hooks:
         if hook.repo not in repo_map:
             repo_order.append(hook.repo)
-            repo_map[hook.repo] = {
-                "repo": hook.repo,
-                "rev": hook.rev,
-                "hooks": [],
-            }
+            repo_entry: dict = {"repo": hook.repo, "hooks": []}
+            if hook.rev is not None:
+                repo_entry["rev"] = hook.rev
+            repo_map[hook.repo] = repo_entry
         repo_map[hook.repo]["hooks"].append(_hook_to_yaml_dict(hook))
 
     return [repo_map[url] for url in repo_order]

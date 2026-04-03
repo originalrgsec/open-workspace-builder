@@ -47,6 +47,27 @@ class TestDefaultHooks:
         ids = [h.hook_id for h in hooks]
         assert "ruff-format" in ids
 
+    def test_contains_trivy(self) -> None:
+        hooks = default_hooks()
+        ids = [h.hook_id for h in hooks]
+        assert "trivy" in ids
+
+    def test_contains_semgrep(self) -> None:
+        hooks = default_hooks()
+        ids = [h.hook_id for h in hooks]
+        assert "semgrep" in ids
+
+    def test_trivy_uses_local_repo(self) -> None:
+        hooks = default_hooks()
+        trivy = [h for h in hooks if h.hook_id == "trivy"][0]
+        assert trivy.repo == "local"
+        assert trivy.rev is None
+
+    def test_semgrep_uses_official_repo(self) -> None:
+        hooks = default_hooks()
+        semgrep = [h for h in hooks if h.hook_id == "semgrep"][0]
+        assert "semgrep/pre-commit" in semgrep.repo
+
     def test_gitleaks_uses_official_repo(self) -> None:
         hooks = default_hooks()
         gitleaks = [h for h in hooks if h.hook_id == "gitleaks"][0]
@@ -62,9 +83,10 @@ class TestDefaultHooks:
         with pytest.raises(AttributeError):
             hook.hook_id = "changed"  # type: ignore[misc]
 
-    def test_all_hooks_have_pinned_revs(self) -> None:
+    def test_all_remote_hooks_have_pinned_revs(self) -> None:
         for hook in default_hooks():
-            assert hook.rev is not None, f"Hook {hook.hook_id} has no pinned rev"
+            if hook.repo != "local":
+                assert hook.rev is not None, f"Hook {hook.hook_id} has no pinned rev"
 
 
 class TestGeneratePrecommitConfig:
@@ -75,11 +97,11 @@ class TestGeneratePrecommitConfig:
         parsed = yaml.safe_load(content)
         assert "repos" in parsed
 
-    def test_default_has_two_repos(self) -> None:
+    def test_default_has_four_repos(self) -> None:
         content = generate_precommit_config()
         parsed = yaml.safe_load(content)
-        # gitleaks repo + ruff repo
-        assert len(parsed["repos"]) == 2
+        # gitleaks + ruff + trivy + semgrep
+        assert len(parsed["repos"]) == 4
 
     def test_gitleaks_repo_structure(self) -> None:
         content = generate_precommit_config()
@@ -314,3 +336,53 @@ class TestHooksCli:
         result = runner.invoke(owb, ["security", "hooks", "status", str(tmp_path)])
         assert result.exit_code == 0
         assert "No .pre-commit-config.yaml" in result.output
+
+
+# ── Init: prompt for existing projects ─────────────────────────────────
+
+
+class TestInitHooksPrompt:
+    """owb init prompts to install hooks on sibling projects."""
+
+    def test_prompt_hooks_creates_config_for_siblings(self, tmp_path: Path) -> None:
+        from open_workspace_builder.cli import _prompt_hooks_for_existing_projects
+
+        # Create a workspace and a sibling git repo without hooks
+        workspace = tmp_path / "my-project"
+        workspace.mkdir()
+        sibling = tmp_path / "other-project"
+        (sibling / ".git").mkdir(parents=True)
+
+        # Simulate user answering "yes"
+        with patch("click.confirm", return_value=True):
+            _prompt_hooks_for_existing_projects(workspace)
+
+        assert (sibling / ".pre-commit-config.yaml").is_file()
+
+    def test_prompt_hooks_skips_projects_with_existing_config(self, tmp_path: Path) -> None:
+        from open_workspace_builder.cli import _prompt_hooks_for_existing_projects
+
+        workspace = tmp_path / "my-project"
+        workspace.mkdir()
+        sibling = tmp_path / "other-project"
+        (sibling / ".git").mkdir(parents=True)
+        (sibling / ".pre-commit-config.yaml").write_text("# existing\n")
+
+        with patch("click.confirm", return_value=True) as mock_confirm:
+            _prompt_hooks_for_existing_projects(workspace)
+
+        # Should not prompt since no candidates
+        mock_confirm.assert_not_called()
+
+    def test_prompt_hooks_respects_user_decline(self, tmp_path: Path) -> None:
+        from open_workspace_builder.cli import _prompt_hooks_for_existing_projects
+
+        workspace = tmp_path / "my-project"
+        workspace.mkdir()
+        sibling = tmp_path / "other-project"
+        (sibling / ".git").mkdir(parents=True)
+
+        with patch("click.confirm", return_value=False):
+            _prompt_hooks_for_existing_projects(workspace)
+
+        assert not (sibling / ".pre-commit-config.yaml").is_file()

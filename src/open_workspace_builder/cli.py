@@ -123,6 +123,41 @@ def init(
     builder = WorkspaceBuilder(config, content_root, dry_run=dry_run)
     builder.build(target_path)
 
+    if not dry_run and not no_wizard:
+        _prompt_hooks_for_existing_projects(target_path)
+
+
+def _prompt_hooks_for_existing_projects(workspace_root: Path) -> None:
+    """After init, offer to install pre-commit hooks on sibling projects.
+
+    Scans for git repos in the parent directory that lack a
+    .pre-commit-config.yaml and prompts the user to install hooks.
+    """
+    parent = workspace_root.resolve().parent
+    candidates: list[Path] = []
+    for child in sorted(parent.iterdir()):
+        if child == workspace_root.resolve():
+            continue
+        if (child / ".git").is_dir() and not (child / ".pre-commit-config.yaml").is_file():
+            candidates.append(child)
+
+    if not candidates:
+        return
+
+    click.echo(f"\nFound {len(candidates)} project(s) without pre-commit hooks:")
+    for c in candidates:
+        click.echo(f"  {c.name}")
+
+    if not click.confirm("\nInstall pre-commit hooks on these projects?", default=True):
+        return
+
+    from open_workspace_builder.security.hooks import generate_precommit_config
+
+    for project in candidates:
+        config_path = project / ".pre-commit-config.yaml"
+        config_path.write_text(generate_precommit_config(), encoding="utf-8")
+        click.echo(f"  Created {project.name}/.pre-commit-config.yaml")
+
 
 @owb.command()
 @click.argument("vault_path", type=click.Path(exists=True))

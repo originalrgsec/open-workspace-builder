@@ -9,3 +9,16 @@ repos:
       - id: ruff
         args: [--fix]
       - id: ruff-format
+  - repo: local
+    hooks:
+      - id: trivy
+        name: trivy vulnerability scan
+        entry: trivy fs --scanners vuln
+        language: system
+        pass_filenames: false
+  - repo: https://github.com/semgrep/pre-commit
+    rev: v1.156.0
+    hooks:
+      - id: semgrep
+        args: [scan, --config, auto]
+        types: [python]

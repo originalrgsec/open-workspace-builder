@@ -149,9 +149,29 @@ When a new project is created, assign a unique three-character prefix and add it
 
 Projects use Semantic Versioning (https://semver.org/). For projects not yet at 1.0 (all current Volcanix projects), minor version bumps indicate feature additions (sprint completion) and patch bumps indicate bug fixes.
 
-## Metrics Initialization
+## New Project Setup
 
-When a new project repo is created, run `owb metrics baseline <project-path>` to establish the zero-point snapshot. This records source LOC, test LOC, test count, commit count, and per-module breakdown at the project's starting state. The baseline is a one-time operation; subsequent sprints rely on session recording (checklist item 6) for ongoing cost and effort tracking.
+When a new project repo is created, the following one-time setup steps are required before the first sprint begins:
+
+### Pre-Commit Hooks
+
+Run `owb security hooks install <project-path>` to generate `.pre-commit-config.yaml` and activate the hooks. The default hook set includes:
+
+| Hook | Purpose |
+|------|---------|
+| **gitleaks** | Secrets detection on staged files |
+| **ruff --fix** | Python linting with auto-fix |
+| **ruff-format** | Python code formatting |
+| **trivy** | Vulnerability scanning of lockfiles and dependencies (local, requires `trivy` binary) |
+| **semgrep** | SAST on staged Python files |
+
+If `owb init` detects sibling projects without pre-commit hooks, it prompts to install them. For existing projects that predate this policy, run `owb security hooks install` manually.
+
+Pre-commit hooks are a commit-time gate. They complement but do not replace the sprint-level security scans (`owb security scan --all`, `owb audit gate --all`).
+
+### Metrics Baseline
+
+Run `owb metrics baseline <project-path>` to establish the zero-point snapshot. This records source LOC, test LOC, test count, commit count, and per-module breakdown at the project's starting state. The baseline is a one-time operation; subsequent sprints rely on session recording (checklist item 6) for ongoing cost and effort tracking.
 
 For existing projects that have not yet established a baseline, run `owb metrics baseline` once. Future baselines can be compared against this initial snapshot to measure growth over time.
 
