@@ -1,0 +1,2913 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Scaffold, maintain, and secure AI coding workspaces from a single command.">
+      
+      
+        <meta name="author" content="originalrgsec">
+      
+      
+        <link rel="canonical" href="https://originalrgsec.github.io/open-workspace-builder/prd/">
+      
+      
+        <link rel="prev" href="../reference/license-compliance/">
+      
+      
+        <link rel="next" href="../adr/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/profile-avatar.jpg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>PRD - Open Workspace Builder</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../assets/css/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link href="../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#prd-open-workspace-builder" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Open Workspace Builder" class="md-header__button md-logo" aria-label="Open Workspace Builder" data-md-component="logo">
+      
+  <img src="../assets/images/profile-avatar.jpg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Open Workspace Builder
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              PRD
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom" aria-label="Switch to light mode" type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom" aria-label="Switch to dark mode" type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/originalrgsec/open-workspace-builder" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    originalrgsec/open-workspace-builder
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../getting-started/why-owb/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../concepts/architecture/" class="md-tabs__link">
+          
+  
+  
+  Concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../howto-upgrade/" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../reference/cli/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../credits/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Credits
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../releases/v1.2.0/" class="md-tabs__link">
+          
+  
+  
+  Releases
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Open Workspace Builder" class="md-nav__button md-logo" aria-label="Open Workspace Builder" data-md-component="logo">
+      
+  <img src="../assets/images/profile-avatar.jpg" alt="logo">
+
+    </a>
+    Open Workspace Builder
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/originalrgsec/open-workspace-builder" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    originalrgsec/open-workspace-builder
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2">
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/why-owb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why OWB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/how-it-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How It Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/first-run-fresh/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First Run: Fresh
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howto-first-run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First Run: Existing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3">
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/phases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4">
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howto-upgrade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Upgrading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/library-usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using as a Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked="">
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lifecycle and Agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/license-compliance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    License Compliance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PRD
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PRD
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#business-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Business Problem
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bootstrap-stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bootstrap Stages
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bootstrap Stages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stage-0-cold-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 0 — Cold Start
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-1-interactive-operation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 1 — Interactive Operation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-2-build-farm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 2 — Build Farm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-3-director-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 3 — Director Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-progression-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage Progression Rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#target-customers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Target Customers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Target Customers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#personas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Personas
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use Cases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Use Cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#uc-1-fresh-workspace-bootstrap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-1: Fresh Workspace Bootstrap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-2-drift-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-2: Drift Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-3-interactive-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-3: Interactive Migration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-4-ecc-upstream-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-4: ECC Upstream Update
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-5-security-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-5: Security Scan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-6-skill-evaluation-new-skill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-6: Skill Evaluation — New Skill
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-7-skill-evaluation-update-existing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-7: Skill Evaluation — Update Existing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-8-multi-source-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-8: Multi-Source Update
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-9-context-file-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-9: Context File Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-10-dependency-supply-chain-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-10: Dependency Supply Chain Audit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-11-stage-promotion-stage-1-2-stage-2-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-11: Stage Promotion (Stage 1 → 2, Stage 2 → 3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-12-delegation-policy-configuration-stage-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-12: Delegation Policy Configuration (Stage 2+)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-13-agent-roster-ingestion-stage-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-13: Agent Roster Ingestion (Stage 2+)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-14-sandbox-policy-configuration-stage-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-14: Sandbox Policy Configuration (Stage 2+)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-15-director-agent-definition-stage-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-15: Director Agent Definition (Stage 3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goals
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Goals">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stage-0-1-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 0-1 Goals
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-2-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 2 Goals
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-3-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 3 Goals
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#non-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Non-Goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assumptions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constraints
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#success-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Success Criteria
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open Questions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Open Questions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stage-0-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 0-1
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 2
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 3
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#links" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Links
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sdr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SDR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../threat-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../credits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Credits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7">
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Releases
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v1.2.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v1.2.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v1.1.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v1.1.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v1.0.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v0.8.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.8.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v0.7.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.7.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v0.6.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.6.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v0.5.1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.5.1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v0.5.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.5.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v0.4.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.4.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v0.3.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.3.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#business-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Business Problem
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bootstrap-stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bootstrap Stages
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bootstrap Stages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stage-0-cold-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 0 — Cold Start
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-1-interactive-operation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 1 — Interactive Operation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-2-build-farm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 2 — Build Farm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-3-director-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 3 — Director Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-progression-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage Progression Rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#target-customers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Target Customers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Target Customers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#personas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Personas
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use Cases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Use Cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#uc-1-fresh-workspace-bootstrap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-1: Fresh Workspace Bootstrap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-2-drift-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-2: Drift Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-3-interactive-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-3: Interactive Migration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-4-ecc-upstream-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-4: ECC Upstream Update
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-5-security-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-5: Security Scan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-6-skill-evaluation-new-skill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-6: Skill Evaluation — New Skill
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-7-skill-evaluation-update-existing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-7: Skill Evaluation — Update Existing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-8-multi-source-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-8: Multi-Source Update
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-9-context-file-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-9: Context File Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-10-dependency-supply-chain-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-10: Dependency Supply Chain Audit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-11-stage-promotion-stage-1-2-stage-2-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-11: Stage Promotion (Stage 1 → 2, Stage 2 → 3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-12-delegation-policy-configuration-stage-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-12: Delegation Policy Configuration (Stage 2+)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-13-agent-roster-ingestion-stage-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-13: Agent Roster Ingestion (Stage 2+)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-14-sandbox-policy-configuration-stage-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-14: Sandbox Policy Configuration (Stage 2+)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uc-15-director-agent-definition-stage-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UC-15: Director Agent Definition (Stage 3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goals
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Goals">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stage-0-1-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 0-1 Goals
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-2-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 2 Goals
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-3-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 3 Goals
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#non-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Non-Goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assumptions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constraints
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#success-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Success Criteria
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open Questions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Open Questions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stage-0-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 0-1
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 2
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 3
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#links" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Links
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="prd-open-workspace-builder">PRD: Open Workspace Builder<a class="headerlink" href="#prd-open-workspace-builder" title="Permanent link">¶</a></h1>
+<h2 id="business-problem">Business Problem<a class="headerlink" href="#business-problem" title="Permanent link">¶</a></h2>
+<p>Setting up a productive Claude Code or Cowork workspace requires assembling multiple independent components: an Obsidian knowledge vault with project templates, context files that calibrate Claude's behavior, ECC agents and commands for development workflows, and custom skills for specialized tasks. There is no standard way to do this. Users who discover one component (e.g., the ECC catalog) often miss others entirely. Users who build workspaces manually accumulate structural drift over time, with no tooling to detect gaps or reconcile against a known-good reference.</p>
+<p>A real-world migration test confirmed this: a user who built a vault from a detailed blog post ended up with working context files but zero ECC agents, no custom skills, missing structural scaffolding, and 8 fewer templates than the reference. The ECC catalog was the highest-value component and the hardest to discover without the builder.</p>
+<p>The additional problem is trust. The ECC catalog is third-party content (MIT licensed, maintained by an external developer). Agents, commands, and rules are markdown files that act as system prompts for Claude. A compromised or malicious prompt file could instruct Claude to exfiltrate data, modify files, or bypass user oversight. No tooling exists to scan these files for prompt injection or malicious instructions before a user installs them.</p>
+<h2 id="bootstrap-stages">Bootstrap Stages<a class="headerlink" href="#bootstrap-stages" title="Permanent link">¶</a></h2>
+<p>OWB structures workspace maturity as a four-stage progression. Each stage builds on the security scanning, process discipline, and trust calibration established in the previous stage. Stages are not skipped. The entire point of the progression is to earn the trust required to operate at the next level.</p>
+<h3 id="stage-0-cold-start">Stage 0 — Cold Start<a class="headerlink" href="#stage-0-cold-start" title="Permanent link">¶</a></h3>
+<p>The user has no OWB workspace. They are either starting fresh or working from a manually assembled vault that was not built by OWB.</p>
+<p><strong>What happens:</strong> The user installs OWB and runs <code>owb init</code>. The setup wizard walks through model provider selection, vault structure, ECC enablement, security settings, and secrets backend configuration. The builder scaffolds the full workspace: knowledge vault, context files, development policies, skills, and a workspace config entry point.</p>
+<p><strong>Exit criteria:</strong></p>
+<ul>
+<li><code>owb init</code> completes successfully</li>
+<li>Workspace passes <code>owb diff</code> with zero missing structural files</li>
+<li>Context files are populated (not stubs)</li>
+<li>At least one project is scaffolded in the vault with a status file and bootstrap entry</li>
+<li>Security scanner is functional (Layers 1-2 operational; Layer 3 configured if API key available)</li>
+</ul>
+<h3 id="stage-1-interactive-operation">Stage 1 — Interactive Operation<a class="headerlink" href="#stage-1-interactive-operation" title="Permanent link">¶</a></h3>
+<p>The human drives every session. All Claude Code or Cowork sessions are started, directed, and ended by the human. The workspace is fully integrated: the PLC (product lifecycle) and SDLC (software development lifecycle) are executable from the CLI prompt using vault state, ECC agents, and custom skills. OWB handles drift detection, migration, upstream updates, dependency auditing, and security scanning as part of the normal operating rhythm.</p>
+<p><strong>What happens:</strong> The human works interactively across projects. Claude reads the bootstrap file on session start, loads project-specific state, executes work, updates status and session logs at session end. The human manages sprint planning, backlog prioritization, and release decisions. All code-producing sessions require human presence. Scheduled tasks (cron-triggered scans, suppression monitoring) may run unattended, but they produce reports for human review rather than taking autonomous action.</p>
+<p><strong>Exit criteria:</strong></p>
+<ul>
+<li>Minimum 3 successful sprint cycles completed end-to-end using the OWB-managed PLC/SDLC</li>
+<li>All vault policies passing: development process checklist, integration verification, OSS health checks</li>
+<li>Security scanner has processed at least 50 files with zero false-negative escapes on adversarial test suite</li>
+<li>Dependency SCA and SAST integrated into CI with zero unacknowledged findings</li>
+<li>The human can articulate which decisions they make repeatedly that could be delegated, and which decisions require human judgment. This becomes the input to the Stage 2 delegation policy.</li>
+</ul>
+<h3 id="stage-2-build-farm">Stage 2 — Build Farm<a class="headerlink" href="#stage-2-build-farm" title="Permanent link">¶</a></h3>
+<p>The human shifts from driving every session to managing a backlog. A headless build farm runs sandboxed agent sessions coordinated by an orchestrator and a head agent. Sessions execute with pre-authorized tool permissions (no confirmation prompts within the sandbox boundary), but network access is controlled and scoped by configuration. The human communicates with the head agent through a third-party chat interface (Slack, Matrix, or equivalent).</p>
+<p><strong>What the human does:</strong> Design, sprint planning, backlog management, and acceptance review. The human defines what gets built (user stories, acceptance criteria, sprint scope) and reviews what was built (PR review, demo, release sign-off). The human does not start or attend individual build sessions.</p>
+<p><strong>What the system does:</strong> The orchestrator reads the sprint backlog, decomposes stories into tasks, dispatches tasks to sandboxed agent sessions, collects results, runs integration verification, and reports status to the human via the chat channel. Each session runs in an isolated sandbox with controlled filesystem, network, and tool access defined by a sandbox policy. The head agent manages session lifecycle, error recovery, and escalation to the human when a task exceeds its delegation authority.</p>
+<p><strong>OWB's role:</strong> OWB is the security, process, and compliance orchestrator for the build farm. It does not build the sandbox infrastructure or the chat integration itself. OWB defines the policies that govern what agents can and cannot do, evaluates and incorporates agent definitions from external sources (e.g., open-source agent rosters like agency-agents), scans all agent content through the three-layer security pipeline before deployment, and enforces the delegation policy that controls which decisions require human approval.</p>
+<p><strong>Key artifacts OWB manages at this stage:</strong></p>
+<ul>
+<li><strong>Sandbox policy</strong> (<code>sandbox-policy.yaml</code>): Defines filesystem boundaries, network allowlist, tool permissions, and session timeout for each sandbox tier.</li>
+<li><strong>Delegation policy</strong> (<code>delegation-policy.yaml</code>): Configurable rules defining what the head agent can decide autonomously vs. what requires human escalation. Established through a wizard that walks the human through categories of decisions (architectural, dependency, security, release, financial) and sets thresholds for each.</li>
+<li><strong>Agent roster</strong> (<code>agents/</code>): The set of agent definitions deployed to the build farm. Every agent passes the security scanner and skill evaluator before deployment. OWB tracks provenance (which upstream source, which version, which evaluation score).</li>
+<li><strong>Session audit log</strong>: Every headless session is logged with inputs, outputs, tool invocations, and security verdicts. The human can query this log at any time.</li>
+</ul>
+<p><strong>Exit criteria:</strong></p>
+<ul>
+<li>Orchestrator and head agent are operational with at least 2 successful unattended sprint cycles</li>
+<li>Sandbox policy is tested and enforced (agent sessions cannot escape filesystem or network boundaries)</li>
+<li>Delegation policy is calibrated: zero incidents where the agent made a decision that should have been escalated, and zero unnecessary escalations that blocked the build pipeline</li>
+<li>Session audit log is complete and queryable</li>
+<li>The head agent can recover from common failure modes (test failures, build errors, dependency conflicts) without human intervention</li>
+<li>Chat integration is functional: the human receives status updates, can ask questions, and can override decisions through the chat channel</li>
+</ul>
+<h3 id="stage-3-director-model">Stage 3 — Director Model<a class="headerlink" href="#stage-3-director-model" title="Permanent link">¶</a></h3>
+<p>The single head agent is replaced by a three-tier hierarchy: the human + head agent at the top, director agents in the middle, and specialist teams at the bottom. This stage addresses the capacity limit of Stage 2: a single head agent managing all tasks across all projects becomes a bottleneck as the number of concurrent projects and the complexity of the backlog grow.</p>
+<p><strong>Architecture:</strong></p>
+<ul>
+<li><strong>Tier 1 — Human + Head Agent:</strong> The human communicates with director agents through the chat channel. The head agent handles cross-director coordination, resource allocation, and escalation routing.</li>
+<li><strong>Tier 2 — Director Agents:</strong> Each director agent owns a domain (e.g., backend engineering, frontend, security, documentation, testing). Directors receive assignments from the human or head agent, decompose them into specialist tasks, manage specialist sessions, and report results upstream. Directors sit between the specialist agents and the PLC/SDLC process: they understand the sprint plan, the acceptance criteria, and the integration verification requirements.</li>
+<li><strong>Tier 3 — Specialist Agents:</strong> The current ECC agents (planner, tdd-guide, code-reviewer, security-reviewer, build-error-resolver, etc.) are demoted to specialists working under director agents. External agent definitions evaluated and incorporated from upstream sources (agency-agents and similar projects) also populate this tier. Specialists execute discrete tasks and report results to their director.</li>
+</ul>
+<p><strong>OWB's role at this stage:</strong></p>
+<ul>
+<li><strong>Director agent definition and evaluation:</strong> OWB provides templates for director agent definitions that encode the PLC/SDLC process, delegation rules, and escalation paths. New director agents pass the full evaluation pipeline (classify, test, score, judge) before deployment.</li>
+<li><strong>Team composition policy</strong> (<code>team-policy.yaml</code>): Defines which specialists report to which director, maximum concurrent sessions per director, and fallback routing when a specialist is unavailable.</li>
+<li><strong>Cross-director coordination rules:</strong> Defines how directors communicate when a task spans domains (e.g., a feature requiring both backend and frontend changes). OWB enforces that cross-domain work follows the integration verification policy.</li>
+<li><strong>Trust calibration wizard:</strong> Extends the Stage 2 delegation wizard to cover director-level autonomy. The human walks through scenarios specific to each director's domain and sets per-director delegation boundaries.</li>
+<li><strong>Agent provenance and lineage:</strong> Every agent in every tier is tracked: where it came from, which version, when it was last evaluated, what its security scan verdict was. OWB can produce a full audit report of the agent hierarchy at any time.</li>
+</ul>
+<p><strong>Exit criteria:</strong></p>
+<ul>
+<li>At least 2 director agents operational with their specialist teams</li>
+<li>Cross-director coordination tested on at least 1 multi-domain feature</li>
+<li>Per-director delegation policies calibrated with zero escalation failures</li>
+<li>Full agent hierarchy audit passes: every agent at every tier has provenance, evaluation score, and security verdict</li>
+<li>The human's involvement is limited to design, sprint planning, backlog management, acceptance review, and exception handling. Build execution runs autonomously.</li>
+</ul>
+<h3 id="stage-progression-rules">Stage Progression Rules<a class="headerlink" href="#stage-progression-rules" title="Permanent link">¶</a></h3>
+<ol>
+<li><strong>No skipping.</strong> Each stage builds the security posture, process discipline, and trust calibration required for the next. A user who has not completed Stage 1's exit criteria does not have the operational maturity to run a Stage 2 build farm safely.</li>
+<li><strong>OWB tracks current stage.</strong> The workspace config records which stage the workspace is operating at. OWB commands surface stage-appropriate guidance. Running <code>owb init</code> produces a Stage 0 workspace; graduating to Stage 1 is implicit once exit criteria are met. Stage 2 and 3 graduation requires explicit <code>owb stage promote</code> with a checklist verification.</li>
+<li><strong>Stages are preserved.</strong> OWB does not deprecate lower stages. A Stage 3 workspace can still run interactive Stage 1 sessions. The human can always drop to a lower stage for debugging, experimentation, or sensitive work.</li>
+<li><strong>Sprints are tagged by stage.</strong> The vault's sprint metadata includes which stage the sprint was executed at. Multiple sprints occur within a stage. The stage defines the operating model; the sprint defines the work unit.</li>
+</ol>
+<h2 id="target-customers">Target Customers<a class="headerlink" href="#target-customers" title="Permanent link">¶</a></h2>
+<p>Claude Code and Cowork power users who want a structured, repeatable workspace with project management capabilities. The immediate audience is individual developers and technical professionals (Stage 0-1). The secondary audience is power users operating headless build farms (Stage 2) and teams running multi-agent hierarchies (Stage 3).</p>
+<h3 id="personas">Personas<a class="headerlink" href="#personas" title="Permanent link">¶</a></h3>
+<p><strong>Persona 1: Solo Power User</strong>
+- Context: Uses Claude Code or Cowork daily for software development, research, and project management. Has multiple active projects. Values structure and repeatability.
+- Pain points: Building a workspace from scratch is tedious and error-prone. Keeping up with ECC updates requires manually checking the upstream repo. No way to know if the workspace is drifting from best practices.
+- Goals: Run one command to get a fully configured workspace. Periodically sync with upstream improvements without losing customizations. Trust that installed content is safe.</p>
+<p><strong>Persona 2: New Adopter</strong>
+- Context: Heard about structured Claude workspaces from a blog post, conference talk, or colleague. Wants to get started quickly without reading a 46K Python file to understand what it does.
+- Pain points: The current prototype is a single file with all content inline. The README describes the output structure but not the value proposition for each component. No getting-started guide split by environment (Claude Code vs. Cowork).
+- Goals: Install via pip, run one command, understand what was generated and why, start using the workspace within 15 minutes.</p>
+<p><strong>Persona 3: Team Lead / Workspace Maintainer</strong>
+- Context: Wants to establish a standard workspace configuration for a team. Needs to customize the default templates, add team-specific skills, and distribute updates.
+- Pain points: No fork-and-customize workflow. No way to push workspace updates to team members. No way to audit what content is installed across team members' environments.
+- Goals: Fork the builder, add team customizations, distribute via repo clone or private fork, push updates that team members can review and accept incrementally.</p>
+<p><strong>Persona 4: Build Farm Operator</strong> <em>(Stage 2)</em>
+- Context: Has completed multiple successful interactive sprint cycles and wants to shift from driving every session to managing a backlog. Comfortable with sandboxed execution and has the infrastructure (or is willing to build it) for headless agent sessions.
+- Pain points: The bottleneck is human attention, not agent capability. Every session requires the human to start it, monitor it, and close it. Sprint velocity is capped by the number of hours the human can sit at a terminal.
+- Goals: Define the work (stories, acceptance criteria), let the build farm execute it, review results asynchronously through a chat channel. Maintain full audit trail and the ability to intervene at any time.</p>
+<p><strong>Persona 5: Multi-Agent Team Operator</strong> <em>(Stage 3)</em>
+- Context: Operating a Stage 2 build farm successfully but hitting capacity limits. The single head agent cannot efficiently manage tasks across multiple domains simultaneously. The operator wants to delegate domain-specific coordination to director agents.
+- Pain points: Task decomposition and specialist routing is a bottleneck at the head-agent level. Cross-domain features require manual coordination. The operator spends time on routing decisions that a domain-aware director could handle.
+- Goals: Stand up a director-specialist hierarchy where each director owns a domain, manages its specialists, and coordinates with other directors on cross-domain work. The operator's role is design, planning, and exception handling.</p>
+<h2 id="use-cases">Use Cases<a class="headerlink" href="#use-cases" title="Permanent link">¶</a></h2>
+<h3 id="uc-1-fresh-workspace-bootstrap">UC-1: Fresh Workspace Bootstrap<a class="headerlink" href="#uc-1-fresh-workspace-bootstrap" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Actor:</strong> Solo Power User or New Adopter</li>
+<li><strong>Trigger:</strong> User installs the tool and runs <code>owb init</code> (or <code>owb init --interactive</code> for guided setup)</li>
+<li><strong>Flow:</strong> The builder reads the config (defaults or user-provided), generates the full workspace structure (vault, ECC catalog, skills, context templates, CLAUDE.md), and writes it to the target directory. If <code>--interactive</code>, the user is prompted for tier names, which ECC components to include, and which skills to install.</li>
+<li><strong>Outcome:</strong> A fully structured workspace ready for use. Five cross-project development policies are installed to Obsidian/code/. Context template files contain placeholder content with instructions for population.</li>
+</ul>
+<h3 id="uc-2-drift-detection">UC-2: Drift Detection<a class="headerlink" href="#uc-2-drift-detection" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Actor:</strong> Solo Power User or Team Lead</li>
+<li><strong>Trigger:</strong> User runs <code>owb diff &lt;vault-path&gt;</code> to compare their existing workspace against the current builder reference</li>
+<li><strong>Flow:</strong> The builder walks the target directory, compares every expected file against the reference (presence, content hash for structural files, version for templates), and produces a gap report. The report categorizes gaps as: missing files, outdated templates, extra files (user additions), and modified files (user customizations).</li>
+<li><strong>Outcome:</strong> A structured report showing exactly where the workspace has diverged, with recommendations per gap.</li>
+</ul>
+<h3 id="uc-3-interactive-migration">UC-3: Interactive Migration<a class="headerlink" href="#uc-3-interactive-migration" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Actor:</strong> Solo Power User</li>
+<li><strong>Trigger:</strong> User runs <code>owb migrate &lt;vault-path&gt;</code> after reviewing a diff report</li>
+<li><strong>Flow:</strong> For each gap identified in the diff, the builder presents the change and prompts accept/reject. Missing files are offered for creation. Outdated templates show a diff. Modified files are flagged but never overwritten without explicit consent. A <code>--accept-all</code> flag skips interactive prompts. All new or modified content runs through the security scanner before being applied.</li>
+<li><strong>Outcome:</strong> The workspace is updated to include new reference content while preserving all user customizations. A migration log records every action taken.</li>
+</ul>
+<h3 id="uc-4-ecc-upstream-update">UC-4: ECC Upstream Update<a class="headerlink" href="#uc-4-ecc-upstream-update" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Actor:</strong> Solo Power User or Team Lead</li>
+<li><strong>Trigger:</strong> User runs <code>owb ecc update</code> to pull the latest from the upstream ECC repo</li>
+<li><strong>Flow:</strong> The builder fetches the latest upstream commit, diffs each file against the pinned vendored copy, runs the three-layer security scan on every changed file, presents results with security flags, and prompts accept/reject per file. Accepted changes update the vendored copy. The reputation ledger is updated.</li>
+<li><strong>Outcome:</strong> The vendored ECC copy is updated with reviewed, security-scanned changes. Rejected or flagged changes are logged. If the upstream repo exceeds the flag threshold, the builder recommends dropping it.</li>
+</ul>
+<h3 id="uc-5-security-scan">UC-5: Security Scan<a class="headerlink" href="#uc-5-security-scan" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Actor:</strong> Any user, CI pipeline, or pre-commit hook</li>
+<li><strong>Trigger:</strong> User runs <code>owb security scan &lt;path&gt;</code>, or a PR triggers the CI scan, or a pre-commit hook fires</li>
+<li><strong>Flow:</strong> The scanner runs three layers on the target files: structural validation (file type, size, encoding), pattern matching (URLs, shell commands, sensitive paths, stealth keywords), and sandboxed semantic analysis (Claude reviews content for prompt injection, behavioral manipulation, and social engineering). Optional <code>--sca</code> flag adds dependency vulnerability scanning (pip-audit + GuardDog). Optional <code>--sast</code> flag adds Semgrep static analysis on source code. Results are returned as a structured report with per-file verdicts: clean, flagged (with specific concerns), or malicious (with evidence). SCA and SAST findings appear in separate report sections.</li>
+<li><strong>Outcome:</strong> A security report. Flagged or malicious files block the triggering operation (merge, update, migration) until resolved by forking to a safe edit or marking as malicious. Critical SCA findings or SAST errors block trust tier T0 assignment.</li>
+</ul>
+<h3 id="uc-6-skill-evaluation-new-skill">UC-6: Skill Evaluation — New Skill<a class="headerlink" href="#uc-6-skill-evaluation-new-skill" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Actor:</strong> Solo Power User or Team Lead</li>
+<li><strong>Trigger:</strong> User runs <code>owb eval &lt;skill-path&gt;</code> to evaluate a new skill before incorporating it</li>
+<li><strong>Flow:</strong> The evaluator classifies the skill type, generates a tailored test suite, executes tests against both a baseline (raw LLM) and the skill-augmented LLM, scores each on four dimensions (novelty, efficiency, precision, defect_rate), computes weighted composites, and decides whether to incorporate or reject.</li>
+<li><strong>Outcome:</strong> An evaluation result with per-dimension scores, composite delta vs baseline, and an incorporate/reject decision with reasoning.</li>
+</ul>
+<h3 id="uc-7-skill-evaluation-update-existing">UC-7: Skill Evaluation — Update Existing<a class="headerlink" href="#uc-7-skill-evaluation-update-existing" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Actor:</strong> Solo Power User</li>
+<li><strong>Trigger:</strong> User runs <code>owb eval &lt;skill-path&gt; --compare</code> to evaluate an updated version of an existing skill</li>
+<li><strong>Flow:</strong> The evaluator loads the existing test suite and stored scores, executes the existing tests against the new version, compares scores with the stored results, and decides whether to replace, keep, or reject.</li>
+<li><strong>Outcome:</strong> A decision to deprecate-and-replace (new version is better), reject (new version is worse), or keep existing (within threshold).</li>
+</ul>
+<h3 id="uc-8-multi-source-update">UC-8: Multi-Source Update<a class="headerlink" href="#uc-8-multi-source-update" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Actor:</strong> Solo Power User or Team Lead</li>
+<li><strong>Trigger:</strong> User runs <code>owb update &lt;source&gt;</code> to pull updates from a named upstream source</li>
+<li><strong>Flow:</strong> The updater discovers files in the source according to configured glob patterns, runs a repo-level security audit (checking for hooks dirs, setup scripts, event triggers), presents results for review, and applies accepted changes. Each source is independently configured with its own repo URL, pin, and discovery rules.</li>
+<li><strong>Outcome:</strong> The local copy of the source is updated with reviewed, security-audited changes. Backward-compatible: <code>owb ecc update</code> still works as an alias.</li>
+</ul>
+<h3 id="uc-9-context-file-lifecycle">UC-9: Context File Lifecycle<a class="headerlink" href="#uc-9-context-file-lifecycle" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Actor:</strong> Solo Power User or New Adopter</li>
+<li><strong>Trigger:</strong> User runs <code>owb init</code> (deploys stubs), <code>owb context status</code> (checks fill state), or <code>owb context migrate</code> (reformats existing files)</li>
+<li><strong>Flow:</strong> During <code>owb init</code>, the builder checks if context files (about-me.md, brand-voice.md, working-style.md) already exist at the target. Existing files are skipped with a message. Missing files receive template stubs with placeholder text. The workspace config file includes a "First Session Tasks" section that instructs the assistant to check for unfilled context stubs and initiate a guided dialogue. <code>owb context status</code> reports whether each file is missing, a stub, or filled. <code>owb context migrate</code> compares existing files against the latest template, identifies missing sections, and offers interactive reformatting.</li>
+<li><strong>Outcome:</strong> Context files are never overwritten without consent. Stubs are filled collaboratively during the first assistant session. Existing files can be reformatted to match new template sections without losing content.</li>
+</ul>
+<h3 id="uc-10-dependency-supply-chain-audit">UC-10: Dependency Supply Chain Audit<a class="headerlink" href="#uc-10-dependency-supply-chain-audit" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Actor:</strong> Any user, CI pipeline</li>
+<li><strong>Trigger:</strong> User runs <code>owb audit deps</code>, <code>owb audit package &lt;name&gt;</code>, or <code>owb audit check-suppressions</code></li>
+<li><strong>Flow:</strong> <code>owb audit deps</code> scans installed packages against the OSV vulnerability database via pip-audit, with optional <code>--deep</code> flag to add GuardDog heuristic malware detection. <code>owb audit package &lt;name&gt;</code> runs both pip-audit and GuardDog against a single package before installation. An ECC rule enforces running this scan before any pip/uv install command in Claude Code sessions. <code>owb audit check-suppressions</code> queries the OSV API to check whether upstream fixes have landed for suppressed CVEs. A weekly CI job (suppression-monitor.yml) opens GitHub issues when fixes become available.</li>
+<li><strong>Outcome:</strong> Known vulnerabilities and malicious code patterns are detected before dependencies enter the environment. Suppressed CVEs are automatically tracked and flagged for action when patches ship.</li>
+</ul>
+<h3 id="uc-11-stage-promotion-stage-1-2-stage-2-3">UC-11: Stage Promotion <em>(Stage 1 → 2, Stage 2 → 3)</em><a class="headerlink" href="#uc-11-stage-promotion-stage-1-2-stage-2-3" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Actor:</strong> Build Farm Operator or Multi-Agent Team Operator</li>
+<li><strong>Trigger:</strong> User runs <code>owb stage promote</code> after believing they have met exit criteria for their current stage</li>
+<li><strong>Flow:</strong> OWB evaluates the exit criteria checklist for the current stage. For Stage 1 → 2: verifies sprint cycle count, vault policy compliance, scanner coverage, SCA/SAST integration, and prompts the user to define an initial delegation policy through an interactive wizard. For Stage 2 → 3: verifies unattended sprint cycles, sandbox enforcement, delegation calibration, audit log completeness, and prompts for director agent definitions and team composition. Unmet criteria are reported with specific remediation guidance.</li>
+<li><strong>Outcome:</strong> The workspace stage is promoted and recorded in config. Stage-appropriate templates, policies, and scaffolding are deployed. If criteria are unmet, the user receives a clear report of what remains.</li>
+</ul>
+<h3 id="uc-12-delegation-policy-configuration-stage-2">UC-12: Delegation Policy Configuration <em>(Stage 2+)</em><a class="headerlink" href="#uc-12-delegation-policy-configuration-stage-2" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Actor:</strong> Build Farm Operator</li>
+<li><strong>Trigger:</strong> User runs <code>owb delegation wizard</code> or <code>owb delegation edit</code></li>
+<li><strong>Flow:</strong> The wizard walks the user through categories of decisions: architectural (new dependency, API design, schema change), security (CVE response, secrets rotation, scanner override), release (version bump, changelog, tag), financial (API cost thresholds, compute budget). For each category, the user sets a delegation level: autonomous (agent decides), inform (agent decides and notifies), approve (agent proposes, human approves), or escalate (agent stops and asks). Thresholds can be numeric (e.g., "approve any dependency addition with fewer than 100 GitHub stars") or categorical.</li>
+<li><strong>Outcome:</strong> A <code>delegation-policy.yaml</code> is written to the workspace. The head agent and director agents reference this policy when deciding whether to proceed autonomously or escalate. The policy is version-controlled and auditable.</li>
+</ul>
+<h3 id="uc-13-agent-roster-ingestion-stage-2">UC-13: Agent Roster Ingestion <em>(Stage 2+)</em><a class="headerlink" href="#uc-13-agent-roster-ingestion-stage-2" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Actor:</strong> Build Farm Operator or Multi-Agent Team Operator</li>
+<li><strong>Trigger:</strong> User runs <code>owb agents ingest &lt;source&gt;</code> to evaluate and incorporate agent definitions from an external project</li>
+<li><strong>Flow:</strong> OWB clones or fetches the source repository, discovers agent definition files using configured glob patterns, runs the three-layer security scan on every agent file, runs the skill evaluator to classify and score each agent, and presents a ranked list with security verdicts and evaluation scores. The user accepts or rejects each agent. Accepted agents are copied to the workspace agent roster with provenance metadata (source repo, commit hash, evaluation score, scan verdict, ingestion date).</li>
+<li><strong>Outcome:</strong> The agent roster is populated with security-scanned, evaluated agent definitions from external sources. Provenance is tracked for audit. Rejected agents are logged with reasons.</li>
+</ul>
+<h3 id="uc-14-sandbox-policy-configuration-stage-2">UC-14: Sandbox Policy Configuration <em>(Stage 2+)</em><a class="headerlink" href="#uc-14-sandbox-policy-configuration-stage-2" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Actor:</strong> Build Farm Operator</li>
+<li><strong>Trigger:</strong> User runs <code>owb sandbox wizard</code> or edits <code>sandbox-policy.yaml</code> directly</li>
+<li><strong>Flow:</strong> The wizard walks the user through sandbox boundary definitions: filesystem mount points (read-only source, read-write workspace, no access to host home directory), network allowlist (package registries, Git remotes, API endpoints), tool permissions (which CLI tools are available inside the sandbox), session timeout, and resource limits (CPU, memory, disk). Multiple sandbox tiers can be defined (e.g., "build" for code-producing sessions, "scan" for security-only sessions, "research" for web-accessing sessions).</li>
+<li><strong>Outcome:</strong> A <code>sandbox-policy.yaml</code> is written. The orchestrator references this policy when launching headless sessions. Sessions that attempt to exceed their sandbox boundary are terminated and logged.</li>
+</ul>
+<h3 id="uc-15-director-agent-definition-stage-3">UC-15: Director Agent Definition <em>(Stage 3)</em><a class="headerlink" href="#uc-15-director-agent-definition-stage-3" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Actor:</strong> Multi-Agent Team Operator</li>
+<li><strong>Trigger:</strong> User runs <code>owb director create &lt;domain&gt;</code> or defines a director agent manually using OWB's director template</li>
+<li><strong>Flow:</strong> OWB provides a director agent template that encodes the PLC/SDLC process awareness, delegation rules, specialist routing logic, and escalation paths. The user customizes the template for a specific domain (e.g., backend engineering, testing, documentation). The completed director definition passes the full evaluation pipeline (classify, test, score, judge) and three-layer security scan. OWB generates the team composition config linking the director to its specialist agents.</li>
+<li><strong>Outcome:</strong> A director agent is deployed to the agent roster with its specialist team defined. The director can receive task assignments from the head agent, decompose them into specialist tasks, and manage execution within its domain.</li>
+</ul>
+<h2 id="goals">Goals<a class="headerlink" href="#goals" title="Permanent link">¶</a></h2>
+<h3 id="stage-0-1-goals">Stage 0-1 Goals<a class="headerlink" href="#stage-0-1-goals" title="Permanent link">¶</a></h3>
+<ol>
+<li><strong>Goal:</strong> Reduce time-to-productive-workspace from hours to minutes — <strong>Metric:</strong> Time from install to first use — <strong>Target:</strong> Under 5 minutes for default config, under 15 minutes for interactive setup</li>
+<li><strong>Goal:</strong> Ensure all installed content passes security review — <strong>Metric:</strong> Percentage of content files scanned before installation — <strong>Target:</strong> 100% of ECC and contributed content scanned; zero unscanned files in any update or migration path</li>
+<li><strong>Goal:</strong> Enable non-destructive workspace maintenance — <strong>Metric:</strong> User customizations preserved through update cycles — <strong>Target:</strong> Zero user files overwritten without explicit consent</li>
+<li><strong>Goal:</strong> Distribute as an installable Python package — <strong>Metric:</strong> Successful install via <code>pip install git+https://...</code> on Python 3.10+ across macOS, Linux, Windows — <strong>Target:</strong> Works on all three platforms with zero extra dependencies for core functionality</li>
+</ol>
+<h3 id="stage-2-goals">Stage 2 Goals<a class="headerlink" href="#stage-2-goals" title="Permanent link">¶</a></h3>
+<ol>
+<li><strong>Goal:</strong> Enable unattended build execution with human oversight — <strong>Metric:</strong> Percentage of sprint tasks completed without human intervention during execution — <strong>Target:</strong> 80%+ of tasks complete autonomously; remaining 20% escalated cleanly</li>
+<li><strong>Goal:</strong> Enforce sandbox boundaries on headless sessions — <strong>Metric:</strong> Sandbox escape attempts detected and blocked — <strong>Target:</strong> 100% of boundary violations caught; zero successful escapes</li>
+<li><strong>Goal:</strong> Provide complete audit trail for unattended sessions — <strong>Metric:</strong> Session log completeness — <strong>Target:</strong> Every tool invocation, file modification, and decision point logged with timestamp and context</li>
+</ol>
+<h3 id="stage-3-goals">Stage 3 Goals<a class="headerlink" href="#stage-3-goals" title="Permanent link">¶</a></h3>
+<ol>
+<li><strong>Goal:</strong> Enable domain-specialized agent coordination — <strong>Metric:</strong> Cross-director handoff success rate — <strong>Target:</strong> 95%+ of cross-domain tasks completed without human routing intervention</li>
+<li><strong>Goal:</strong> Maintain full agent hierarchy provenance — <strong>Metric:</strong> Agents with complete provenance records — <strong>Target:</strong> 100% of agents at all tiers have source, version, evaluation score, and security verdict on record</li>
+</ol>
+<h2 id="non-goals">Non-Goals<a class="headerlink" href="#non-goals" title="Permanent link">¶</a></h2>
+<ul>
+<li>Building a GUI or web interface. OWB is a CLI tool. Chat-based interaction (Stage 2+) happens through third-party tools (Slack, Matrix), not a custom UI.</li>
+<li>Building sandbox infrastructure. OWB defines sandbox policies; the user or a separate tool provisions the actual sandboxes (Docker, VMs, cloud instances). OWB may evaluate and recommend sandbox tooling through the OSS health pipeline.</li>
+<li>Building the orchestrator or chat bot. OWB defines the policies and agent roster that the orchestrator consumes. The orchestrator itself is a separate component, likely adopted from an evaluated open-source project.</li>
+<li>Managing Claude API keys, billing, or account configuration.</li>
+<li>Replacing Obsidian as a knowledge management tool. The vault is an Obsidian vault; the builder scaffolds it.</li>
+<li>Real-time sync at Stage 0-1. The builder runs on-demand, not as a daemon. (Stage 2+ introduces a long-running orchestrator, but that is a separate component, not OWB itself.)</li>
+<li>Supporting non-Claude AI coding assistants (Cursor, Copilot, etc.) at Stage 0-1. The model-agnostic backend supports any LiteLLM provider, but the ECC content and workspace conventions assume Claude. Multi-tool agent deployment may become relevant at Stage 2+ as agent rosters are ingested from projects that support multiple tools.</li>
+<li>Community skill marketplace. Skills are either bundled or user-provided; there is no discovery/install-from-registry flow. Agent roster ingestion (UC-13) handles the equivalent function for external agent sources.</li>
+</ul>
+<h2 id="assumptions">Assumptions<a class="headerlink" href="#assumptions" title="Permanent link">¶</a></h2>
+<ul>
+<li>Users have Python 3.10+ installed. The builder has no compiled dependencies.</li>
+<li>ECC upstream repo (github.com/affaan-m/everything-claude-code) remains publicly accessible and MIT licensed. If it goes private or changes license, the builder freezes on the last known-good vendored copy.</li>
+<li>Claude Code and Cowork's <code>.claude/</code> and <code>.skills/</code> directory conventions remain stable. Changes to these conventions require builder updates.</li>
+<li>Users are comfortable with CLI tools. The interactive mode lowers the barrier but does not eliminate it.</li>
+</ul>
+<h2 id="constraints">Constraints<a class="headerlink" href="#constraints" title="Permanent link">¶</a></h2>
+<ul>
+<li>Zero required dependencies for core build functionality. Optional dependencies (PyYAML for config, GitPython or subprocess git for ECC updates) are acceptable but must degrade gracefully if missing.</li>
+<li>The security scanner's semantic analysis layer requires a Claude API call or Claude Code subagent. This means the scan has a cost (tokens) and requires either an API key or a Claude Code session. The structural and pattern-matching layers work offline.</li>
+<li>The builder must not modify files outside the target directory. No global system changes.</li>
+<li>All ECC content must carry its upstream MIT license attribution. The builder's own code is separately licensed under MIT.</li>
+</ul>
+<h2 id="success-criteria">Success Criteria<a class="headerlink" href="#success-criteria" title="Permanent link">¶</a></h2>
+<ul>
+<li>A user with repo access can <code>pip install git+https://github.com/originalrgsec/open-workspace-builder.git &amp;&amp; owb init</code> and have a working workspace.</li>
+<li>A user with an existing workspace can run <code>owb diff</code> and get an accurate gap report on the first try.</li>
+<li>The security scanner catches the adversarial test cases in the test suite (prompt injection, data exfiltration instructions, stealth keywords, Unicode tricks).</li>
+<li>A contributor can submit a PR that passes CI (tests + security scan) without manual intervention from the maintainer for clean content.</li>
+<li>The ECC update workflow produces a clear per-file accept/reject experience with security verdicts visible.</li>
+</ul>
+<h2 id="open-questions">Open Questions<a class="headerlink" href="#open-questions" title="Permanent link">¶</a></h2>
+<h3 id="stage-0-1">Stage 0-1<a class="headerlink" href="#stage-0-1" title="Permanent link">¶</a></h3>
+<ol>
+<li>Should the builder support a <code>owb ecc pin &lt;commit-hash&gt;</code> command to lock to a specific upstream version, or is the current "always diff against latest" model sufficient?</li>
+<li>What is the right threshold for the reputation ledger to recommend dropping an upstream repo? Three confirmed malicious flags? Five? Should it be configurable?</li>
+<li>Should the semantic security scan be optional (for users without API access) or mandatory? If optional, should the builder warn that structural/pattern checks alone are insufficient?</li>
+<li>Should the builder generate a <code>.claude/CLAUDE.md</code> that references the vault, or should it leave CLAUDE.md management to the user? The current prototype generates one, but some users may have their own.</li>
+</ol>
+<h3 id="stage-2">Stage 2<a class="headerlink" href="#stage-2" title="Permanent link">¶</a></h3>
+<ol>
+<li>Which orchestrator framework should OWB evaluate and recommend? Candidates include agency-agents, hermes-paperclip-adapter, and other multi-agent coordination projects. OWB's OSS health pipeline and security scanner should evaluate these before any adoption decision.</li>
+<li>What is the right sandbox technology? Docker containers, lightweight VMs (Firecracker, gVisor), or a managed service? The answer likely depends on the user's infrastructure. OWB should define the policy interface and remain sandbox-implementation-agnostic.</li>
+<li>How should the delegation policy handle novel decision categories that the wizard did not anticipate? Default to escalate? Default to the nearest configured category?</li>
+<li>What chat protocol should OWB target for human-agent communication? Slack and Matrix are the leading candidates. Should OWB define a protocol-agnostic message interface that adapters can implement?</li>
+</ol>
+<h3 id="stage-3">Stage 3<a class="headerlink" href="#stage-3" title="Permanent link">¶</a></h3>
+<ol>
+<li>How should director agents handle conflicting priorities when two directors need the same specialist simultaneously? Queue-based? Priority-weighted? Escalate to head agent?</li>
+<li>What is the right granularity for director domains? Too broad (e.g., "engineering") and the director becomes a bottleneck. Too narrow (e.g., "Python backend" vs. "Go backend") and coordination overhead increases.</li>
+<li>How should OWB handle director agent failure or degradation? Automatic failover to another director? Escalate all tasks to the head agent? Pause and notify the human?</li>
+</ol>
+<h2 id="links">Links<a class="headerlink" href="#links" title="Permanent link">¶</a></h2>
+<ul>
+<li><a href="../adr/">ADR</a></li>
+<li><a href="../sdr/">SDR</a></li>
+<li><a href="../threat-model/">Threat Model</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden="">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © 2026 originalrgsec
+    </div>
+  
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/originalrgsec/open-workspace-builder" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../assets/js/mermaid-zoom.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>

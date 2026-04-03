@@ -1,0 +1,2258 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Scaffold, maintain, and secure AI coding workspaces from a single command.">
+      
+      
+        <meta name="author" content="originalrgsec">
+      
+      
+        <link rel="canonical" href="https://originalrgsec.github.io/open-workspace-builder/reference/lifecycle/">
+      
+      
+        <link rel="prev" href="../cli/">
+      
+      
+        <link rel="next" href="../license-compliance/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/profile-avatar.jpg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Lifecycle and Agents - Open Workspace Builder</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/css/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#lifecycle-agents-and-policy-enforcement" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Open Workspace Builder" class="md-header__button md-logo" aria-label="Open Workspace Builder" data-md-component="logo">
+      
+  <img src="../../assets/images/profile-avatar.jpg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Open Workspace Builder
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Lifecycle and Agents
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom" aria-label="Switch to light mode" type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom" aria-label="Switch to dark mode" type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/originalrgsec/open-workspace-builder" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    originalrgsec/open-workspace-builder
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/why-owb/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../concepts/architecture/" class="md-tabs__link">
+          
+  
+  
+  Concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../howto-upgrade/" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../cli/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../credits/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Credits
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../releases/v1.2.0/" class="md-tabs__link">
+          
+  
+  
+  Releases
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Open Workspace Builder" class="md-nav__button md-logo" aria-label="Open Workspace Builder" data-md-component="logo">
+      
+  <img src="../../assets/images/profile-avatar.jpg" alt="logo">
+
+    </a>
+    Open Workspace Builder
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/originalrgsec/open-workspace-builder" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    originalrgsec/open-workspace-builder
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2">
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/why-owb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why OWB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/how-it-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How It Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/first-run-fresh/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First Run: Fresh
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../howto-first-run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First Run: Existing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3">
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/phases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4">
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../howto-upgrade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Upgrading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/library-usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using as a Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked="">
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lifecycle and Agents
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lifecycle and Agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#product-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Product Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#software-development-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Software Development Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sprint-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sprint Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-policy-enforcement-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How Policy Enforcement Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-catalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent Catalog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Agent Catalog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#agents-specialized-sub-processes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agents (Specialized Sub-Processes)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skills-orchestration-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skills (Orchestration Workflows)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commands-one-line-triggers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commands (One-Line Triggers)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#end-to-end-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-End Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../license-compliance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    License Compliance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PRD
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sdr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SDR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../threat-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../credits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Credits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7">
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Releases
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/v1.2.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v1.2.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/v1.1.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v1.1.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/v1.0.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/v0.8.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.8.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/v0.7.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.7.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/v0.6.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.6.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/v0.5.1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.5.1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/v0.5.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.5.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/v0.4.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.4.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/v0.3.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.3.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#product-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Product Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#software-development-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Software Development Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sprint-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sprint Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-policy-enforcement-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How Policy Enforcement Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-catalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent Catalog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Agent Catalog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#agents-specialized-sub-processes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agents (Specialized Sub-Processes)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skills-orchestration-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skills (Orchestration Workflows)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commands-one-line-triggers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commands (One-Line Triggers)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#end-to-end-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-End Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="lifecycle-agents-and-policy-enforcement">Lifecycle, Agents, and Policy Enforcement<a class="headerlink" href="#lifecycle-agents-and-policy-enforcement" title="Permanent link">¶</a></h1>
+<p>OWB ships a set of governance policies, ECC agents, and orchestration skills that together form a complete product development process. The policies define what must happen at each phase. The agents and skills execute those policies automatically, triggered by the natural context of the work at hand. The developer does not need to remember the process — the agents enforce it.</p>
+<p>This page explains how the product lifecycle, software development lifecycle, agent catalog, and policy enforcement rules connect to each other.</p>
+<h2 id="product-lifecycle">Product Lifecycle<a class="headerlink" href="#product-lifecycle" title="Permanent link">¶</a></h2>
+<p>The product lifecycle defines the phases a project moves through from concept to production. Each phase produces specific artifacts and has specific quality gates.</p>
+<pre class="mermaid"><code>graph LR
+    P1["&lt;b&gt;Intelligence&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Research, ideation,&lt;br/&gt;opportunity identification&lt;/i&gt;"]:::phase
+    P2["&lt;b&gt;Design&lt;/b&gt;&lt;br/&gt;&lt;i&gt;PRD, ADR, SDR,&lt;br/&gt;threat model&lt;/i&gt;"]:::phase
+    P3["&lt;b&gt;Plan&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Story writing,&lt;br/&gt;sprint planning&lt;/i&gt;"]:::phase
+    P4["&lt;b&gt;Build&lt;/b&gt;&lt;br/&gt;&lt;i&gt;TDD implementation,&lt;br/&gt;code review&lt;/i&gt;"]:::phase
+    P5["&lt;b&gt;Verify&lt;/b&gt;&lt;br/&gt;&lt;i&gt;QA layers, smoke test,&lt;br/&gt;security scan&lt;/i&gt;"]:::phase
+    P6["&lt;b&gt;Release&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Sprint close, retro,&lt;br/&gt;changelog, tag&lt;/i&gt;"]:::phase
+    P7["&lt;b&gt;Operate&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Production monitoring,&lt;br/&gt;drift detection&lt;/i&gt;"]:::phase
+
+    P1 --&gt; P2 --&gt; P3 --&gt; P4 --&gt; P5 --&gt; P6 --&gt; P7
+    P6 --&gt;|"next sprint"| P3
+    P7 --&gt;|"new opportunity"| P1
+
+    classDef phase fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px</code></pre>
+<p>Each phase maps to specific governance documents, agent capabilities, and quality gates:</p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Governance Document</th>
+<th>Key Agents and Skills</th>
+<th>Quality Gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intelligence</td>
+<td>product-development-workflow</td>
+<td>mobile-inbox-triage</td>
+<td>Research tagged and processed</td>
+</tr>
+<tr>
+<td>Design</td>
+<td>product-development-workflow</td>
+<td>architect, planner</td>
+<td>PRD, ADR, SDR, threat model complete</td>
+</tr>
+<tr>
+<td>Plan</td>
+<td>development-process</td>
+<td>write-story, sprint-plan</td>
+<td>Stories have workflow-level AC</td>
+</tr>
+<tr>
+<td>Build</td>
+<td>development-workflow, testing</td>
+<td>tdd-guide, code-reviewer, build-error-resolver</td>
+<td>Tests green, 80%+ coverage</td>
+</tr>
+<tr>
+<td>Verify</td>
+<td>integration-verification-policy</td>
+<td>security-reviewer, e2e-runner</td>
+<td>Smoke test passes, CLI contract verified</td>
+</tr>
+<tr>
+<td>Release</td>
+<td>development-process</td>
+<td>sprint-complete, retro, doc-updater</td>
+<td>Checklist complete, retro filed</td>
+</tr>
+<tr>
+<td>Operate</td>
+<td>oss-health-policy, allowed-licenses</td>
+<td>vault-audit, oss-health-check</td>
+<td>Drift detected and resolved</td>
+</tr>
+</tbody>
+</table>
+<h2 id="software-development-lifecycle">Software Development Lifecycle<a class="headerlink" href="#software-development-lifecycle" title="Permanent link">¶</a></h2>
+<p>Within the Build phase, each feature follows a strict development workflow. The ECC rules file <code>development-workflow.md</code> defines four sequential steps, each backed by a specific agent.</p>
+<pre class="mermaid"><code>graph TD
+    R["&lt;b&gt;0. Research and Reuse&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Search GitHub, registries,&lt;br/&gt;prior art before writing code&lt;/i&gt;"]:::step
+    P["&lt;b&gt;1. Plan&lt;/b&gt;&lt;br/&gt;&lt;i&gt;planner agent creates&lt;br/&gt;implementation plan&lt;/i&gt;"]:::step
+    T["&lt;b&gt;2. TDD&lt;/b&gt;&lt;br/&gt;&lt;i&gt;tdd-guide agent enforces&lt;br/&gt;RED → GREEN → REFACTOR&lt;/i&gt;"]:::step
+    CR["&lt;b&gt;3. Code Review&lt;/b&gt;&lt;br/&gt;&lt;i&gt;code-reviewer agent runs&lt;br/&gt;immediately after writing&lt;/i&gt;"]:::step
+    G["&lt;b&gt;4. Commit&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Conventional commits,&lt;br/&gt;push to branch&lt;/i&gt;"]:::step
+
+    R --&gt; P --&gt; T --&gt; CR --&gt; G
+
+    R -.- R_agent["oss-health-check&lt;br/&gt;license audit"]:::agent
+    P -.- P_agent["planner&lt;br/&gt;architect"]:::agent
+    T -.- T_agent["tdd-guide&lt;br/&gt;build-error-resolver"]:::agent
+    CR -.- CR_agent["code-reviewer&lt;br/&gt;security-reviewer&lt;br/&gt;python-reviewer"]:::agent
+    G -.- G_agent["doc-updater"]:::agent
+
+    classDef step fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px
+    classDef agent fill:#0A0A14,color:#E8B830,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5</code></pre>
+<p>The agents are not called by a central orchestrator. They are triggered naturally by the ECC rules loaded into the AI agent's context. When the rules file says "use <strong>tdd-guide</strong> agent" for new features, the AI agent invokes it because that instruction is part of its active system prompt. The developer does not need to remember which agent to call — the rules make it automatic.</p>
+<h2 id="sprint-lifecycle">Sprint Lifecycle<a class="headerlink" href="#sprint-lifecycle" title="Permanent link">¶</a></h2>
+<p>A sprint is the unit of delivery. The sprint-plan skill orchestrates the documentation updates at both ends of a sprint — opening and closing — while the sprint-complete and retro skills handle the quality gates at close.</p>
+<pre class="mermaid"><code>graph TD
+    subgraph open ["Sprint Open"]
+        O1["&lt;b&gt;Validate&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Prerequisites complete,&lt;br/&gt;tests green, tree clean&lt;/i&gt;"]:::step
+        O2["&lt;b&gt;Update Artifacts&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Story frontmatter,&lt;br/&gt;status, SDR, bootstrap&lt;/i&gt;"]:::step
+        O1 --&gt; O2
+    end
+
+    subgraph build ["Sprint Execution"]
+        B1["&lt;b&gt;Implement Stories&lt;/b&gt;&lt;br/&gt;&lt;i&gt;TDD cycle per story,&lt;br/&gt;code review after each&lt;/i&gt;"]:::step
+        B2["&lt;b&gt;Integration Verify&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Smoke test, CLI contract,&lt;br/&gt;workflow-level AC&lt;/i&gt;"]:::step
+        B1 --&gt; B2
+    end
+
+    subgraph close ["Sprint Close"]
+        C1["&lt;b&gt;Completion Checklist&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Tests, docs, CHANGELOG,&lt;br/&gt;manifest, metrics,&lt;br/&gt;supply chain verification&lt;/i&gt;"]:::step
+        C2["&lt;b&gt;Retrospective&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Root cause analysis,&lt;br/&gt;linked deliverables&lt;/i&gt;"]:::step
+        C3["&lt;b&gt;Update Artifacts&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Status, bootstrap,&lt;br/&gt;session log, vault audit&lt;/i&gt;"]:::step
+        C1 --&gt; C2 --&gt; C3
+    end
+
+    open --&gt; build --&gt; close
+    close --&gt;|"next sprint"| open
+
+    O1 -.- sprint_plan["sprint-plan skill"]:::skill
+    O2 -.- sprint_plan
+    C1 -.- sprint_complete["sprint-complete skill"]:::skill
+    C2 -.- retro_skill["retro skill"]:::skill
+    C3 -.- vault_audit["vault-audit skill"]:::skill
+
+    classDef step fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px
+    classDef skill fill:#0A0A14,color:#E8B830,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+
+    style open fill:#0A0A14,stroke:#D4A017,stroke-width:1px,color:#D4A017
+    style build fill:#0A0A14,stroke:#B87308,stroke-width:1px,color:#B87308
+    style close fill:#0A0A14,stroke:#E67E22,stroke-width:1px,color:#E67E22</code></pre>
+<h2 id="how-policy-enforcement-works">How Policy Enforcement Works<a class="headerlink" href="#how-policy-enforcement-works" title="Permanent link">¶</a></h2>
+<p>The connection between governance policies and agent behavior happens through three layers:</p>
+<p><strong>Layer 1: Policy documents</strong> live in <code>content/policies/</code> and are deployed to the vault's <code>code/</code> directory during <code>owb init</code>. These are the full, detailed governance documents — the product development workflow, sprint mechanics, integration verification standards, OSS health evaluation criteria, and allowed license lists.</p>
+<p><strong>Layer 2: Inline enforcement rules</strong> are extracted from the policy documents into a compact checklist (<code>vault-policies.md</code>) that is deployed to the workspace's rules directory. The AI agent loads this file automatically as part of its system context. Each checklist item is an enforceable gate — the agent checks these before proceeding with work.</p>
+<p><strong>Layer 3: A policy compliance preamble</strong> is injected into the generated workspace config file (the agent's entry point). This preamble instructs the agent to follow the enforcement rules and escalate conflicts to the owner rather than proceeding silently.</p>
+<pre class="mermaid"><code>graph TD
+    Policies["&lt;b&gt;Policy Documents&lt;/b&gt;&lt;br/&gt;&lt;i&gt;5 governance documents&lt;br/&gt;in content/policies/&lt;/i&gt;"]:::store
+    Rules["&lt;b&gt;Inline Enforcement Rules&lt;/b&gt;&lt;br/&gt;&lt;i&gt;vault-policies.md in&lt;br/&gt;workspace rules directory&lt;/i&gt;"]:::rules
+    Preamble["&lt;b&gt;Policy Compliance Preamble&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Injected into agent&lt;br/&gt;config file&lt;/i&gt;"]:::rules
+    Agent["&lt;b&gt;AI Agent&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Loads rules and preamble&lt;br/&gt;as system context&lt;/i&gt;"]:::agent
+
+    Policies --&gt;|"owb init extracts&lt;br/&gt;enforceable items"| Rules
+    Policies --&gt;|"owb init detects&lt;br/&gt;policies exist"| Preamble
+    Rules --&gt;|"auto-loaded&lt;br/&gt;into context"| Agent
+    Preamble --&gt;|"read at&lt;br/&gt;session start"| Agent
+
+    Agent --&gt;|"consults full docs&lt;br/&gt;when needed"| Policies
+
+    classDef store fill:#0A0A14,color:#B0B0C0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+    classDef rules fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px
+    classDef agent fill:#12121E,color:#E8B830,stroke:#D4A017,stroke-width:3px</code></pre>
+<p>The enforcement rules contain checklist items like:</p>
+<ul>
+<li>"PRD, ADR, SDR, and threat model exist before implementation begins"</li>
+<li>"Acceptance criteria describe end-to-end operator workflows, not isolated module behavior"</li>
+<li>"License check passes before health evaluation (disallowed license = stop)"</li>
+</ul>
+<p>When an AI agent begins work on a feature, these rules are already in its context. If the agent is asked to implement a story without a PRD, the enforcement rules instruct it to flag that gap. If a dependency is being added, the rules require a license check and health evaluation before proceeding. The agent does not need a separate compliance workflow — the rules are part of every session.</p>
+<h2 id="agent-catalog">Agent Catalog<a class="headerlink" href="#agent-catalog" title="Permanent link">¶</a></h2>
+<p>The ECC ships 16 agents, 21 commands, and 7 skills. Each is designed for a specific phase of the lifecycle.</p>
+<h3 id="agents-specialized-sub-processes">Agents (Specialized Sub-Processes)<a class="headerlink" href="#agents-specialized-sub-processes" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th>Agent</th>
+<th>Lifecycle Phase</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>planner</strong></td>
+<td>Plan</td>
+<td>Creates implementation plans, identifies dependencies and risks</td>
+</tr>
+<tr>
+<td><strong>architect</strong></td>
+<td>Design</td>
+<td>System design, C4 modeling, architectural decisions</td>
+</tr>
+<tr>
+<td><strong>tdd-guide</strong></td>
+<td>Build</td>
+<td>Enforces RED → GREEN → REFACTOR cycle, 80%+ coverage</td>
+</tr>
+<tr>
+<td><strong>code-reviewer</strong></td>
+<td>Build</td>
+<td>Reviews code for quality, security, maintainability</td>
+</tr>
+<tr>
+<td><strong>python-reviewer</strong></td>
+<td>Build</td>
+<td>Python-specific PEP 8, type hints, security review</td>
+</tr>
+<tr>
+<td><strong>go-reviewer</strong></td>
+<td>Build</td>
+<td>Go-specific idiomatic patterns, concurrency safety</td>
+</tr>
+<tr>
+<td><strong>security-reviewer</strong></td>
+<td>Verify</td>
+<td>OWASP Top 10, secrets detection, injection prevention</td>
+</tr>
+<tr>
+<td><strong>build-error-resolver</strong></td>
+<td>Build</td>
+<td>Fixes build errors, type errors, linter warnings</td>
+</tr>
+<tr>
+<td><strong>e2e-runner</strong></td>
+<td>Verify</td>
+<td>End-to-end testing with browser automation</td>
+</tr>
+<tr>
+<td><strong>doc-updater</strong></td>
+<td>Release</td>
+<td>Updates documentation, READMEs, codemaps</td>
+</tr>
+<tr>
+<td><strong>refactor-cleaner</strong></td>
+<td>Build</td>
+<td>Dead code removal, consolidation, cleanup</td>
+</tr>
+<tr>
+<td><strong>database-reviewer</strong></td>
+<td>Build</td>
+<td>PostgreSQL query optimization, schema review</td>
+</tr>
+<tr>
+<td><strong>harness-optimizer</strong></td>
+<td>Build</td>
+<td>Agent harness configuration optimization</td>
+</tr>
+<tr>
+<td><strong>loop-operator</strong></td>
+<td>Build</td>
+<td>Autonomous agent loop monitoring and intervention</td>
+</tr>
+<tr>
+<td><strong>chief-of-staff</strong></td>
+<td>Operate</td>
+<td>Communication triage across channels</td>
+</tr>
+</tbody>
+</table>
+<h3 id="skills-orchestration-workflows">Skills (Orchestration Workflows)<a class="headerlink" href="#skills-orchestration-workflows" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th>Skill</th>
+<th>Lifecycle Phase</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>sprint-plan</strong></td>
+<td>Plan / Release</td>
+<td>Automates sprint open and close artifact updates</td>
+</tr>
+<tr>
+<td><strong>sprint-complete</strong></td>
+<td>Release</td>
+<td>Walks through the sprint completion checklist</td>
+</tr>
+<tr>
+<td><strong>retro</strong></td>
+<td>Release</td>
+<td>Scaffolds retrospectives with sequential IDs</td>
+</tr>
+<tr>
+<td><strong>write-story</strong></td>
+<td>Plan</td>
+<td>Generates story files with workflow-level AC</td>
+</tr>
+<tr>
+<td><strong>vault-audit</strong></td>
+<td>Operate</td>
+<td>Checks vault integrity (links, indexes, frontmatter)</td>
+</tr>
+<tr>
+<td><strong>oss-health-check</strong></td>
+<td>Build</td>
+<td>Evaluates dependency health against scoring criteria</td>
+</tr>
+<tr>
+<td><strong>mobile-inbox-triage</strong></td>
+<td>Intelligence</td>
+<td>Processes mobile research captures</td>
+</tr>
+</tbody>
+</table>
+<h3 id="commands-one-line-triggers">Commands (One-Line Triggers)<a class="headerlink" href="#commands-one-line-triggers" title="Permanent link">¶</a></h3>
+<p>Commands are shorthand for common operations: <code>/plan</code>, <code>/tdd</code>, <code>/code-review</code>, <code>/verify</code>, <code>/build-fix</code>, <code>/test-coverage</code>, <code>/e2e</code>, <code>/eval</code>, <code>/checkpoint</code>, <code>/update-docs</code>, <code>/refactor-clean</code>, <code>/python-review</code>, <code>/go-review</code>, <code>/go-build</code>, <code>/go-test</code>.</p>
+<h2 id="end-to-end-example">End-to-End Example<a class="headerlink" href="#end-to-end-example" title="Permanent link">¶</a></h2>
+<p>A developer working with OWB and an AI agent experiences the full lifecycle without needing to remember the process:</p>
+<ol>
+<li>
+<p><strong>Research phase:</strong> The developer captures an idea on mobile. The mobile-inbox-triage skill processes it into a tagged research note.</p>
+</li>
+<li>
+<p><strong>Design phase:</strong> The developer says "let's design this." The agent invokes the architect and planner agents, checks the decisions index for prior art, and produces PRD, ADR, SDR, and threat model using vault templates.</p>
+</li>
+<li>
+<p><strong>Sprint planning:</strong> The developer says "open Sprint 5 with stories S030 through S035." The sprint-plan skill validates prerequisites, updates story frontmatter, status.md, SDR, and bootstrap in one pass.</p>
+</li>
+<li>
+<p><strong>Implementation:</strong> The developer says "implement S030." The agent reads the story's acceptance criteria, invokes the tdd-guide to write tests first, implements the code, then automatically triggers the code-reviewer. If a new dependency is needed, the enforcement rules require <code>owb audit package</code> before installation and <code>owb audit licenses</code> before adoption.</p>
+</li>
+<li>
+<p><strong>Sprint close:</strong> The developer says "close the sprint." The sprint-complete skill runs the checklist (tests, docs, CHANGELOG, manifest). The retro skill scaffolds a retrospective with the correct sequential ID and carried-forward items. The vault-audit skill checks for broken links from the bulk edits. A session log is written to the project's sessions folder.</p>
+</li>
+<li>
+<p><strong>Operation:</strong> Between sprints, <code>owb diff</code> detects template drift. <code>owb migrate</code> applies updates. The vault-audit skill catches stale references. The oss-health-check skill re-evaluates dependencies when their maintenance signals change.</p>
+</li>
+</ol>
+<p>At no point does the developer consult a process document or remember which agent to call. The policies are in the agent's context. The agents trigger based on the work at hand. The skills orchestrate multi-file updates that would otherwise require manual coordination across a dozen vault files.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden="">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © 2026 originalrgsec
+    </div>
+  
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/originalrgsec/open-workspace-builder" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../assets/js/mermaid-zoom.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>

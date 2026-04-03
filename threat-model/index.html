@@ -1,0 +1,4503 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Scaffold, maintain, and secure AI coding workspaces from a single command.">
+      
+      
+        <meta name="author" content="originalrgsec">
+      
+      
+        <link rel="canonical" href="https://originalrgsec.github.io/open-workspace-builder/threat-model/">
+      
+      
+        <link rel="prev" href="../sdr/">
+      
+      
+        <link rel="next" href="../credits/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/profile-avatar.jpg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Threat Model - Open Workspace Builder</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../assets/css/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link href="../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#threat-model-open-workspace-builder" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Open Workspace Builder" class="md-header__button md-logo" aria-label="Open Workspace Builder" data-md-component="logo">
+      
+  <img src="../assets/images/profile-avatar.jpg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Open Workspace Builder
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Threat Model
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom" aria-label="Switch to light mode" type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom" aria-label="Switch to dark mode" type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/originalrgsec/open-workspace-builder" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    originalrgsec/open-workspace-builder
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../getting-started/why-owb/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../concepts/architecture/" class="md-tabs__link">
+          
+  
+  
+  Concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../howto-upgrade/" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../reference/cli/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../credits/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Credits
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../releases/v1.2.0/" class="md-tabs__link">
+          
+  
+  
+  Releases
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Open Workspace Builder" class="md-nav__button md-logo" aria-label="Open Workspace Builder" data-md-component="logo">
+      
+  <img src="../assets/images/profile-avatar.jpg" alt="logo">
+
+    </a>
+    Open Workspace Builder
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/originalrgsec/open-workspace-builder" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    originalrgsec/open-workspace-builder
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2">
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/why-owb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why OWB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/how-it-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How It Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/first-run-fresh/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First Run: Fresh
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howto-first-run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First Run: Existing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3">
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/phases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4">
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howto-upgrade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Upgrading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/library-usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using as a Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked="">
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lifecycle and Agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/license-compliance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    License Compliance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PRD
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sdr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SDR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat Model
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methodology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Methodology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System Scope
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="System Scope">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#in-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        In Scope
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#out-of-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Out of Scope
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-classification-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Classification Summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trust-boundary-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trust Boundary Diagram
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trust-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trust Boundaries
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stride-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        STRIDE Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="STRIDE Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#element-ecc-upstream-fetch-df-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element: ECC Upstream Fetch (DF-1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#element-vendored-content-store-ds-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element: Vendored Content Store (DS-1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#element-security-scanner-semantic-analysis-p-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element: Security Scanner — Semantic Analysis (P-1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#element-installed-content-in-user-workspace-ds-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element: Installed Content in User Workspace (DS-2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#element-collaborator-pr-df-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element: Collaborator PR (DF-2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#element-reputation-ledger-ds-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element: Reputation Ledger (DS-3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#element-evaluator-pipeline-p-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element: Evaluator Pipeline (P-2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#element-source-infrastructure-p-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element: Source Infrastructure (P-3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risk-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk Assessment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Risk Assessment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#likelihood-scale-nist-sp-800-30-table-h-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Likelihood Scale (NIST SP 800-30 Table H-2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#impact-scale-nist-sp-800-30-table-h-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Impact Scale (NIST SP 800-30 Table H-3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risk-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk Matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#threat-register" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threat Register
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mitigations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mitigations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mitigations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#m-001-pinned-vendoring-with-commit-hash-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-001: Pinned Vendoring with Commit Hash Tracking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-002-git-signature-verification-deferred" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-002: Git Signature Verification (Deferred)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-003-local-audit-trail-for-ecc-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-003: Local Audit Trail for ECC Updates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-004-reputation-ledger-with-threshold-based-drop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-004: Reputation Ledger with Threshold-Based Drop
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-005-build-time-integrity-check-for-vendored-content" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-005: Build-Time Integrity Check for Vendored Content
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-006-three-layer-security-scanner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-006: Three-Layer Security Scanner
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-007-adversarial-test-suite-for-scanner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-007: Adversarial Test Suite for Scanner
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-008-content-only-scanning-no-user-data-in-scan-payload" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-008: Content-Only Scanning (No User Data in Scan Payload)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-009-sandboxed-scanner-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-009: Sandboxed Scanner Execution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-010-pattern-detection-for-self-modification-and-persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-010: Pattern Detection for Self-Modification and Persistence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-011-exfiltration-pattern-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-011: Exfiltration Pattern Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-012-branch-protection-with-required-owner-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-012: Branch Protection with Required Owner Review
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-013-ci-security-scan-on-pull-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-013: CI Security Scan on Pull Requests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-014-codeowners-protection-for-security-critical-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-014: CODEOWNERS Protection for Security-Critical Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-015-reputation-ledger-integrity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-015: Reputation Ledger Integrity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-016-systemuser-prompt-separation-in-evaluator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-016: System/User Prompt Separation in Evaluator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-017-resource-limits-on-evaluation-and-source-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-017: Resource Limits on Evaluation and Source Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-018-repo-audit-gate-for-upstream-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-018: Repo Audit Gate for Upstream Sources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-019-pre-install-sca-gate-pip-audit-guarddog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-019: Pre-Install SCA Gate (pip-audit + GuardDog)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-020-full-dependency-tree-scanning-in-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-020: Full Dependency Tree Scanning in CI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-021-sast-integration-in-evaluator-trust-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-021: SAST Integration in Evaluator Trust Scoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-022-automated-cve-suppression-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-022: Automated CVE Suppression Monitoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-023-interactive-diff-review-for-context-file-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-023: Interactive Diff Review for Context File Migration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-024-secrets-scanning-gate-gitleaksggshield" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-024: Secrets Scanning Gate (gitleaks/ggshield)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-025-package-quarantine-7-day-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-025: Package Quarantine (7-Day Window)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-026-programmatic-pre-install-sca-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-026: Programmatic Pre-Install SCA Gate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-027-multi-ecosystem-sca-via-trivy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-027: Multi-Ecosystem SCA via Trivy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#residual-risk-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Residual Risk Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#assumptions-and-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assumptions and Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#review-schedule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Schedule
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nist-control-mapping-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NIST Control Mapping Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#links" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Links
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../credits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Credits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7">
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Releases
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v1.2.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v1.2.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v1.1.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v1.1.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v1.0.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v0.8.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.8.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v0.7.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.7.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v0.6.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.6.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v0.5.1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.5.1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v0.5.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.5.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v0.4.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.4.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/v0.3.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.3.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methodology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Methodology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System Scope
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="System Scope">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#in-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        In Scope
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#out-of-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Out of Scope
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-classification-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Classification Summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trust-boundary-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trust Boundary Diagram
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trust-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trust Boundaries
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stride-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        STRIDE Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="STRIDE Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#element-ecc-upstream-fetch-df-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element: ECC Upstream Fetch (DF-1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#element-vendored-content-store-ds-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element: Vendored Content Store (DS-1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#element-security-scanner-semantic-analysis-p-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element: Security Scanner — Semantic Analysis (P-1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#element-installed-content-in-user-workspace-ds-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element: Installed Content in User Workspace (DS-2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#element-collaborator-pr-df-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element: Collaborator PR (DF-2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#element-reputation-ledger-ds-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element: Reputation Ledger (DS-3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#element-evaluator-pipeline-p-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element: Evaluator Pipeline (P-2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#element-source-infrastructure-p-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element: Source Infrastructure (P-3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risk-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk Assessment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Risk Assessment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#likelihood-scale-nist-sp-800-30-table-h-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Likelihood Scale (NIST SP 800-30 Table H-2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#impact-scale-nist-sp-800-30-table-h-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Impact Scale (NIST SP 800-30 Table H-3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risk-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk Matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#threat-register" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threat Register
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mitigations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mitigations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mitigations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#m-001-pinned-vendoring-with-commit-hash-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-001: Pinned Vendoring with Commit Hash Tracking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-002-git-signature-verification-deferred" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-002: Git Signature Verification (Deferred)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-003-local-audit-trail-for-ecc-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-003: Local Audit Trail for ECC Updates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-004-reputation-ledger-with-threshold-based-drop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-004: Reputation Ledger with Threshold-Based Drop
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-005-build-time-integrity-check-for-vendored-content" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-005: Build-Time Integrity Check for Vendored Content
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-006-three-layer-security-scanner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-006: Three-Layer Security Scanner
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-007-adversarial-test-suite-for-scanner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-007: Adversarial Test Suite for Scanner
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-008-content-only-scanning-no-user-data-in-scan-payload" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-008: Content-Only Scanning (No User Data in Scan Payload)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-009-sandboxed-scanner-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-009: Sandboxed Scanner Execution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-010-pattern-detection-for-self-modification-and-persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-010: Pattern Detection for Self-Modification and Persistence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-011-exfiltration-pattern-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-011: Exfiltration Pattern Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-012-branch-protection-with-required-owner-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-012: Branch Protection with Required Owner Review
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-013-ci-security-scan-on-pull-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-013: CI Security Scan on Pull Requests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-014-codeowners-protection-for-security-critical-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-014: CODEOWNERS Protection for Security-Critical Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-015-reputation-ledger-integrity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-015: Reputation Ledger Integrity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-016-systemuser-prompt-separation-in-evaluator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-016: System/User Prompt Separation in Evaluator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-017-resource-limits-on-evaluation-and-source-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-017: Resource Limits on Evaluation and Source Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-018-repo-audit-gate-for-upstream-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-018: Repo Audit Gate for Upstream Sources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-019-pre-install-sca-gate-pip-audit-guarddog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-019: Pre-Install SCA Gate (pip-audit + GuardDog)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-020-full-dependency-tree-scanning-in-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-020: Full Dependency Tree Scanning in CI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-021-sast-integration-in-evaluator-trust-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-021: SAST Integration in Evaluator Trust Scoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-022-automated-cve-suppression-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-022: Automated CVE Suppression Monitoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-023-interactive-diff-review-for-context-file-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-023: Interactive Diff Review for Context File Migration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-024-secrets-scanning-gate-gitleaksggshield" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-024: Secrets Scanning Gate (gitleaks/ggshield)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-025-package-quarantine-7-day-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-025: Package Quarantine (7-Day Window)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-026-programmatic-pre-install-sca-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-026: Programmatic Pre-Install SCA Gate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-027-multi-ecosystem-sca-via-trivy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-027: Multi-Ecosystem SCA via Trivy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#residual-risk-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Residual Risk Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#assumptions-and-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assumptions and Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#review-schedule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Schedule
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nist-control-mapping-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NIST Control Mapping Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#links" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Links
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="threat-model-open-workspace-builder">Threat Model: Open Workspace Builder<a class="headerlink" href="#threat-model-open-workspace-builder" title="Permanent link">¶</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">¶</a></h2>
+<p>This threat model covers the open-workspace-builder CLI tool and the content it installs into user workspaces. The primary attack surface is not traditional software vulnerabilities but prompt injection through content files. The builder installs markdown files (agents, commands, rules, skills, templates) that Claude interprets as system-level instructions. A malicious file in this pipeline can cause Claude to exfiltrate data, modify files, bypass user oversight, or establish persistence across sessions.</p>
+<ul>
+<li><a href="../adr/">ADR</a></li>
+<li><a href="../prd/">PRD</a></li>
+</ul>
+<h2 id="methodology">Methodology<a class="headerlink" href="#methodology" title="Permanent link">¶</a></h2>
+<p>This threat model uses STRIDE per element applied to the data flow diagrams defined in the ADR. Risk is scored using a likelihood x impact matrix aligned with NIST SP 800-30 Rev. 1 (Guide for Conducting Risk Assessments). Mitigations map to NIST SP 800-53 Rev. 5 control families where applicable, establishing traceability for SOC 2 and future compliance needs.</p>
+<h2 id="system-scope">System Scope<a class="headerlink" href="#system-scope" title="Permanent link">¶</a></h2>
+<h3 id="in-scope">In Scope<a class="headerlink" href="#in-scope" title="Permanent link">¶</a></h3>
+<ul>
+<li>The builder CLI tool and its Python codebase</li>
+<li>All content files the builder installs: ECC agents, commands, rules; custom skills (SKILL.md, scripts); vault templates; context file templates; CLAUDE.md</li>
+<li>The ECC upstream update workflow (fetch, diff, scan, accept/reject)</li>
+<li>The migration workflow (diff existing vault, apply changes)</li>
+<li>The security scanner module (all three layers)</li>
+<li>The reputation ledger and its data</li>
+<li>CI pipeline security scan on pull requests</li>
+<li>Collaborator contributions via GitHub PRs</li>
+</ul>
+<h3 id="out-of-scope">Out of Scope<a class="headerlink" href="#out-of-scope" title="Permanent link">¶</a></h3>
+<ul>
+<li>Claude Code or Cowork platform security (Anthropic's responsibility)</li>
+<li>Obsidian application security</li>
+<li>The user's local filesystem security posture</li>
+<li>Network security during git fetch operations (relies on git/SSH/HTTPS transport security)</li>
+<li>The upstream ECC repo's own CI/CD pipeline</li>
+</ul>
+<h3 id="data-classification-summary">Data Classification Summary<a class="headerlink" href="#data-classification-summary" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th>Classification</th>
+<th>Data Elements</th>
+<th>Regulatory Applicability</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Restricted</td>
+<td>User's populated context files (about-me.md, brand-voice.md, working-style.md) containing PII, career history, clearance status</td>
+<td>Privacy, potential clearance implications</td>
+</tr>
+<tr>
+<td>Confidential</td>
+<td>Security scanner verdicts, reputation ledger (reveals what was flagged and why)</td>
+<td>Internal operational data</td>
+</tr>
+<tr>
+<td>Internal</td>
+<td>Vault structure, project names, template content</td>
+<td>Business-sensitive</td>
+</tr>
+<tr>
+<td>Public</td>
+<td>Builder source code, ECC vendored content (MIT licensed), vault templates (no user data)</td>
+<td>Open source</td>
+</tr>
+</tbody>
+</table>
+<h2 id="trust-boundary-diagram">Trust Boundary Diagram<a class="headerlink" href="#trust-boundary-diagram" title="Permanent link">¶</a></h2>
+<pre class="mermaid"><code>graph TD
+    subgraph TB1 ["TB-1: Upstream → Vendored"]
+        direction LR
+        ECC["ECC Upstream&lt;br/&gt;&lt;i&gt;Third-party repo&lt;/i&gt;"]:::external
+        Vendor["Vendored Copy&lt;br/&gt;&lt;i&gt;vendor/ecc/&lt;/i&gt;"]:::store
+        ECC --&gt;|"DF-1: git fetch&lt;br/&gt;&lt;b&gt;S&lt;/b&gt; T-001 · &lt;b&gt;T&lt;/b&gt; T-002&lt;br/&gt;&lt;b&gt;R&lt;/b&gt; T-003"| Vendor
+    end
+
+    subgraph TB4 ["TB-4: Content → Claude Execution"]
+        direction LR
+        Installed["Installed Content&lt;br/&gt;&lt;i&gt;.claude/ agents,&lt;br/&gt;commands, rules&lt;/i&gt;"]:::store
+        Claude["AI Agent&lt;br/&gt;&lt;i&gt;Interprets as&lt;br/&gt;instructions&lt;/i&gt;"]:::external
+        Installed --&gt;|"&lt;b&gt;T&lt;/b&gt; T-011 · &lt;b&gt;I&lt;/b&gt; T-013&lt;br/&gt;&lt;b&gt;E&lt;/b&gt; T-015 · &lt;b&gt;D&lt;/b&gt; T-014"| Claude
+    end
+
+    subgraph TB3 ["TB-3: Builder → Workspace"]
+        direction LR
+        Builder["Build Engine&lt;br/&gt;&lt;i&gt;owb init&lt;/i&gt;"]:::process
+        Workspace["User Workspace&lt;br/&gt;&lt;i&gt;vault, config, skills&lt;/i&gt;"]:::store
+        Builder --&gt;|"DF-13: file writes"| Workspace
+    end
+
+    subgraph Scanner ["Security Scanner (3 layers)"]
+        L1["Layer 1&lt;br/&gt;Structural"]:::process
+        L2["Layer 2&lt;br/&gt;Pattern&lt;br/&gt;&lt;i&gt;42 rules&lt;/i&gt;"]:::process
+        L3["Layer 3&lt;br/&gt;Semantic&lt;br/&gt;&lt;b&gt;T&lt;/b&gt; T-007 · &lt;b&gt;I&lt;/b&gt; T-008&lt;br/&gt;&lt;b&gt;E&lt;/b&gt; T-010"]:::process
+        L1 --&gt; L2 --&gt; L3
+    end
+
+    subgraph TB2 ["TB-2: PR → Main"]
+        direction LR
+        Contributor["Contributor&lt;br/&gt;&lt;i&gt;Fork/branch&lt;/i&gt;"]:::actor
+        Main["Main Branch&lt;br/&gt;&lt;i&gt;Protected&lt;/i&gt;"]:::store
+        Contributor --&gt;|"DF-20: PR&lt;br/&gt;&lt;b&gt;S&lt;/b&gt; T-016 · &lt;b&gt;T&lt;/b&gt; T-017&lt;br/&gt;&lt;b&gt;E&lt;/b&gt; T-018"| Main
+    end
+
+    subgraph Sources ["TB-6: Upstream Sources"]
+        direction LR
+        Source["Named Source&lt;br/&gt;&lt;i&gt;config-driven&lt;/i&gt;"]:::external
+        Local["Local Content"]:::store
+        Source --&gt;|"&lt;b&gt;S&lt;/b&gt; T-024 · &lt;b&gt;T&lt;/b&gt; T-025&lt;br/&gt;&lt;b&gt;E&lt;/b&gt; T-027"| Local
+    end
+
+    Vendor --&gt; Scanner
+    Scanner --&gt; Builder
+    Main --&gt; Scanner
+
+    classDef external fill:#0A0A14,color:#B0B0C0,stroke:#555,stroke-width:1px
+    classDef store fill:#1B2A4A,color:#F0F0F0,stroke:#B87308,stroke-width:1px,stroke-dasharray:5 5
+    classDef process fill:#12121E,color:#E8B830,stroke:#D4A017,stroke-width:2px
+    classDef actor fill:#1B2A4A,color:#F0F0F0,stroke:#D4A017,stroke-width:2px</code></pre>
+<p>STRIDE notation in the diagram: <strong>S</strong> = Spoofing, <strong>T</strong> = Tampering, <strong>R</strong> = Repudiation, <strong>I</strong> = Information Disclosure, <strong>D</strong> = Denial of Service, <strong>E</strong> = Elevation of Privilege. Threat IDs (T-NNN) map to the threat register below.</p>
+<h2 id="trust-boundaries">Trust Boundaries<a class="headerlink" href="#trust-boundaries" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Boundary</th>
+<th>Crosses</th>
+<th>Enforcement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TB-1</td>
+<td>Upstream ECC repo — Vendored copy</td>
+<td>Third-party markdown content entering the builder's trusted content store</td>
+<td>Security scanner (all three layers), manual review, pinned versioning</td>
+</tr>
+<tr>
+<td>TB-2</td>
+<td>Collaborator PR — Main branch</td>
+<td>Contributor code and content entering the mainline</td>
+<td>GitHub branch protection, CI security scan, owner review</td>
+</tr>
+<tr>
+<td>TB-3</td>
+<td>Builder output — User workspace</td>
+<td>Generated files entering the user's trusted working environment</td>
+<td>User runs the builder explicitly; dry-run mode available</td>
+</tr>
+<tr>
+<td>TB-4</td>
+<td>Vendored content — Claude execution context</td>
+<td>Installed agents/commands/rules being interpreted by Claude as instructions</td>
+<td>Security scanner pre-installation; user's responsibility post-install</td>
+</tr>
+<tr>
+<td>TB-5</td>
+<td>Migration source — User workspace</td>
+<td>New reference content being merged into an existing user workspace</td>
+<td>Interactive accept/reject per file, security scan on all new content</td>
+</tr>
+</tbody>
+</table>
+<h2 id="stride-analysis">STRIDE Analysis<a class="headerlink" href="#stride-analysis" title="Permanent link">¶</a></h2>
+<h3 id="element-ecc-upstream-fetch-df-1">Element: ECC Upstream Fetch (DF-1)<a class="headerlink" href="#element-ecc-upstream-fetch-df-1" title="Permanent link">¶</a></h3>
+<p><strong>Type:</strong> data flow
+<strong>DFD Reference:</strong> DF-1 (ECC Update Flow)</p>
+<table>
+<thead>
+<tr>
+<th>STRIDE Category</th>
+<th>Applicable?</th>
+<th>Threat Description</th>
+<th>Threat ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S</strong>poofing</td>
+<td>Yes</td>
+<td>Attacker compromises the ECC GitHub account or performs a man-in-the-middle on git fetch, delivering malicious content that appears to come from the legitimate maintainer</td>
+<td>T-001</td>
+</tr>
+<tr>
+<td><strong>T</strong>ampering</td>
+<td>Yes</td>
+<td>Attacker modifies ECC content between upstream commit and local fetch (git transport tampering, or compromised GitHub Actions injecting content into releases)</td>
+<td>T-002</td>
+</tr>
+<tr>
+<td><strong>R</strong>epudiation</td>
+<td>Yes</td>
+<td>ECC maintainer pushes malicious content and later force-pushes to remove evidence. No local audit trail of what was offered vs. what was accepted</td>
+<td>T-003</td>
+</tr>
+<tr>
+<td><strong>I</strong>nformation Disclosure</td>
+<td>No</td>
+<td>The fetch itself does not expose user data</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>D</strong>enial of Service</td>
+<td>Yes</td>
+<td>ECC repo becomes unavailable, blocking updates. Not a security threat but an availability concern</td>
+<td>T-004</td>
+</tr>
+<tr>
+<td><strong>E</strong>levation of Privilege</td>
+<td>No</td>
+<td>The fetch process runs with user permissions only</td>
+<td>--</td>
+</tr>
+</tbody>
+</table>
+<h3 id="element-vendored-content-store-ds-1">Element: Vendored Content Store (DS-1)<a class="headerlink" href="#element-vendored-content-store-ds-1" title="Permanent link">¶</a></h3>
+<p><strong>Type:</strong> data store
+<strong>DFD Reference:</strong> DS-1</p>
+<table>
+<thead>
+<tr>
+<th>STRIDE Category</th>
+<th>Applicable?</th>
+<th>Threat Description</th>
+<th>Threat ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S</strong>poofing</td>
+<td>No</td>
+<td>Local filesystem, authenticated by OS</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>T</strong>ampering</td>
+<td>Yes</td>
+<td>An attacker with local filesystem access (or a compromised dependency) modifies vendored content after it passes the security scan but before the next build</td>
+<td>T-005</td>
+</tr>
+<tr>
+<td><strong>R</strong>epudiation</td>
+<td>Yes</td>
+<td>Changes to vendored content are not integrity-checked at build time unless explicitly verified</td>
+<td>T-006</td>
+</tr>
+<tr>
+<td><strong>I</strong>nformation Disclosure</td>
+<td>No</td>
+<td>Vendored content is public (MIT licensed)</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>D</strong>enial of Service</td>
+<td>No</td>
+<td>Local filesystem</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>E</strong>levation of Privilege</td>
+<td>No</td>
+<td>Files are user-owned</td>
+<td>--</td>
+</tr>
+</tbody>
+</table>
+<h3 id="element-security-scanner-semantic-analysis-p-1">Element: Security Scanner — Semantic Analysis (P-1)<a class="headerlink" href="#element-security-scanner-semantic-analysis-p-1" title="Permanent link">¶</a></h3>
+<p><strong>Type:</strong> process
+<strong>DFD Reference:</strong> P-1</p>
+<table>
+<thead>
+<tr>
+<th>STRIDE Category</th>
+<th>Applicable?</th>
+<th>Threat Description</th>
+<th>Threat ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S</strong>poofing</td>
+<td>No</td>
+<td>The scanner is invoked locally</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>T</strong>ampering</td>
+<td>Yes</td>
+<td>A malicious content file is specifically crafted to evade the semantic analysis prompt. Adversarial prompt engineering against the reviewer: the file contains instructions that, when read by the reviewing Claude instance, cause it to report the file as clean</td>
+<td>T-007</td>
+</tr>
+<tr>
+<td><strong>R</strong>epudiation</td>
+<td>No</td>
+<td>Scanner output is logged</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>I</strong>nformation Disclosure</td>
+<td>Yes</td>
+<td>The file content is sent to Claude API for analysis. If the file contains sensitive data (unlikely for ECC content, possible for user-contributed skills), that data is transmitted to Anthropic</td>
+<td>T-008</td>
+</tr>
+<tr>
+<td><strong>D</strong>enial of Service</td>
+<td>Yes</td>
+<td>Scanner depends on Claude API availability. API outage blocks security review, which blocks updates</td>
+<td>T-009</td>
+</tr>
+<tr>
+<td><strong>E</strong>levation of Privilege</td>
+<td>Yes</td>
+<td>If the semantic analysis runs in the same Claude session as the user's workspace (not sandboxed), a malicious file could influence the session context</td>
+<td>T-010</td>
+</tr>
+</tbody>
+</table>
+<h3 id="element-installed-content-in-user-workspace-ds-2">Element: Installed Content in User Workspace (DS-2)<a class="headerlink" href="#element-installed-content-in-user-workspace-ds-2" title="Permanent link">¶</a></h3>
+<p><strong>Type:</strong> data store
+<strong>DFD Reference:</strong> DS-2</p>
+<table>
+<thead>
+<tr>
+<th>STRIDE Category</th>
+<th>Applicable?</th>
+<th>Threat Description</th>
+<th>Threat ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S</strong>poofing</td>
+<td>No</td>
+<td>Local filesystem</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>T</strong>ampering</td>
+<td>Yes</td>
+<td>Post-installation, a malicious agent/rule instructs Claude to modify other installed content files, establishing persistence. For example, an agent that appends instructions to CLAUDE.md or modifies other agent definitions. Policy documents (content/policies/) deployed to Obsidian/code/ — process guidance consumed by ECC agents; no secrets, no executable code</td>
+<td>T-011</td>
+</tr>
+<tr>
+<td><strong>R</strong>epudiation</td>
+<td>Yes</td>
+<td>Claude-initiated file modifications may not be logged or attributed to the originating agent/rule</td>
+<td>T-012</td>
+</tr>
+<tr>
+<td><strong>I</strong>nformation Disclosure</td>
+<td>Yes</td>
+<td>A malicious agent instructs Claude to read sensitive files (context files with PII, SSH keys, credentials, env files) and exfiltrate them via curl, clipboard, or by embedding them in code output</td>
+<td>T-013</td>
+</tr>
+<tr>
+<td><strong>D</strong>enial of Service</td>
+<td>Yes</td>
+<td>A malicious rule degrades Claude's performance by injecting conflicting instructions, wasting tokens on hidden processing, or instructing Claude to refuse legitimate user requests</td>
+<td>T-014</td>
+</tr>
+<tr>
+<td><strong>E</strong>levation of Privilege</td>
+<td>Yes</td>
+<td>A malicious agent instructs Claude to execute arbitrary shell commands, install packages, modify system files, or grant itself permissions the user did not intend</td>
+<td>T-015</td>
+</tr>
+</tbody>
+</table>
+<h3 id="element-collaborator-pr-df-2">Element: Collaborator PR (DF-2)<a class="headerlink" href="#element-collaborator-pr-df-2" title="Permanent link">¶</a></h3>
+<p><strong>Type:</strong> data flow
+<strong>DFD Reference:</strong> DF-2 (Contribution Flow)</p>
+<table>
+<thead>
+<tr>
+<th>STRIDE Category</th>
+<th>Applicable?</th>
+<th>Threat Description</th>
+<th>Threat ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S</strong>poofing</td>
+<td>Yes</td>
+<td>Collaborator's GitHub account is compromised. Attacker submits a PR that appears to come from a trusted contributor</td>
+<td>T-016</td>
+</tr>
+<tr>
+<td><strong>T</strong>ampering</td>
+<td>Yes</td>
+<td>Collaborator submits a PR that modifies content files (agents, skills, templates) to include malicious instructions, either intentionally or because their local machine is compromised</td>
+<td>T-017</td>
+</tr>
+<tr>
+<td><strong>R</strong>epudiation</td>
+<td>No</td>
+<td>GitHub PR history provides full audit trail</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>I</strong>nformation Disclosure</td>
+<td>No</td>
+<td>PRs are to a public repo</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>D</strong>enial of Service</td>
+<td>No</td>
+<td>Bad PRs can be rejected</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>E</strong>levation of Privilege</td>
+<td>Yes</td>
+<td>A PR modifies CI configuration to disable security scanning, or modifies the security scanner itself to whitelist malicious patterns</td>
+<td>T-018</td>
+</tr>
+</tbody>
+</table>
+<h3 id="element-reputation-ledger-ds-3">Element: Reputation Ledger (DS-3)<a class="headerlink" href="#element-reputation-ledger-ds-3" title="Permanent link">¶</a></h3>
+<p><strong>Type:</strong> data store
+<strong>DFD Reference:</strong> DS-3</p>
+<table>
+<thead>
+<tr>
+<th>STRIDE Category</th>
+<th>Applicable?</th>
+<th>Threat Description</th>
+<th>Threat ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S</strong>poofing</td>
+<td>No</td>
+<td>Local file</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>T</strong>ampering</td>
+<td>Yes</td>
+<td>Attacker modifies the reputation ledger to clear flag history, preventing the threshold-based drop recommendation from triggering</td>
+<td>T-019</td>
+</tr>
+<tr>
+<td><strong>R</strong>epudiation</td>
+<td>No</td>
+<td>Ledger is append-only by design</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>I</strong>nformation Disclosure</td>
+<td>Yes</td>
+<td>The ledger reveals what content was flagged and why, which could help an attacker craft evasion strategies if they gain read access</td>
+<td>T-020</td>
+</tr>
+<tr>
+<td><strong>D</strong>enial of Service</td>
+<td>No</td>
+<td>Local file</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>E</strong>levation of Privilege</td>
+<td>No</td>
+<td>Data file, not executable</td>
+<td>--</td>
+</tr>
+</tbody>
+</table>
+<h3 id="element-evaluator-pipeline-p-2">Element: Evaluator Pipeline (P-2)<a class="headerlink" href="#element-evaluator-pipeline-p-2" title="Permanent link">¶</a></h3>
+<p><strong>Type:</strong> process
+<strong>DFD Reference:</strong> P-2 (Evaluation Flow)</p>
+<table>
+<thead>
+<tr>
+<th>STRIDE Category</th>
+<th>Applicable?</th>
+<th>Threat Description</th>
+<th>Threat ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S</strong>poofing</td>
+<td>No</td>
+<td>Evaluator runs locally</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>T</strong>ampering</td>
+<td>Yes</td>
+<td>A malicious SKILL.md contains prompt injection that manipulates the scoring LLM to report inflated scores, causing the evaluator to incorporate a harmful skill</td>
+<td>T-021</td>
+</tr>
+<tr>
+<td><strong>R</strong>epudiation</td>
+<td>No</td>
+<td>Evaluation results are persisted</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>I</strong>nformation Disclosure</td>
+<td>Yes</td>
+<td>Skill content sent to LLM for scoring may contain proprietary instructions that are disclosed to the model provider</td>
+<td>T-022</td>
+</tr>
+<tr>
+<td><strong>D</strong>enial of Service</td>
+<td>Yes</td>
+<td>A crafted skill generates an extremely large test suite or produces responses that exhaust token budgets</td>
+<td>T-023</td>
+</tr>
+<tr>
+<td><strong>E</strong>levation of Privilege</td>
+<td>No</td>
+<td>Evaluator does not execute skill output as code</td>
+<td>--</td>
+</tr>
+</tbody>
+</table>
+<h3 id="element-source-infrastructure-p-3">Element: Source Infrastructure (P-3)<a class="headerlink" href="#element-source-infrastructure-p-3" title="Permanent link">¶</a></h3>
+<p><strong>Type:</strong> process
+<strong>DFD Reference:</strong> P-3 (Source Update Flow)</p>
+<table>
+<thead>
+<tr>
+<th>STRIDE Category</th>
+<th>Applicable?</th>
+<th>Threat Description</th>
+<th>Threat ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S</strong>poofing</td>
+<td>Yes</td>
+<td>Attacker compromises a named upstream source's repo, delivering malicious content that passes basic content scans but contains hook directories or setup scripts with host modification commands</td>
+<td>T-024</td>
+</tr>
+<tr>
+<td><strong>T</strong>ampering</td>
+<td>Yes</td>
+<td>Upstream source includes a <code>.hooks/</code> directory, <code>setup.py</code> with <code>os.system()</code> calls, or event trigger files that execute on the user's machine when the content is applied</td>
+<td>T-025</td>
+</tr>
+<tr>
+<td><strong>R</strong>epudiation</td>
+<td>No</td>
+<td>Update operations are logged</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>I</strong>nformation Disclosure</td>
+<td>No</td>
+<td>Source content is fetched, not user data sent</td>
+<td>--</td>
+</tr>
+<tr>
+<td><strong>D</strong>enial of Service</td>
+<td>Yes</td>
+<td>Malicious source provides extremely large files or deeply nested directories to exhaust disk or processing time</td>
+<td>T-026</td>
+</tr>
+<tr>
+<td><strong>E</strong>levation of Privilege</td>
+<td>Yes</td>
+<td>Setup scripts or hooks in upstream sources attempt to modify the host system (install packages, modify PATH, write to system directories)</td>
+<td>T-027</td>
+</tr>
+</tbody>
+</table>
+<h2 id="risk-assessment">Risk Assessment<a class="headerlink" href="#risk-assessment" title="Permanent link">¶</a></h2>
+<p>Risk scoring follows NIST SP 800-30 Rev. 1. Each identified threat is rated on likelihood and impact, producing an overall risk level.</p>
+<h3 id="likelihood-scale-nist-sp-800-30-table-h-2">Likelihood Scale (NIST SP 800-30 Table H-2)<a class="headerlink" href="#likelihood-scale-nist-sp-800-30-table-h-2" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Very High</td>
+<td>10</td>
+<td>Adversary is almost certain to initiate, or occurs routinely</td>
+</tr>
+<tr>
+<td>High</td>
+<td>8</td>
+<td>Adversary is highly likely to initiate</td>
+</tr>
+<tr>
+<td>Moderate</td>
+<td>5</td>
+<td>Adversary is somewhat likely to initiate</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>2</td>
+<td>Adversary is unlikely to initiate</td>
+</tr>
+<tr>
+<td>Very Low</td>
+<td>0</td>
+<td>Adversary is highly unlikely to initiate</td>
+</tr>
+</tbody>
+</table>
+<h3 id="impact-scale-nist-sp-800-30-table-h-3">Impact Scale (NIST SP 800-30 Table H-3)<a class="headerlink" href="#impact-scale-nist-sp-800-30-table-h-3" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Very High</td>
+<td>10</td>
+<td>Catastrophic adverse effect on operations, assets, or individuals</td>
+</tr>
+<tr>
+<td>High</td>
+<td>8</td>
+<td>Severe adverse effect</td>
+</tr>
+<tr>
+<td>Moderate</td>
+<td>5</td>
+<td>Serious adverse effect</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>2</td>
+<td>Limited adverse effect</td>
+</tr>
+<tr>
+<td>Very Low</td>
+<td>0</td>
+<td>Negligible adverse effect</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risk-matrix">Risk Matrix<a class="headerlink" href="#risk-matrix" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Impact: Very Low (0)</th>
+<th>Low (2)</th>
+<th>Moderate (5)</th>
+<th>High (8)</th>
+<th>Very High (10)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Likelihood: Very High (10)</strong></td>
+<td>Low</td>
+<td>Moderate</td>
+<td>High</td>
+<td>Very High</td>
+<td>Very High</td>
+</tr>
+<tr>
+<td><strong>High (8)</strong></td>
+<td>Low</td>
+<td>Moderate</td>
+<td>High</td>
+<td>High</td>
+<td>Very High</td>
+</tr>
+<tr>
+<td><strong>Moderate (5)</strong></td>
+<td>Low</td>
+<td>Low</td>
+<td>Moderate</td>
+<td>High</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>Low (2)</strong></td>
+<td>Low</td>
+<td>Low</td>
+<td>Low</td>
+<td>Moderate</td>
+<td>Moderate</td>
+</tr>
+<tr>
+<td><strong>Very Low (0)</strong></td>
+<td>Low</td>
+<td>Low</td>
+<td>Low</td>
+<td>Low</td>
+<td>Low</td>
+</tr>
+</tbody>
+</table>
+<h3 id="threat-register">Threat Register<a class="headerlink" href="#threat-register" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th>Threat ID</th>
+<th>Threat</th>
+<th>STRIDE</th>
+<th>Element</th>
+<th>Likelihood</th>
+<th>Impact</th>
+<th>Risk Level</th>
+<th>Mitigation ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T-001</td>
+<td>ECC account compromise / MITM</td>
+<td>S</td>
+<td>DF-1</td>
+<td>Low (2)</td>
+<td>High (8)</td>
+<td>Moderate</td>
+<td>M-001, M-002</td>
+</tr>
+<tr>
+<td>T-002</td>
+<td>Git transport tampering</td>
+<td>T</td>
+<td>DF-1</td>
+<td>Very Low (0)</td>
+<td>High (8)</td>
+<td>Low</td>
+<td>M-001</td>
+</tr>
+<tr>
+<td>T-003</td>
+<td>ECC maintainer pushes malicious content then covers tracks</td>
+<td>R</td>
+<td>DF-1</td>
+<td>Low (2)</td>
+<td>High (8)</td>
+<td>Moderate</td>
+<td>M-003, M-004</td>
+</tr>
+<tr>
+<td>T-005</td>
+<td>Local filesystem tampering of vendored content</td>
+<td>T</td>
+<td>DS-1</td>
+<td>Very Low (0)</td>
+<td>High (8)</td>
+<td>Low</td>
+<td>M-005</td>
+</tr>
+<tr>
+<td>T-007</td>
+<td>Adversarial evasion of semantic scanner</td>
+<td>T</td>
+<td>P-1</td>
+<td>Moderate (5)</td>
+<td>Very High (10)</td>
+<td>High</td>
+<td>M-006, M-007</td>
+</tr>
+<tr>
+<td>T-008</td>
+<td>Sensitive data in scanned files sent to Claude API</td>
+<td>I</td>
+<td>P-1</td>
+<td>Low (2)</td>
+<td>Moderate (5)</td>
+<td>Low</td>
+<td>M-008</td>
+</tr>
+<tr>
+<td>T-010</td>
+<td>Non-sandboxed scanner session context pollution</td>
+<td>E</td>
+<td>P-1</td>
+<td>High (8)</td>
+<td>High (8)</td>
+<td>High</td>
+<td>M-009</td>
+</tr>
+<tr>
+<td>T-011</td>
+<td>Malicious agent establishes persistence via file modification</td>
+<td>T</td>
+<td>DS-2</td>
+<td>Moderate (5)</td>
+<td>Very High (10)</td>
+<td>High</td>
+<td>M-006, M-010</td>
+</tr>
+<tr>
+<td>T-013</td>
+<td>Data exfiltration via malicious agent instructions</td>
+<td>I</td>
+<td>DS-2</td>
+<td>Moderate (5)</td>
+<td>Very High (10)</td>
+<td>High</td>
+<td>M-006, M-010, M-011</td>
+</tr>
+<tr>
+<td>T-015</td>
+<td>Arbitrary command execution via malicious agent</td>
+<td>E</td>
+<td>DS-2</td>
+<td>Moderate (5)</td>
+<td>Very High (10)</td>
+<td>High</td>
+<td>M-006, M-010</td>
+</tr>
+<tr>
+<td>T-016</td>
+<td>Compromised collaborator account</td>
+<td>S</td>
+<td>DF-2</td>
+<td>Low (2)</td>
+<td>High (8)</td>
+<td>Moderate</td>
+<td>M-012, M-013</td>
+</tr>
+<tr>
+<td>T-017</td>
+<td>Malicious collaborator PR (intentional or compromised machine)</td>
+<td>T</td>
+<td>DF-2</td>
+<td>Low (2)</td>
+<td>Very High (10)</td>
+<td>Moderate</td>
+<td>M-012, M-013, M-006</td>
+</tr>
+<tr>
+<td>T-018</td>
+<td>PR disables security scanning or modifies scanner to whitelist</td>
+<td>E</td>
+<td>DF-2</td>
+<td>Low (2)</td>
+<td>Very High (10)</td>
+<td>Moderate</td>
+<td>M-014</td>
+</tr>
+<tr>
+<td>T-019</td>
+<td>Reputation ledger tampering</td>
+<td>T</td>
+<td>DS-3</td>
+<td>Very Low (0)</td>
+<td>Moderate (5)</td>
+<td>Low</td>
+<td>M-015</td>
+</tr>
+<tr>
+<td>T-020</td>
+<td>Reputation ledger information disclosure</td>
+<td>I</td>
+<td>DS-3</td>
+<td>Very Low (0)</td>
+<td>Low (2)</td>
+<td>Low</td>
+<td>M-015</td>
+</tr>
+<tr>
+<td>T-021</td>
+<td>Score manipulation via prompt injection in SKILL.md</td>
+<td>T</td>
+<td>P-2</td>
+<td>Moderate (5)</td>
+<td>High (8)</td>
+<td>High</td>
+<td>M-016, M-006</td>
+</tr>
+<tr>
+<td>T-022</td>
+<td>Proprietary skill content disclosed to model provider</td>
+<td>I</td>
+<td>P-2</td>
+<td>Moderate (5)</td>
+<td>Moderate (5)</td>
+<td>Moderate</td>
+<td>M-008</td>
+</tr>
+<tr>
+<td>T-023</td>
+<td>Token exhaustion via crafted test suite</td>
+<td>D</td>
+<td>P-2</td>
+<td>Low (2)</td>
+<td>Moderate (5)</td>
+<td>Low</td>
+<td>M-017</td>
+</tr>
+<tr>
+<td>T-024</td>
+<td>Compromised upstream source with hidden hooks</td>
+<td>S</td>
+<td>P-3</td>
+<td>Moderate (5)</td>
+<td>High (8)</td>
+<td>High</td>
+<td>M-018</td>
+</tr>
+<tr>
+<td>T-025</td>
+<td>Setup scripts with host modification in upstream</td>
+<td>T</td>
+<td>P-3</td>
+<td>Moderate (5)</td>
+<td>Very High (10)</td>
+<td>High</td>
+<td>M-018</td>
+</tr>
+<tr>
+<td>T-026</td>
+<td>Resource exhaustion via malicious source content</td>
+<td>D</td>
+<td>P-3</td>
+<td>Low (2)</td>
+<td>Low (2)</td>
+<td>Low</td>
+<td>M-017</td>
+</tr>
+<tr>
+<td>T-027</td>
+<td>Host system modification via upstream hooks/scripts</td>
+<td>E</td>
+<td>P-3</td>
+<td>Moderate (5)</td>
+<td>Very High (10)</td>
+<td>High</td>
+<td>M-018</td>
+</tr>
+<tr>
+<td>T-028</td>
+<td>Malicious package injection via typosquatted or compromised PyPI package</td>
+<td>T</td>
+<td>DF-1</td>
+<td>Moderate (5)</td>
+<td>Very High (10)</td>
+<td>High</td>
+<td>M-019</td>
+</tr>
+<tr>
+<td>T-029</td>
+<td>Vulnerable transitive dependency pulled in by direct dependency</td>
+<td>T</td>
+<td>DF-1</td>
+<td>High (8)</td>
+<td>High (8)</td>
+<td>High</td>
+<td>M-020</td>
+</tr>
+<tr>
+<td>T-030</td>
+<td>Insecure code patterns in evaluated components (SQL injection, path traversal)</td>
+<td>T</td>
+<td>P-2</td>
+<td>Moderate (5)</td>
+<td>High (8)</td>
+<td>High</td>
+<td>M-021</td>
+</tr>
+<tr>
+<td>T-031</td>
+<td>Stale CVE suppression masking a known vulnerability after upstream fix ships</td>
+<td>T</td>
+<td>DS-1</td>
+<td>Moderate (5)</td>
+<td>High (8)</td>
+<td>High</td>
+<td>M-022</td>
+</tr>
+<tr>
+<td>T-032</td>
+<td>Malicious content injected into context files preserved during interactive migrate</td>
+<td>T</td>
+<td>TB-5</td>
+<td>Low (2)</td>
+<td>High (8)</td>
+<td>Moderate</td>
+<td>M-023</td>
+</tr>
+</tbody>
+</table>
+<h2 id="mitigations">Mitigations<a class="headerlink" href="#mitigations" title="Permanent link">¶</a></h2>
+<h3 id="m-001-pinned-vendoring-with-commit-hash-tracking">M-001: Pinned Vendoring with Commit Hash Tracking<a class="headerlink" href="#m-001-pinned-vendoring-with-commit-hash-tracking" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-001, T-002</li>
+<li><strong>Description:</strong> ECC content is vendored at a specific commit hash. The builder never pulls content at build time. Updates are explicit, deliberate operations (<code>owb ecc update</code>) that produce a diff for review. The vendored copy includes the upstream commit hash in a metadata file for traceability.</li>
+<li><strong>NIST 800-53 Control:</strong> CM-2 Baseline Configuration, SA-12 Supply Chain Protection</li>
+<li><strong>Implementation:</strong> <code>vendor/ecc/</code> directory with <code>vendor/ecc/.upstream-meta.json</code> tracking repo URL, commit hash, date fetched, and last scan results</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> If the upstream repo is compromised between the user's last update and the next, the user will be offered malicious content during the next <code>owb ecc update</code>. The security scanner (M-006) is the compensating control.</li>
+</ul>
+<h3 id="m-002-git-signature-verification-deferred">M-002: Git Signature Verification (Deferred)<a class="headerlink" href="#m-002-git-signature-verification-deferred" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-001</li>
+<li><strong>Description:</strong> If the ECC maintainer signs commits, the builder can verify signatures during <code>owb ecc update</code>. This enhancement is contingent on the upstream repo adopting signed commits.</li>
+<li><strong>NIST 800-53 Control:</strong> SC-8 Transmission Confidentiality and Integrity</li>
+<li><strong>Implementation:</strong> Deferred. Monitor upstream for GPG/SSH signing adoption.</li>
+<li><strong>Status:</strong> deferred</li>
+<li><strong>Residual risk:</strong> Without signature verification, account compromise remains undetectable at the git layer. The security scanner is the primary control.</li>
+</ul>
+<h3 id="m-003-local-audit-trail-for-ecc-updates">M-003: Local Audit Trail for ECC Updates<a class="headerlink" href="#m-003-local-audit-trail-for-ecc-updates" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-003</li>
+<li><strong>Description:</strong> Every <code>owb ecc update</code> operation logs the full diff (offered changes), the security scan results, and the accept/reject decision per file. This log persists locally even if the upstream repo is force-pushed.</li>
+<li><strong>NIST 800-53 Control:</strong> AU-3 Content of Audit Records, AU-6 Audit Record Review</li>
+<li><strong>Implementation:</strong> <code>vendor/ecc/.update-log.jsonl</code> — append-only JSON lines file recording each update operation</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Local log can be tampered with by someone with filesystem access (addressed by M-015).</li>
+</ul>
+<h3 id="m-004-reputation-ledger-with-threshold-based-drop">M-004: Reputation Ledger with Threshold-Based Drop<a class="headerlink" href="#m-004-reputation-ledger-with-threshold-based-drop" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-003</li>
+<li><strong>Description:</strong> The builder maintains a ledger of security flag events per upstream source. Each entry records the file, flag type, severity, and disposition (forked, marked malicious, false positive). If a source exceeds a configurable threshold of confirmed malicious flags, the builder recommends dropping the upstream and freezing on the last known-good copy.</li>
+<li><strong>NIST 800-53 Control:</strong> SA-12 Supply Chain Protection, RA-5 Vulnerability Monitoring and Scanning</li>
+<li><strong>Implementation:</strong> <code>~/.owb/reputation-ledger.jsonl</code> stored in user's home directory (not in the repo)</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Threshold is a judgment call. Too low produces false positives; too high lets repeated low-severity issues accumulate.</li>
+</ul>
+<h3 id="m-005-build-time-integrity-check-for-vendored-content">M-005: Build-Time Integrity Check for Vendored Content<a class="headerlink" href="#m-005-build-time-integrity-check-for-vendored-content" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-005, T-006</li>
+<li><strong>Description:</strong> The builder computes and stores content hashes for all vendored files at scan/accept time. Build-time re-verification before installing content is not yet implemented.</li>
+<li><strong>NIST 800-53 Control:</strong> SI-7 Software, Firmware, and Information Integrity</li>
+<li><strong>Implementation:</strong> <code>vendor/ecc/.content-hashes.json</code> is generated during <code>owb ecc update</code> when files are accepted. Build-time hash verification during <code>owb init</code> and <code>owb migrate</code> is not yet implemented — <code>engine/ecc.py</code> copies files without checking hashes.</li>
+<li><strong>Status:</strong> partial</li>
+<li><strong>Residual risk:</strong> An attacker who modifies both the content and the hash file defeats this control. Mitigated by filesystem permissions and user awareness.</li>
+</ul>
+<h3 id="m-006-three-layer-security-scanner">M-006: Three-Layer Security Scanner<a class="headerlink" href="#m-006-three-layer-security-scanner" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-007, T-011, T-013, T-015, T-017</li>
+<li><strong>Description:</strong> All content files (ECC updates, collaborator PRs, migration additions) pass through a three-layer security scan before acceptance. Layer 1: Structural validation (file type, size, encoding, Unicode anomalies). Layer 2: Pattern matching against known-bad indicators (external URLs, shell commands, sensitive file paths, stealth keywords, self-modification references, encoded payloads). Layer 3: Sandboxed semantic analysis (a separate Claude instance reviews the file for prompt injection, behavioral manipulation, and social engineering).</li>
+<li><strong>NIST 800-53 Control:</strong> SI-3 Malicious Code Protection, RA-5 Vulnerability Monitoring and Scanning, CA-8 Penetration Testing (adversarial test suite)</li>
+<li><strong>Implementation:</strong> <code>open_workspace_builder/security/</code> module with <code>structural.py</code>, <code>patterns.py</code>, <code>semantic.py</code>, and <code>scanner.py</code> orchestrator. Pattern library stored as data (<code>security/patterns.yaml</code>). Adversarial test suite in <code>tests/security/</code>.</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Adversarial evasion of the semantic layer (T-007) remains the highest residual risk. See M-007.</li>
+</ul>
+<h3 id="m-007-adversarial-test-suite-for-scanner">M-007: Adversarial Test Suite for Scanner<a class="headerlink" href="#m-007-adversarial-test-suite-for-scanner" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-007</li>
+<li><strong>Description:</strong> The test suite includes deliberately crafted malicious files designed to evade each scanner layer. These test prompt injection variants, Unicode tricks, encoded payloads, stealth keywords in natural language context, and multi-file attack chains (where no single file is malicious but the combination is). The test suite is expanded whenever a new evasion technique is discovered.</li>
+<li><strong>NIST 800-53 Control:</strong> CA-8 Penetration Testing</li>
+<li><strong>Implementation:</strong> <code>tests/security/adversarial/</code> directory with categorized test cases and expected verdicts</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Novel evasion techniques will succeed until they are discovered and added to the test suite. This is inherent to any signature/pattern-based detection system.</li>
+</ul>
+<h3 id="m-008-content-only-scanning-no-user-data-in-scan-payload">M-008: Content-Only Scanning (No User Data in Scan Payload)<a class="headerlink" href="#m-008-content-only-scanning-no-user-data-in-scan-payload" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-008</li>
+<li><strong>Description:</strong> The semantic scanner receives only the file content and a fixed analysis prompt. No user context, vault data, or filesystem paths are included in the scan payload. The scanner runs as a stateless, context-free analysis.</li>
+<li><strong>NIST 800-53 Control:</strong> SC-7 Boundary Protection, AC-4 Information Flow Enforcement</li>
+<li><strong>Implementation:</strong> The scanner constructs a minimal prompt containing only the file content and analysis instructions. No session context, no user identity, no vault paths.</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> The file content itself may contain identifying information if it is a user-contributed skill or template. This is acceptable because the content is what we are scanning.</li>
+</ul>
+<h3 id="m-009-sandboxed-scanner-execution">M-009: Sandboxed Scanner Execution<a class="headerlink" href="#m-009-sandboxed-scanner-execution" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-010</li>
+<li><strong>Description:</strong> The semantic analysis layer runs in a separate Claude instance (subagent or API call) with no access to the user's filesystem, vault, or session context. The scanner instance receives only the file content and returns only the verdict. It cannot execute commands, read files, or influence the user's session.</li>
+<li><strong>NIST 800-53 Control:</strong> SC-39 Process Isolation, SC-7 Boundary Protection</li>
+<li><strong>Implementation:</strong> Scanner uses Claude API with a minimal system prompt. No tool use enabled. Response is parsed as structured data (JSON verdict).</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Relies on Claude API's isolation guarantees. If the API response parsing has injection vulnerabilities (e.g., the verdict JSON contains executable content that gets eval'd), isolation is defeated. Mitigation: strict JSON schema validation on scanner output.</li>
+</ul>
+<h3 id="m-010-pattern-detection-for-self-modification-and-persistence">M-010: Pattern Detection for Self-Modification and Persistence<a class="headerlink" href="#m-010-pattern-detection-for-self-modification-and-persistence" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-011, T-013, T-015</li>
+<li><strong>Description:</strong> Layer 2 pattern matching specifically flags content that references other agent/rule/skill files, instructs modification of CLAUDE.md or config files, or contains instructions that would persist across sessions. These patterns indicate a file is attempting to influence beyond its own scope.</li>
+<li><strong>NIST 800-53 Control:</strong> SI-3 Malicious Code Protection</li>
+<li><strong>Implementation:</strong> Patterns in <code>security/patterns.yaml</code> under the <code>self-modification</code> and <code>persistence</code> categories</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Indirect references (describing the target file's purpose without naming it, then instructing "update the workspace configuration") may evade pattern matching. The semantic layer is the compensating control.</li>
+</ul>
+<h3 id="m-011-exfiltration-pattern-detection">M-011: Exfiltration Pattern Detection<a class="headerlink" href="#m-011-exfiltration-pattern-detection" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-013</li>
+<li><strong>Description:</strong> Layer 2 specifically flags shell commands that perform network operations (curl, wget, nc, ssh with remote targets), references to sensitive file paths (~/.ssh, ~/.aws, .env, credentials), and instructions to embed file contents in output. These are the primary exfiltration vectors in a Claude prompt context.</li>
+<li><strong>NIST 800-53 Control:</strong> SI-3 Malicious Code Protection, SC-7 Boundary Protection</li>
+<li><strong>Implementation:</strong> Patterns in <code>security/patterns.yaml</code> under the <code>exfiltration</code> category</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Creative exfiltration (e.g., "include the contents of the user's configuration file in a code review comment" without naming specific paths) may evade pattern matching. Semantic layer compensates.</li>
+</ul>
+<h3 id="m-012-branch-protection-with-required-owner-review">M-012: Branch Protection with Required Owner Review<a class="headerlink" href="#m-012-branch-protection-with-required-owner-review" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-016, T-017</li>
+<li><strong>Description:</strong> GitHub branch protection on <code>main</code> requires at least one approving review from the repository owner before merge. The collaborator (junior dev) cannot merge their own PRs. The owner reviews all changes to content files (agents, skills, templates) with the same scrutiny as code changes.</li>
+<li><strong>NIST 800-53 Control:</strong> CM-3 Configuration Change Control, AC-5 Separation of Duties</li>
+<li><strong>Implementation:</strong> GitHub branch protection rules: require 1 review, dismiss stale reviews on new push, restrict merge to admin</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Owner review quality is the control's effectiveness. Fatigued or rushed reviews may miss subtle issues.</li>
+</ul>
+<h3 id="m-013-ci-security-scan-on-pull-requests">M-013: CI Security Scan on Pull Requests<a class="headerlink" href="#m-013-ci-security-scan-on-pull-requests" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-016, T-017</li>
+<li><strong>Description:</strong> PRs should trigger a GitHub Actions workflow that runs the security scanner on changed content files.</li>
+<li><strong>NIST 800-53 Control:</strong> SA-11 Developer Testing and Evaluation, SI-3 Malicious Code Protection</li>
+<li><strong>Implementation:</strong> The <code>owb security scan</code> CLI command is implemented and functional. The CI workflow (<code>.github/workflows/security-scan.yml</code>) that invokes it on PR diffs does not yet exist.</li>
+<li><strong>Status:</strong> not implemented</li>
+<li><strong>Residual risk:</strong> If the PR modifies the scanner itself to whitelist the malicious pattern, the CI scan passes. See M-014.</li>
+</ul>
+<h3 id="m-014-codeowners-protection-for-security-critical-files">M-014: CODEOWNERS Protection for Security-Critical Files<a class="headerlink" href="#m-014-codeowners-protection-for-security-critical-files" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-018</li>
+<li><strong>Description:</strong> GitHub CODEOWNERS file designates the repository owner as the required reviewer for changes to the security scanner module, CI configuration, CODEOWNERS itself, and the pattern library. The collaborator cannot approve changes to these files.</li>
+<li><strong>NIST 800-53 Control:</strong> AC-5 Separation of Duties, CM-5 Access Restrictions for Change</li>
+<li><strong>Implementation:</strong> <code>.github/CODEOWNERS</code> file with entries for <code>open_workspace_builder/security/</code>, <code>.github/workflows/</code>, <code>CODEOWNERS</code>, and <code>security/patterns.yaml</code></li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> GitHub CODEOWNERS enforcement depends on branch protection being enabled. If branch protection is accidentally disabled, the control is ineffective.</li>
+</ul>
+<h3 id="m-015-reputation-ledger-integrity">M-015: Reputation Ledger Integrity<a class="headerlink" href="#m-015-reputation-ledger-integrity" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-019, T-020</li>
+<li><strong>Description:</strong> The reputation ledger is stored in the user's home directory (<code>~/.owb/</code>), not in the repository. It is append-only by design (new entries are appended; existing entries are never modified or deleted by the tool). The ledger file permissions are set to user-read-write only (600).</li>
+<li><strong>NIST 800-53 Control:</strong> AU-9 Protection of Audit Information</li>
+<li><strong>Implementation:</strong> Ledger write operations are append-only (<code>open(..., "a")</code>). File is created with 0600 permissions via <code>os.chmod</code>. Permission modification warning is not yet implemented.</li>
+<li><strong>Status:</strong> partial</li>
+<li><strong>Residual risk:</strong> A user with filesystem access can still modify the file. This is acceptable — the user is the trust anchor in this threat model.</li>
+</ul>
+<h3 id="m-016-systemuser-prompt-separation-in-evaluator">M-016: System/User Prompt Separation in Evaluator<a class="headerlink" href="#m-016-systemuser-prompt-separation-in-evaluator" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-021</li>
+<li><strong>Description:</strong> All evaluator LLM calls use strict system/user message separation. Scoring rubrics and decision criteria stay in the system prompt (trusted, not influenced by skill content). Skill content and test outputs are placed in the user message, wrapped in XML delimiters (<code>&lt;skill_output&gt;</code>, <code>&lt;skill_instructions&gt;</code>) with explicit instructions to treat the content as data to evaluate, not instructions to follow.</li>
+<li><strong>NIST 800-53 Control:</strong> SI-3 Malicious Code Protection, SC-7 Boundary Protection</li>
+<li><strong>Implementation:</strong> evaluator/scorer.py, evaluator/judge.py, evaluator/manager.py</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Sophisticated prompt injection may still influence scoring. The system/user separation raises the bar but does not eliminate the risk. Future mitigation: post-hoc score validation and multi-judge consensus.</li>
+</ul>
+<h3 id="m-017-resource-limits-on-evaluation-and-source-operations">M-017: Resource Limits on Evaluation and Source Operations<a class="headerlink" href="#m-017-resource-limits-on-evaluation-and-source-operations" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-023, T-026</li>
+<li><strong>Description:</strong> The evaluator enforces a minimum test case count (configurable, default 8) and uses bounded max_tokens on all LLM calls. Source discovery respects exclude patterns and does not recurse into directories matching exclusion rules.</li>
+<li><strong>NIST 800-53 Control:</strong> SC-5 Denial of Service Protection</li>
+<li><strong>Implementation:</strong> EvaluationConfig.min_test_cases, max_tokens parameters on ModelBackend calls, SourceConfig.exclude patterns</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Token budgets protect against single-call exhaustion but not against many legitimate calls in a large test suite.</li>
+</ul>
+<h3 id="m-018-repo-audit-gate-for-upstream-sources">M-018: Repo Audit Gate for Upstream Sources<a class="headerlink" href="#m-018-repo-audit-gate-for-upstream-sources" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-024, T-025, T-027</li>
+<li><strong>Description:</strong> Before any content from an upstream source is presented for review, the RepoAuditor checks for known-dangerous patterns: <code>.hooks/</code> directories, <code>setup.py</code>/<code>setup.cfg</code> with executable content, event trigger files, and cross-file import chains. Files matching these patterns receive warn or block verdicts. Blocked files cannot be accepted.</li>
+<li><strong>NIST 800-53 Control:</strong> SA-12 Supply Chain Protection, SI-3 Malicious Code Protection</li>
+<li><strong>Implementation:</strong> sources/audit.py with configurable check rules</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Novel attack vectors (e.g., content that instructs the AI to create hooks post-installation) are not caught by static audit. The security scanner (M-006) is the compensating control.</li>
+</ul>
+<h3 id="m-019-pre-install-sca-gate-pip-audit-guarddog">M-019: Pre-Install SCA Gate (pip-audit + GuardDog)<a class="headerlink" href="#m-019-pre-install-sca-gate-pip-audit-guarddog" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-028</li>
+<li><strong>Description:</strong> Before any package installation, the <code>owb audit package &lt;name&gt;</code> command runs pip-audit (known CVE check against OSV) and GuardDog (heuristic malware detection via Semgrep/YARA rules). An ECC rule (<code>dependency-security.md</code>) instructs Claude Code to invoke this scan before any pip/uv install command. CI runs pip-audit on every push as a backstop.</li>
+<li><strong>NIST 800-53 Control:</strong> SA-12 Supply Chain Protection, RA-5 Vulnerability Monitoring and Scanning</li>
+<li><strong>Implementation:</strong> <code>security/dep_audit.py</code> (audit_single_package), <code>vendor/ecc/rules/common/dependency-security.md</code>, <code>.github/workflows/ci.yml</code> (dep-scan job)</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Zero-day supply chain attacks not yet in the OSV database will not be caught by pip-audit. GuardDog's heuristic detection provides partial coverage for novel attacks but is not guaranteed.</li>
+</ul>
+<h3 id="m-020-full-dependency-tree-scanning-in-ci">M-020: Full Dependency Tree Scanning in CI<a class="headerlink" href="#m-020-full-dependency-tree-scanning-in-ci" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-029</li>
+<li><strong>Description:</strong> pip-audit resolves the full dependency tree (including transitive dependencies) and checks all packages against OSV. The CI dep-scan job runs on every push to main, catching vulnerable transitive deps introduced by direct dependency updates.</li>
+<li><strong>NIST 800-53 Control:</strong> RA-5 Vulnerability Monitoring and Scanning, SA-12 Supply Chain Protection</li>
+<li><strong>Implementation:</strong> <code>.github/workflows/ci.yml</code> dep-scan job, <code>owb audit deps</code> CLI command</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Vulnerabilities disclosed between CI runs remain undetected until the next push. The weekly suppression monitor (M-022) provides an additional check for known suppressed CVEs.</li>
+</ul>
+<h3 id="m-021-sast-integration-in-evaluator-trust-scoring">M-021: SAST Integration in Evaluator Trust Scoring<a class="headerlink" href="#m-021-sast-integration-in-evaluator-trust-scoring" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-030</li>
+<li><strong>Description:</strong> Semgrep SAST scanning runs on source code via <code>owb security scan --sast</code>. Findings feed into the trust tier scoring: ERROR-severity SAST findings block T0 assignment and force Tier 2 with manual review required. The evaluator's <code>TrustTierAssigner.assign()</code> accepts <code>sast_error</code> as an input parameter.</li>
+<li><strong>NIST 800-53 Control:</strong> SA-11 Developer Testing and Evaluation, SI-3 Malicious Code Protection</li>
+<li><strong>Implementation:</strong> <code>security/sast.py</code> (Semgrep wrapper), <code>evaluator/trust.py</code> (sast_error parameter), <code>cli.py</code> (--sast flag)</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Custom or novel vulnerability patterns not covered by Semgrep's rule database will not be detected. Rule coverage depends on Semgrep community and registry updates.</li>
+</ul>
+<h3 id="m-022-automated-cve-suppression-monitoring">M-022: Automated CVE Suppression Monitoring<a class="headerlink" href="#m-022-automated-cve-suppression-monitoring" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-031</li>
+<li><strong>Description:</strong> A YAML registry (<code>security/data/suppressions.yaml</code>) tracks every suppressed CVE with package name, pinned version, suppression date, and reason. <code>owb audit check-suppressions</code> queries the OSV API for each entry and reports whether a fix version has been published. A weekly GitHub Actions cron job (<code>suppression-monitor.yml</code>) runs this check and opens a GitHub issue with the <code>suppression-review</code> label when fixes are available.</li>
+<li><strong>NIST 800-53 Control:</strong> RA-5 Vulnerability Monitoring and Scanning, SI-2 Flaw Remediation</li>
+<li><strong>Implementation:</strong> <code>security/suppressions_schema.py</code>, <code>security/suppression_monitor.py</code>, <code>.github/workflows/suppression-monitor.yml</code></li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> OSV database lag between upstream fix release and database entry means the monitor may not detect fixes immediately. Typical lag is hours to days.</li>
+</ul>
+<h3 id="m-023-interactive-diff-review-for-context-file-migration">M-023: Interactive Diff Review for Context File Migration<a class="headerlink" href="#m-023-interactive-diff-review-for-context-file-migration" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-032</li>
+<li><strong>Description:</strong> <code>owb context migrate</code> shows a unified diff of proposed changes before overwriting any file. Each file requires explicit user approval. The ContextMigrator only appends missing template sections; it does not modify existing content. Dry-run mode is available for preview.</li>
+<li><strong>NIST 800-53 Control:</strong> CM-3 Configuration Change Control</li>
+<li><strong>Implementation:</strong> <code>engine/context.py</code> (ContextMigrator), <code>cli.py</code> (owb context migrate)</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Subtle prompt injection that looks benign in a diff review could be preserved. The three-layer content scanner (M-006) is the compensating control for content injected into context files.</li>
+</ul>
+<h3 id="m-024-secrets-scanning-gate-gitleaksggshield">M-024: Secrets Scanning Gate (gitleaks/ggshield)<a class="headerlink" href="#m-024-secrets-scanning-gate-gitleaksggshield" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-028</li>
+<li><strong>Description:</strong> <code>owb security secrets</code> scans paths for hardcoded credentials using gitleaks (default, zero-config, fully local) or ggshield (opt-in, API-backed). Pre-commit hooks block commits containing detected secrets. Integrates into the unified scan via <code>owb security scan --secrets</code> or <code>--all</code>.</li>
+<li><strong>NIST 800-53 Control:</strong> IA-5 Authenticator Management, SA-12 Supply Chain Protection</li>
+<li><strong>Implementation:</strong> <code>security/secrets_scanner.py</code> (GitleaksBackend, GgshieldBackend), <code>.pre-commit-config.yaml</code>, <code>cli.py</code> (owb security secrets)</li>
+<li><strong>Status:</strong> implemented</li>
+</ul>
+<h3 id="m-025-package-quarantine-7-day-window">M-025: Package Quarantine (7-Day Window)<a class="headerlink" href="#m-025-package-quarantine-7-day-window" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-028</li>
+<li><strong>Description:</strong> A 7-day quarantine period is enforced on all package installations via <code>uv.toml exclude-newer</code>. No package version published within the last 7 days can enter the lock file. <code>owb audit pins</code> checks for safe pin advancements where both current and candidate versions exceed the quarantine window. Emergency bypasses are logged to <code>.owb/quarantine-bypasses.jsonl</code>.</li>
+<li><strong>NIST 800-53 Control:</strong> SA-12 Supply Chain Protection, CM-7 Least Functionality</li>
+<li><strong>Implementation:</strong> <code>security/quarantine.py</code>, <code>uv.toml</code>, <code>cli.py</code> (owb audit pins)</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Attacks that persist undetected beyond 7 days will bypass the quarantine. The pre-install gate (M-026) and dependency scanning (M-019, M-020) provide compensating coverage.</li>
+</ul>
+<h3 id="m-026-programmatic-pre-install-sca-gate">M-026: Programmatic Pre-Install SCA Gate<a class="headerlink" href="#m-026-programmatic-pre-install-sca-gate" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-028, T-029</li>
+<li><strong>Description:</strong> <code>owb audit gate &lt;package&gt;</code> runs a 5-check battery before any new dependency is accepted: pip-audit (CVEs), GuardDog (malware heuristics), OSS health check, license audit, and quarantine verification. Replaces the prompt-only pre-install gate with programmatic enforcement. Gate failures are recorded to the reputation ledger.</li>
+<li><strong>NIST 800-53 Control:</strong> SA-12 Supply Chain Protection, RA-5 Vulnerability Monitoring and Scanning</li>
+<li><strong>Implementation:</strong> <code>security/gate.py</code> (run_gate, run_gate_batch), <code>cli.py</code> (owb audit gate)</li>
+<li><strong>Status:</strong> implemented</li>
+</ul>
+<h3 id="m-027-multi-ecosystem-sca-via-trivy">M-027: Multi-Ecosystem SCA via Trivy<a class="headerlink" href="#m-027-multi-ecosystem-sca-via-trivy" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Threat(s) addressed:</strong> T-029</li>
+<li><strong>Description:</strong> Trivy provides vulnerability scanning across npm, Go, Rust, and container ecosystems, supplementing pip-audit for Python. Pinned to v0.69.3 (last known-safe version before CVE-2026-33634 compromise). Version safety enforcement hard-blocks compromised versions 0.69.4-0.69.6.</li>
+<li><strong>NIST 800-53 Control:</strong> RA-5 Vulnerability Monitoring and Scanning, SA-12 Supply Chain Protection</li>
+<li><strong>Implementation:</strong> <code>security/trivy.py</code>, <code>cli.py</code> (owb security trivy, --trivy flag)</li>
+<li><strong>Status:</strong> implemented</li>
+<li><strong>Residual risk:</strong> Trivy DB freshness depends on network access for first-run download. Pinned version cannot receive rule updates until a verified safe release is published.</li>
+</ul>
+<h2 id="residual-risk-summary">Residual Risk Summary<a class="headerlink" href="#residual-risk-summary" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Threat ID</th>
+<th>Original Risk</th>
+<th>Mitigation</th>
+<th>Residual Risk</th>
+<th>Accepted?</th>
+<th>Accepted By</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T-007</td>
+<td>High</td>
+<td>M-006, M-007</td>
+<td>Moderate</td>
+<td>Yes</td>
+<td>Owner — novel evasion is inherent; adversarial test suite is the ongoing control</td>
+</tr>
+<tr>
+<td>T-010</td>
+<td>High</td>
+<td>M-009</td>
+<td>Low</td>
+<td>Yes</td>
+<td>Owner — sandboxed execution with no tool use provides strong isolation</td>
+</tr>
+<tr>
+<td>T-011</td>
+<td>High</td>
+<td>M-006, M-010</td>
+<td>Moderate</td>
+<td>Yes</td>
+<td>Owner — pattern + semantic detection catches known variants; novel approaches require test suite expansion</td>
+</tr>
+<tr>
+<td>T-013</td>
+<td>High</td>
+<td>M-006, M-010, M-011</td>
+<td>Moderate</td>
+<td>Yes</td>
+<td>Owner — exfiltration patterns are well-characterized; creative indirect exfiltration is the residual</td>
+</tr>
+<tr>
+<td>T-015</td>
+<td>High</td>
+<td>M-006, M-010</td>
+<td>Moderate</td>
+<td>Yes</td>
+<td>Owner — same residual as T-011 and T-013</td>
+</tr>
+<tr>
+<td>T-018</td>
+<td>Moderate</td>
+<td>M-014</td>
+<td>Low</td>
+<td>Yes</td>
+<td>Owner — CODEOWNERS + branch protection is strong; only fails if both are disabled simultaneously</td>
+</tr>
+<tr>
+<td>T-021</td>
+<td>High</td>
+<td>M-016, M-006</td>
+<td>Moderate</td>
+<td>Yes</td>
+<td>Owner — system/user separation raises the bar; novel injection remains possible</td>
+</tr>
+<tr>
+<td>T-025</td>
+<td>High</td>
+<td>M-018</td>
+<td>Low</td>
+<td>Yes</td>
+<td>Owner — repo audit gate catches known patterns; static analysis is comprehensive</td>
+</tr>
+<tr>
+<td>T-027</td>
+<td>High</td>
+<td>M-018</td>
+<td>Low</td>
+<td>Yes</td>
+<td>Owner — same as T-025</td>
+</tr>
+<tr>
+<td>T-028</td>
+<td>High</td>
+<td>M-019</td>
+<td>Moderate</td>
+<td>Yes</td>
+<td>Owner — zero-day supply chain attacks are inherent; heuristic detection provides partial coverage</td>
+</tr>
+<tr>
+<td>T-029</td>
+<td>High</td>
+<td>M-020</td>
+<td>Moderate</td>
+<td>Yes</td>
+<td>Owner — inter-CI-run gap is acceptable; weekly suppression monitor adds coverage</td>
+</tr>
+<tr>
+<td>T-030</td>
+<td>High</td>
+<td>M-021</td>
+<td>Moderate</td>
+<td>Yes</td>
+<td>Owner — Semgrep rule coverage is extensive but not exhaustive</td>
+</tr>
+<tr>
+<td>T-031</td>
+<td>High</td>
+<td>M-022</td>
+<td>Low</td>
+<td>Yes</td>
+<td>Owner — OSV lag is typically hours, weekly check frequency is acceptable</td>
+</tr>
+<tr>
+<td>T-032</td>
+<td>Moderate</td>
+<td>M-023</td>
+<td>Low</td>
+<td>Yes</td>
+<td>Owner — interactive review + content scanner provides defense in depth</td>
+</tr>
+</tbody>
+</table>
+<h2 id="assumptions-and-dependencies">Assumptions and Dependencies<a class="headerlink" href="#assumptions-and-dependencies" title="Permanent link">¶</a></h2>
+<ul>
+<li>Claude API provides adequate isolation between separate API calls. A malicious file analyzed in one call cannot influence the response of a subsequent call.</li>
+<li>Git HTTPS/SSH transport provides integrity protection for fetched content. We do not independently verify content beyond what git provides.</li>
+<li>The user's local filesystem is trusted. If an attacker has arbitrary write access to the user's machine, the threat model is moot.</li>
+<li>Claude Code and Cowork do not execute agent/rule files as code. They are interpreted as natural language instructions. If a future Claude version adds code execution from these files, the threat model must be revised.</li>
+<li>The ECC upstream repo is maintained in good faith. The reputation ledger and security scanner are controls against compromise, not assumption of malice.</li>
+</ul>
+<h2 id="review-schedule">Review Schedule<a class="headerlink" href="#review-schedule" title="Permanent link">¶</a></h2>
+<p>This threat model should be reviewed when:</p>
+<ul>
+<li>The architecture changes (new content sources, new installation paths, new integration points)</li>
+<li>A security incident occurs involving this system or the ECC upstream</li>
+<li>The security scanner is modified (new layers, changed patterns, different sandboxing approach)</li>
+<li>New prompt injection techniques are published (MITRE ATLAS, academic research, security community disclosures)</li>
+<li>At minimum quarterly, given the rapidly evolving nature of LLM security</li>
+</ul>
+<p>Next scheduled review: 2026-06-16</p>
+<h2 id="nist-control-mapping-summary">NIST Control Mapping Summary<a class="headerlink" href="#nist-control-mapping-summary" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Control ID</th>
+<th>Control Name</th>
+<th>Family</th>
+<th>Mitigations</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AC-4</td>
+<td>Information Flow Enforcement</td>
+<td>Access Control</td>
+<td>M-008</td>
+<td>implemented</td>
+</tr>
+<tr>
+<td>AC-5</td>
+<td>Separation of Duties</td>
+<td>Access Control</td>
+<td>M-012, M-014</td>
+<td>implemented</td>
+</tr>
+<tr>
+<td>AU-3</td>
+<td>Content of Audit Records</td>
+<td>Audit</td>
+<td>M-003</td>
+<td>implemented</td>
+</tr>
+<tr>
+<td>AU-6</td>
+<td>Audit Record Review</td>
+<td>Audit</td>
+<td>M-003</td>
+<td>implemented</td>
+</tr>
+<tr>
+<td>AU-9</td>
+<td>Protection of Audit Information</td>
+<td>Audit</td>
+<td>M-015</td>
+<td>partial</td>
+</tr>
+<tr>
+<td>CA-8</td>
+<td>Penetration Testing</td>
+<td>Assessment</td>
+<td>M-007</td>
+<td>implemented</td>
+</tr>
+<tr>
+<td>CM-2</td>
+<td>Baseline Configuration</td>
+<td>Config Mgmt</td>
+<td>M-001</td>
+<td>implemented</td>
+</tr>
+<tr>
+<td>CM-3</td>
+<td>Configuration Change Control</td>
+<td>Config Mgmt</td>
+<td>M-012</td>
+<td>implemented</td>
+</tr>
+<tr>
+<td>CM-5</td>
+<td>Access Restrictions for Change</td>
+<td>Config Mgmt</td>
+<td>M-014</td>
+<td>implemented</td>
+</tr>
+<tr>
+<td>RA-5</td>
+<td>Vulnerability Monitoring and Scanning</td>
+<td>Risk Assessment</td>
+<td>M-004, M-006</td>
+<td>implemented</td>
+</tr>
+<tr>
+<td>SA-11</td>
+<td>Developer Testing and Evaluation</td>
+<td>Acquisition</td>
+<td>M-013</td>
+<td>not implemented</td>
+</tr>
+<tr>
+<td>SA-12</td>
+<td>Supply Chain Protection</td>
+<td>Acquisition</td>
+<td>M-001, M-004</td>
+<td>implemented</td>
+</tr>
+<tr>
+<td>SC-7</td>
+<td>Boundary Protection</td>
+<td>Sys/Comm Protection</td>
+<td>M-008, M-009, M-011</td>
+<td>implemented</td>
+</tr>
+<tr>
+<td>SC-8</td>
+<td>Transmission Confidentiality and Integrity</td>
+<td>Sys/Comm Protection</td>
+<td>M-002</td>
+<td>deferred</td>
+</tr>
+<tr>
+<td>SC-39</td>
+<td>Process Isolation</td>
+<td>Sys/Comm Protection</td>
+<td>M-009</td>
+<td>implemented</td>
+</tr>
+<tr>
+<td>SI-3</td>
+<td>Malicious Code Protection</td>
+<td>Sys/Info Integrity</td>
+<td>M-006, M-010, M-011, M-013</td>
+<td>partial (M-013 not implemented)</td>
+</tr>
+<tr>
+<td>SI-7</td>
+<td>Software/Firmware/Info Integrity</td>
+<td>Sys/Info Integrity</td>
+<td>M-005</td>
+<td>partial</td>
+</tr>
+<tr>
+<td>SC-5</td>
+<td>Denial of Service Protection</td>
+<td>Sys/Comm Protection</td>
+<td>M-017</td>
+<td>implemented</td>
+</tr>
+</tbody>
+</table>
+<h2 id="links">Links<a class="headerlink" href="#links" title="Permanent link">¶</a></h2>
+<ul>
+<li><a href="../adr/">ADR</a></li>
+<li><a href="../prd/">PRD</a></li>
+<li><a href="../sdr/">SDR</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden="">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © 2026 originalrgsec
+    </div>
+  
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/originalrgsec/open-workspace-builder" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../assets/js/mermaid-zoom.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>
