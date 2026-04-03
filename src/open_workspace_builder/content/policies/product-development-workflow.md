@@ -71,6 +71,8 @@ The execution model uses CLI prompts. Each prompt specifies a target branch, the
 
 Sprint completion follows the checklist in [[code/development-process]]: stories pass acceptance criteria, project docs are updated, release notes written, and metrics recorded.
 
+**Security drift baseline:** When a new project repo is created, run `owb security drift <project-path> --update-baseline` and commit the resulting `.owb/drift-baseline.json`. This baseline enables detection of unauthorized or accidental changes to project directives. See [[code/development-process#Security Drift Baseline]] for update and maintenance requirements.
+
 **Metrics rhythm:** At sprint start, run `owb metrics record` to flush unrecorded sessions into the ledger. During the sprint, tag sessions with story IDs (`owb metrics record --story {PREFIX}-S{NNN}`) at natural breakpoints. At sprint end, run a final `owb metrics record` and generate a cost summary with `owb metrics by-story --since {sprint-start-date}`. This applies to every project, every sprint. When a new project repo is created, run `owb metrics baseline` once to establish the zero-point snapshot.
 
 ### Phase 5: Quality Assurance
@@ -112,7 +114,7 @@ Workspace moves, config changes, and infrastructure updates follow the standing 
 | `sdr.md` | Design | Implementation blueprint: modules, schemas, stories, sprints |
 | `threat-model.md` | Design | STRIDE analysis per DFD element with NIST 800-53 mapping |
 | `decision-record.md` | Design | Cross-project architectural decision with alternatives |
-| `story.md` | Sprint planning | Acceptance criteria, edge/error cases, integration contracts |
+| `story.md` | Sprint planning | Acceptance criteria, edge/error cases, integration contracts. Set `deliverable: decision` and uncomment the Research Spike sections for time-boxed research spikes. |
 | `session-log.md` | Implementation | Session-level record of decisions and changes |
 | `retrospective.md` | Retro | Root cause analysis, action items, linked deliverables |
 | `tech-debt.md` | Any | Deferred work tracked with priority and trigger conditions |

@@ -19,6 +19,10 @@ This sits above two other layers that are already documented:
 
 This document defines how to run a sprint end-to-end and what artifacts must be updated at each phase.
 
+## Sprint Completion Trigger
+
+When all stories in a sprint are implemented and the full test suite passes green (coverage meets threshold, linter clean), the sprint close procedure begins automatically. The agent proceeds directly into the Sprint Completion Checklist below without waiting for user confirmation. This is a standing instruction, not a per-sprint decision. If something unexpected surfaces during close (test regression, coverage drop, vault conflict), pause and surface it to the owner.
+
 ## Sprint Completion Checklist
 
 Every sprint ends with the following before the final PR is merged:
@@ -49,11 +53,26 @@ Tag the release after the PR merges.
 
 Verify all dependencies pass the quarantine window and scan battery before the sprint closes. Run `owb audit pins` to confirm no dependency was published within the 7-day quarantine window. Run `owb audit gate --all` to confirm all direct dependencies pass the full scan battery (CVEs, malware indicators, advisory flags). If any dependency fails, resolve it before merging the final PR. See `supply-chain-protection.md` for the full policy.
 
-### 5. Vault Audit
+### 5a. Research Review
+
+Review all research notes tagged to this project (search `projects:` frontmatter field in `research/processed/`). For each note, assign a disposition in the project's `_index.md` Research section:
+
+- **pending** — not yet reviewed in a sprint planning context
+- **accepted** — influenced a story, decision, or design change (link the artifact)
+- **rejected** — evaluated and dismissed (one-line reason)
+- **deferred** — interesting but not actionable now
+
+Notes tagged during inbox triage are tentative assignments. Sprint planning is where they get a real review. If a note's project tag is wrong, update the frontmatter to the correct project.
+
+### 5b. PII and Secrets Audit
+
+Run a PII audit against all files modified during the sprint. This catches credentials, API keys, personal identifiers, and other sensitive data that may have entered vault files through research imports, session logs, or design documents. If findings are confirmed, redact them and update the encrypted PII store per the project's PII handling policy. The secrets inventory must be current before the sprint closes.
+
+### 6. Vault Audit
 
 Run the vault-audit skill (or equivalent mechanical + semantic checks) before declaring the sprint closed. Sprint-level documentation changes (status.md, bootstrap, retro-log, decisions index, policy files) are high-risk for link rot and structural drift. The audit catches issues introduced during close-out itself, not just during active development. Origin: RETRO-006 — vault audit was omitted from Sprint 9 close-out until the owner caught it.
 
-### 6. Metrics Recorded
+### 7. Metrics Recorded
 
 Metrics recording is mandatory for every sprint on every project with a git repo.
 
@@ -145,6 +164,39 @@ Stories created before this convention (pre-OWB Sprint 7, pre-CWB Sprint 6) reta
 
 When a new project is created, assign a unique three-character prefix and add it to this table.
 
+## Project Status Lifecycle
+
+The `status` field in each project's `_index.md` frontmatter tracks where the project is in its lifecycle. Status values are ordered; a project moves forward through these phases (though it may skip phases or move directly to a terminal state).
+
+### Active Phases
+
+| Status | Meaning | Sprint Work? |
+|--------|---------|-------------|
+| `concept` | Idea captured, no design work started | No |
+| `research` | Active investigation, no design artifacts yet | No |
+| `design` | Design documents (PRD, ADR, SDR, threat model) in progress | No |
+| `design-complete` | All design documents written, ready for implementation | No |
+| `development` | Active sprint-based implementation | Yes |
+| `production` | Shipped, running, and receiving active feature work | Yes |
+| `maintenance` | Feature-complete, no planned active development. Bugs, dependency updates, and security patches only. | No (reactive only) |
+
+### Terminal States
+
+| Status | Meaning |
+|--------|---------|
+| `evaluated` | Assessment project completed (evals, proof-of-concepts) |
+| `archived` | No longer active, kept for reference |
+
+### Transitions
+
+- `concept` → `research` or `design` (owner decides to pursue)
+- `design` → `development` (SDR complete, Sprint 1 planned)
+- `development` → `production` (first release, pipeline activated or users onboarded)
+- `production` → `maintenance` (feature-complete, no planned sprints)
+- Any phase → `archived` (project shelved or abandoned)
+
+A project entering `maintenance` should update `_bootstrap.md` to reflect the new phase and remove active next-action items. Maintenance projects are not included in sprint planning unless a bug or security issue triggers reactive work.
+
 ## Release Versioning
 
 Projects use Semantic Versioning (https://semver.org/). For projects not yet at 1.0 (all current Volcanix projects), minor version bumps indicate feature additions (sprint completion) and patch bumps indicate bug fixes.
@@ -168,6 +220,14 @@ Run `owb security hooks install <project-path>` to generate `.pre-commit-config.
 If `owb init` detects sibling projects without pre-commit hooks, it prompts to install them. For existing projects that predate this policy, run `owb security hooks install` manually.
 
 Pre-commit hooks are a commit-time gate. They complement but do not replace the sprint-level security scans (`owb security scan --all`, `owb audit gate --all`).
+
+### Security Drift Baseline
+
+Run `owb security drift <project-path> --update-baseline` to establish the initial directive drift baseline. This creates `.owb/drift-baseline.json`, which records the current state of all security-relevant directives (CLAUDE.md, settings, hook configs, MCP definitions). Future runs of `owb security drift` compare against this snapshot to detect unauthorized or accidental changes.
+
+Commit the baseline file to the repo so it is versioned alongside the code. The baseline must be updated whenever a deliberate change is made to project directives (e.g., adding a new MCP server, modifying CLAUDE.md instructions, or changing hook configuration). Run `owb security drift <project-path> --update-baseline` after such changes and commit the updated file.
+
+For existing projects that predate this policy, run the baseline command once and commit the result.
 
 ### Metrics Baseline
 
