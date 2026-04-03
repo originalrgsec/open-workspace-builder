@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-04-03
+
+### Changed
+- Development process (SDLC) policy updated with sprint completion trigger, research
+  review gate (§5a), PII/secrets audit gate (§5b), project status lifecycle taxonomy,
+  and security drift baseline setup requirements
+- Product development workflow (PLC) updated with security drift baseline paragraph
+  in Phase 4 setup and story template `deliverable: decision` documentation
+
 ## [1.2.0] - 2026-04-02
 
 ### Added
