@@ -49,12 +49,10 @@ class TestStepStageSelection:
 
         vault = tmp_path / "Obsidian"
         vault.mkdir()
-        meta = {"version": "0.8.2", "stage": 2}
-        (vault / "vault-meta.json").write_text(
-            json.dumps(meta), encoding="utf-8"
-        )
+        meta = {"version": "0.8.2", "stage": 1}
+        (vault / "vault-meta.json").write_text(json.dumps(meta), encoding="utf-8")
         result = _step_stage_selection(vault_path=vault)
-        assert result.current_stage == 2
+        assert result.current_stage == 1
 
     def test_returns_frozen_stage_config(self, tmp_path: Path) -> None:
         result = _step_stage_selection(vault_path=None)

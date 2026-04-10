@@ -189,7 +189,7 @@ class TestPathsResolution:
             trust=TrustConfig(active_policies=("strict",)),
             marketplace=MarketplaceConfig(format="anthropic"),
             tokens=TokensConfig(budget_threshold=50.0),
-            stage=StageConfig(current_stage=2),
+            stage=StageConfig(current_stage=1),
             enforcement=EnforcementConfig(hooks_enabled=True),
         )
         resolved = _with_resolved_paths(config, "owb")
@@ -199,7 +199,7 @@ class TestPathsResolution:
         assert resolved.trust.active_policies == ("strict",)
         assert resolved.marketplace.format == "anthropic"
         assert resolved.tokens.budget_threshold == 50.0
-        assert resolved.stage.current_stage == 2
+        assert resolved.stage.current_stage == 1
         assert resolved.enforcement.hooks_enabled is True
 
 
@@ -311,9 +311,9 @@ class TestMergeNewSections:
 
     def test_stage_overlay(self, tmp_path: Path) -> None:
         cfg = tmp_path / "c.yaml"
-        cfg.write_text("stage:\n  current_stage: 2\n", encoding="utf-8")
+        cfg.write_text("stage:\n  current_stage: 1\n", encoding="utf-8")
         config = load_config(cfg, cli_name="owb")
-        assert config.stage.current_stage == 2
+        assert config.stage.current_stage == 1
 
     def test_stage_overlay_preserves_default_when_absent(self, tmp_path: Path) -> None:
         cfg = tmp_path / "c.yaml"

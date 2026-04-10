@@ -107,11 +107,11 @@ def deploy_hooks(
 ) -> None:
     """Deploy hook script, manifest, and settings.json entry.
 
-    Only deploys when enforcement.hooks_enabled is True and stage >= 2.
+    Only deploys when enforcement.hooks_enabled is True and stage >= 1.
     """
     if not config.enforcement.hooks_enabled:
         return
-    if config.stage.current_stage < 2:
+    if config.stage.current_stage < 1:
         return
 
     # Generate manifest
@@ -145,9 +145,7 @@ def _register_hook(agent_config_dir: Path, script_path: Path) -> None:
             settings = {}
 
     hooks = settings.setdefault("hooks", {})
-    hooks["UserPromptSubmit"] = [
-        {"command": f"bash {script_path}"}
-    ]
+    hooks["UserPromptSubmit"] = [{"command": f"bash {script_path}"}]
 
     settings_path.write_text(
         json.dumps(settings, indent=2) + "\n",

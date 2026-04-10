@@ -121,7 +121,7 @@ class TestDeployHooks:
         owb_dir = tmp_path / ".owb"
         config = Config(
             enforcement=EnforcementConfig(hooks_enabled=True),
-            stage=StageConfig(current_stage=2),
+            stage=StageConfig(current_stage=1),
         )
         deploy_hooks(
             config=config,
@@ -138,7 +138,7 @@ class TestDeployHooks:
         owb_dir = tmp_path / ".owb"
         config = Config(
             enforcement=EnforcementConfig(hooks_enabled=True),
-            stage=StageConfig(current_stage=2),
+            stage=StageConfig(current_stage=1),
         )
         deploy_hooks(
             config=config,
@@ -155,7 +155,7 @@ class TestDeployHooks:
         claude_dir = tmp_path / ".claude"
         config = Config(
             enforcement=EnforcementConfig(hooks_enabled=True),
-            stage=StageConfig(current_stage=2),
+            stage=StageConfig(current_stage=1),
         )
         deploy_hooks(
             config=config,
@@ -173,7 +173,7 @@ class TestDeployHooks:
         owb_dir = tmp_path / ".owb"
         config = Config(
             enforcement=EnforcementConfig(hooks_enabled=False),
-            stage=StageConfig(current_stage=2),
+            stage=StageConfig(current_stage=1),
         )
         deploy_hooks(
             config=config,
@@ -183,12 +183,12 @@ class TestDeployHooks:
         )
         assert not (owb_dir / "hooks" / "policy-reminder.sh").exists()
 
-    def test_skips_when_stage_below_2(self, tmp_path: Path) -> None:
+    def test_skips_when_stage_below_1(self, tmp_path: Path) -> None:
         policies = _make_policies_dir(tmp_path)
         owb_dir = tmp_path / ".owb"
         config = Config(
             enforcement=EnforcementConfig(hooks_enabled=True),
-            stage=StageConfig(current_stage=1),
+            stage=StageConfig(current_stage=0),
         )
         deploy_hooks(
             config=config,
@@ -207,7 +207,7 @@ class TestDeployHooks:
         (claude_dir / "settings.json").write_text(json.dumps(existing), encoding="utf-8")
         config = Config(
             enforcement=EnforcementConfig(hooks_enabled=True),
-            stage=StageConfig(current_stage=2),
+            stage=StageConfig(current_stage=1),
         )
         deploy_hooks(
             config=config,

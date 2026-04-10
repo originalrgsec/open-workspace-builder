@@ -32,21 +32,17 @@ class TestBuilderVaultMeta:
         meta = json.loads((vault / "vault-meta.json").read_text(encoding="utf-8"))
         assert meta["stage"] == 0
 
-    def test_vault_meta_reflects_configured_stage(
-        self, tmp_path: Path, content_root: Path
-    ) -> None:
+    def test_vault_meta_reflects_configured_stage(self, tmp_path: Path, content_root: Path) -> None:
         target = tmp_path / "workspace"
-        config = Config(stage=StageConfig(current_stage=2))
+        config = Config(stage=StageConfig(current_stage=1))
         builder = WorkspaceBuilder(config, content_root)
         builder.build(target)
 
         vault = target / "Obsidian"
         meta = json.loads((vault / "vault-meta.json").read_text(encoding="utf-8"))
-        assert meta["stage"] == 2
+        assert meta["stage"] == 1
 
-    def test_vault_meta_contains_version(
-        self, tmp_path: Path, content_root: Path
-    ) -> None:
+    def test_vault_meta_contains_version(self, tmp_path: Path, content_root: Path) -> None:
         target = tmp_path / "workspace"
         config = Config()
         builder = WorkspaceBuilder(config, content_root)
@@ -56,9 +52,7 @@ class TestBuilderVaultMeta:
         meta = json.loads((vault / "vault-meta.json").read_text(encoding="utf-8"))
         assert "version" in meta
 
-    def test_vault_meta_is_valid_json(
-        self, tmp_path: Path, content_root: Path
-    ) -> None:
+    def test_vault_meta_is_valid_json(self, tmp_path: Path, content_root: Path) -> None:
         target = tmp_path / "workspace"
         config = Config()
         builder = WorkspaceBuilder(config, content_root)
@@ -69,9 +63,7 @@ class TestBuilderVaultMeta:
         meta = json.loads(raw)  # should not raise
         assert isinstance(meta, dict)
 
-    def test_dry_run_does_not_write_meta(
-        self, tmp_path: Path, content_root: Path
-    ) -> None:
+    def test_dry_run_does_not_write_meta(self, tmp_path: Path, content_root: Path) -> None:
         target = tmp_path / "workspace"
         config = Config()
         builder = WorkspaceBuilder(config, content_root, dry_run=True)

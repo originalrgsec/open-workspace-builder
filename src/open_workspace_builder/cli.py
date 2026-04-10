@@ -2999,7 +2999,7 @@ def stage_status(vault: str | None, config_path: str | None) -> None:
 @click.option(
     "--enable-hooks/--no-hooks",
     default=None,
-    help="Enable/disable hook-based policy enforcement (Phase 2+).",
+    help="Enable/disable hook-based policy enforcement.",
 )
 def stage_promote(
     vault: str | None,
@@ -3022,7 +3022,12 @@ def stage_promote(
     assessment = evaluator.assess_current()
 
     if assessment.current_stage == assessment.target_stage:
-        click.echo(f"Already at maximum Stage {assessment.current_stage}. Nothing to promote.")
+        click.echo(
+            f"Already at maximum Stage {assessment.current_stage}. "
+            "Phase 1 is OWB's operational ceiling. "
+            "Phase 2 and Phase 3 capabilities are available "
+            "in the ABOP Engineering Platform."
+        )
         sys.exit(1)
 
     if not assessment.can_promote:
@@ -3054,33 +3059,6 @@ def stage_promote(
         click.echo(
             "Warning: no config file specified — stage not persisted. Pass --config to save."
         )
-
-    # Deploy hooks if promoting to Stage 2+ with hooks enabled
-    if new_stage >= 2 and hooks_enabled:
-        from dataclasses import replace
-
-        from open_workspace_builder.config import EnforcementConfig, StageConfig
-        from open_workspace_builder.enforcement import deploy_hooks
-
-        updated_config = replace(
-            config,
-            enforcement=EnforcementConfig(hooks_enabled=True),
-            stage=StageConfig(current_stage=new_stage),
-        )
-        try:
-            content_root = _find_content_root()
-            policies_dir = content_root / "content" / "policies"
-        except FileNotFoundError:
-            policies_dir = Path("content") / "policies"
-        owb_dir = Path(config.paths.config_dir) if config.paths.config_dir else Path.home() / ".owb"
-        agent_config_dir = Path.home() / ".claude"
-        deploy_hooks(
-            config=updated_config,
-            policies_dir=policies_dir,
-            owb_dir=owb_dir,
-            agent_config_dir=agent_config_dir,
-        )
-        click.echo("Hook-based policy enforcement deployed.")
 
     click.echo(f"Promoted to Stage {new_stage}")
 

@@ -144,9 +144,7 @@ class SecurityConfig:
     trivy_enabled: bool = False
     secrets_scanner: str = "gitleaks"
     secrets_enabled: bool = False
-    trusted_upstream_urls: tuple[str, ...] = (
-        "https://github.com/affaan-m/everything-claude-code",
-    )
+    trusted_upstream_urls: tuple[str, ...] = ("https://github.com/affaan-m/everything-claude-code",)
 
 
 @dataclass(frozen=True)
@@ -204,7 +202,7 @@ class TokensConfig:
 
 @dataclass(frozen=True)
 class StageConfig:
-    """Bootstrap stage tracking (PRD stages 0-3)."""
+    """Bootstrap stage tracking (PRD stages 0-1)."""
 
     current_stage: int = 0
 
@@ -325,8 +323,7 @@ def load_config(
         resolved_path = Path(config_path)
         if not resolved_path.exists():
             raise FileNotFoundError(
-                f"Config file not found: {resolved_path}. "
-                f"Check the path and try again."
+                f"Config file not found: {resolved_path}. Check the path and try again."
             )
     else:
         user_config = Path.home() / f".{cli_name}" / "config.yaml"
@@ -348,9 +345,7 @@ def load_config(
     try:
         raw = yaml.safe_load(resolved_path.read_text(encoding="utf-8")) or {}
     except Exception as exc:
-        raise ValueError(
-            f"Could not parse config file {resolved_path}: {exc}"
-        ) from exc
+        raise ValueError(f"Could not parse config file {resolved_path}: {exc}") from exc
 
     config = _build_config_from_dict(defaults, raw)
     return _with_resolved_paths(config, cli_name)

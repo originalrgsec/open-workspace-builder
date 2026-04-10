@@ -30,9 +30,7 @@ def _make_vault(tmp_path: Path) -> Path:
 def _write_vault_meta(vault: Path, stage: int = 0) -> None:
     """Write a vault-meta.json with the given stage."""
     meta = {"version": "0.8.2", "stage": stage}
-    (vault / "vault-meta.json").write_text(
-        json.dumps(meta), encoding="utf-8"
-    )
+    (vault / "vault-meta.json").write_text(json.dumps(meta), encoding="utf-8")
 
 
 def _populate_stage0_exit_criteria(vault: Path) -> None:
@@ -128,9 +126,9 @@ class TestStageEvaluatorConstruction:
 
     def test_reads_stage_from_config(self, tmp_path: Path) -> None:
         vault = _make_vault(tmp_path)
-        config = Config(stage=StageConfig(current_stage=2))
+        config = Config(stage=StageConfig(current_stage=1))
         evaluator = StageEvaluator(vault_path=vault, config=config)
-        assert evaluator.current_stage == 2
+        assert evaluator.current_stage == 1
 
     def test_nonexistent_vault_raises(self, tmp_path: Path) -> None:
         config = Config()
@@ -175,9 +173,7 @@ class TestStage0To1Criteria:
         config = Config(stage=StageConfig(current_stage=0))
         evaluator = StageEvaluator(vault_path=vault, config=config)
         assessment = evaluator.assess(target_stage=1)
-        structural = next(
-            c for c in assessment.criteria if "structural" in c.name.lower()
-        )
+        structural = next(c for c in assessment.criteria if "structural" in c.name.lower())
         assert structural.passed is False
 
     def test_missing_project_fails(self, tmp_path: Path) -> None:
@@ -189,9 +185,7 @@ class TestStage0To1Criteria:
         config = Config(stage=StageConfig(current_stage=0))
         evaluator = StageEvaluator(vault_path=vault, config=config)
         assessment = evaluator.assess(target_stage=1)
-        project_criterion = next(
-            c for c in assessment.criteria if "project" in c.name.lower()
-        )
+        project_criterion = next(c for c in assessment.criteria if "project" in c.name.lower())
         assert project_criterion.passed is False
 
 
@@ -203,19 +197,19 @@ class TestStage0To1Criteria:
 class TestStageSkipPrevention:
     """Promotion cannot skip stages."""
 
-    def test_cannot_skip_from_0_to_2(self, tmp_path: Path) -> None:
+    def test_cannot_promote_beyond_phase1(self, tmp_path: Path) -> None:
         vault = _make_vault(tmp_path)
-        config = Config(stage=StageConfig(current_stage=0))
+        config = Config(stage=StageConfig(current_stage=1))
         evaluator = StageEvaluator(vault_path=vault, config=config)
-        with pytest.raises(ValueError, match="Cannot skip"):
+        with pytest.raises(ValueError, match="operational ceiling"):
             evaluator.assess(target_stage=2)
 
-    def test_cannot_promote_backwards(self, tmp_path: Path) -> None:
+    def test_phase1_ceiling_message_mentions_abop(self, tmp_path: Path) -> None:
         vault = _make_vault(tmp_path)
-        config = Config(stage=StageConfig(current_stage=2))
+        config = Config(stage=StageConfig(current_stage=1))
         evaluator = StageEvaluator(vault_path=vault, config=config)
-        with pytest.raises(ValueError, match="Cannot promote backwards"):
-            evaluator.assess(target_stage=1)
+        with pytest.raises(ValueError, match="ABOP Engineering Platform"):
+            evaluator.assess(target_stage=2)
 
     def test_cannot_promote_to_same(self, tmp_path: Path) -> None:
         vault = _make_vault(tmp_path)
@@ -241,11 +235,11 @@ class TestAssessCurrent:
         assert assessment.current_stage == 0
         assert assessment.target_stage == 1  # next stage
 
-    def test_stage_3_has_no_next(self, tmp_path: Path) -> None:
+    def test_stage_1_has_no_next(self, tmp_path: Path) -> None:
         vault = _make_vault(tmp_path)
-        config = Config(stage=StageConfig(current_stage=3))
+        config = Config(stage=StageConfig(current_stage=1))
         evaluator = StageEvaluator(vault_path=vault, config=config)
         assessment = evaluator.assess_current()
-        assert assessment.current_stage == 3
-        assert assessment.target_stage == 3  # max stage, no next
+        assert assessment.current_stage == 1
+        assert assessment.target_stage == 1  # max stage, no next
         assert assessment.criteria == ()  # nothing to check
