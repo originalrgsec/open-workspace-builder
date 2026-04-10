@@ -211,6 +211,13 @@ class TestStageSkipPrevention:
         with pytest.raises(ValueError, match="ABOP Engineering Platform"):
             evaluator.assess(target_stage=2)
 
+    def test_cannot_promote_backwards(self, tmp_path: Path) -> None:
+        vault = _make_vault(tmp_path)
+        config = Config(stage=StageConfig(current_stage=1))
+        evaluator = StageEvaluator(vault_path=vault, config=config)
+        with pytest.raises(ValueError, match="Cannot promote backwards"):
+            evaluator.assess(target_stage=0)
+
     def test_cannot_promote_to_same(self, tmp_path: Path) -> None:
         vault = _make_vault(tmp_path)
         config = Config(stage=StageConfig(current_stage=1))

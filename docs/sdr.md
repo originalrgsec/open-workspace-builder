@@ -743,6 +743,18 @@ class ReputationLedger:
 - Version: v1.2.0
 - Tests: 1405 → 1549 (+144)
 
+### Sprint 17: Security Patches + Solo-Scoped Docs Reframe
+- Stories: OWB-SEC-001 (XS), OWB-SEC-002 (S), OWB-S106 (L), DRN-066-docs (S), Vault-sync (S)
+- Goal: Close SEC-001 and SEC-002. Strip multi-user language per DRN-066. Reframe docs around three value pillars (IDP, policy-as-code, SSCA). Three concept pages, glossary, README and landing page rewrite.
+- Version: v1.3.0
+- Tests: 1549 → 1561 (+12)
+
+### Sprint 18: Post-Rescope Cleanup + Process Research
+- Stories: OWB-S110 (Research), OWB-S111 (S), OWB-S112 (S)
+- Goal: Finalize DRN-066 rescope in code. S111 capped stage system at Phase 1 (MAX_STAGE 3→1, deleted Phase 2/3 exit criteria, added ABOP redirect). S112 completed solo-only docs sweep (README "four-phase" language, phases.md opening). S110 produced cross-project research on context window budget model — recommended 8-point session cap, identified ~13,700 tokens of instruction/memory savings, proposed sprint-close skill for enforcement.
+- Version: v1.4.0
+- Tests: 1561 → 1563 (+2)
+
 ## Open Questions
 
 1. Should the CLI use `click` or `argparse`? Click provides a cleaner subcommand model but adds a dependency. Argparse is stdlib but verbose for this many subcommands. Recommendation: click.

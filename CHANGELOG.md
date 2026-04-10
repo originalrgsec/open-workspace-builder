@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-04-10
+
+### Changed
+- **Stage system capped at Phase 1 (OWB-S111):** `MAX_STAGE` reduced from 3 to 1.
+  Phase 2/3 exit criteria methods removed. `owb stage promote` beyond Phase 1 now
+  exits with code 1 and directs users to the ABOP Engineering Platform. Enforcement
+  hook deployment gate lowered from stage 2 to stage 1 so hooks remain usable at
+  the new ceiling.
+- **Docs solo-only sweep (OWB-S112):** Remaining Phase 2 language in README and
+  `docs/concepts/phases.md` rewritten to solo-only framing. "Four-phase maturity
+  model" replaced with Phase 0-1 scope ceiling language.
+
+### Removed
+- `_check_stage_1_to_2()` and `_check_stage_2_to_3()` methods from `stage.py`
+- Phase 2/3 config generation branches from `_check_exit_criteria()`
+- Dead hook deployment block in CLI (unreachable with `MAX_STAGE=1`)
+
 ## [1.3.0] - 2026-04-09
 
 ### Security
