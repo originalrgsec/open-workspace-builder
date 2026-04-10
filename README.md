@@ -168,7 +168,7 @@ Requires `[sheets]` extra for Google Sheets or `[xlsx]` for Excel export.
 
 ## Phase Model
 
-OWB uses a [four-phase maturity model](docs/concepts/phases.md). Phase 1 (interactive sessions) is fully operational. Phase 2 (hybrid model routing with cheaper open-weight models for builds and Claude for oversight) is in design. The existing LiteLLM integration means the codebase is already model-agnostic.
+OWB uses a [phase model](docs/concepts/phases.md) to describe workspace maturity. Phase 0 (cold start) and Phase 1 (interactive sessions) are fully operational and represent the project's scope ceiling. The codebase is model-agnostic through LiteLLM, supporting any provider that speaks the protocol. Phase 2 and Phase 3 have been extracted to a separate Volcanix commercial product (see DRN-066).
 
 ## Security Scanner
 
