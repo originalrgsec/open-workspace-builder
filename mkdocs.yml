@@ -95,6 +95,9 @@ nav:
     - Security Model: concepts/security.md
     - Configuration: concepts/configuration.md
     - Phase Model: concepts/phases.md
+    - IDP for AI Coding: concepts/idp-for-ai-coding.md
+    - Policy as Code: concepts/policy-as-code.md
+    - Supply Chain Security: concepts/supply-chain-security.md
   - Guides:
     - Upgrading: howto-upgrade.md
     - Using as a Library: guides/library-usage.md
@@ -102,6 +105,7 @@ nav:
     - CLI Commands: reference/cli.md
     - Lifecycle and Agents: reference/lifecycle.md
     - License Compliance: reference/license-compliance.md
+    - Glossary: reference/glossary.md
     - PRD: prd.md
     - ADR: adr.md
     - SDR: sdr.md

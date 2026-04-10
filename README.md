@@ -1,30 +1,21 @@
 # owb — Open Workspace Builder
 
-Scaffold, maintain, and secure AI coding workspaces from a single command.
+An open-source internal developer platform (IDP) for AI coding assistants, with built-in policy-as-code and supply chain security for the workspace itself.
 
 [![PyPI](https://img.shields.io/pypi/v/open-workspace-builder)](https://pypi.org/project/open-workspace-builder/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Tests: 1253](https://img.shields.io/badge/tests-1253%20passed-brightgreen)](tests/)
+[![Tests: 1561](https://img.shields.io/badge/tests-1561%20passed-brightgreen)](tests/)
 
-## What It Does
+OWB is designed for individual developers who use AI coding assistants daily. It is not a team collaboration tool, a hosted service, or a SaaS platform.
 
-`owb` generates a ready-to-use AI workspace that includes an Obsidian knowledge vault, custom skills, context file templates, and a workspace config entry point. It provides drift detection, interactive migration, upstream content sync, and a three-layer security scanner.
+**Workspace as a platform.** `owb init` scaffolds a structured workspace from a single command: Obsidian knowledge vault, context files, development rules, custom skills, and a workspace config entry point. An interactive wizard handles model selection, vault structure, and security settings. Drift detection and interactive migration keep the workspace current as projects evolve.
 
-OWB also serves as a shared core library. Downstream packages (like vendor-specific wrappers) can depend on OWB for all engine, security, and configuration infrastructure, then overlay their own defaults.
+**Policy as code.** Security and development policies are expressed as machine-readable rules enforced automatically. Inline rules govern dependency installation, coding standards, and TDD workflow. Pre-commit hooks run secrets scanning (gitleaks), linting (ruff), SAST (Semgrep), and vulnerability scanning (Trivy). A three-layer security scanner with 58 attack signatures blocks prompt injection, data exfiltration, and MCP manipulation before content reaches your sessions.
 
-Key capabilities:
+**Supply chain security.** Every dependency and content update passes through a security gate. Package quarantine (7-day aging), pre-install SCA (pip-audit + GuardDog), license auditing, OSS health scoring, suppression monitoring, and content provenance tracking protect the workspace from compromised packages and malicious upstream changes.
 
-- **Interactive setup wizard** on first run, with `--from-vault` for existing Obsidian vaults
-- **Model-agnostic LLM backend** via LiteLLM — works with any provider (Anthropic, OpenAI, Ollama, etc.)
-- **Extensible registry** for security patterns, trust policies, and marketplace formats
-- **Three-layer security scanner** with structural, pattern, and semantic analysis
-- **Config overlay system** with three layers: built-in defaults, user config file, CLI flags
-- **Name-aware CLI** that resolves config paths from the binary name (`owb` vs `cwb`)
-- **Skill evaluation pipeline** with scoring, judging, and three evaluation modes (new, update, overlap)
-- **Multi-source content infrastructure** with config-driven discovery, repo audit, and update pipeline
-- **Token consumption tracking** with cost analysis, budget alerts, monthly forecasting, and per-story attribution
-- **Supply chain scanning** with pip-audit, GuardDog, and Semgrep SAST integration
+OWB also serves as a shared core library. Downstream packages (like vendor-specific wrappers) depend on OWB for engine, security, and configuration infrastructure, then overlay their own defaults.
 
 ## Quick Start
 

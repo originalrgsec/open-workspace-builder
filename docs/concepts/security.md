@@ -101,3 +101,9 @@ Run `owb security drift --update-baseline` after any intentional directive chang
 ## SCA and SAST Defaults
 
 As of v1.2.0, SCA (software composition analysis) and SAST (static application security testing) are enabled by default for all workspaces. Previous versions required opt-in via `security.sca_enabled` and `security.sast_enabled`. Existing configs that explicitly set these to `false` will continue to be respected.
+
+## Related concepts
+
+- [Policy as Code](policy-as-code.md) — how security rules are expressed and enforced
+- [Supply Chain Security](supply-chain-security.md) — dependency and content provenance protection
+- [IDP for AI Coding](idp-for-ai-coding.md) — the platform model these security capabilities support

@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-04-09
+
+### Security
+- **SEC-002:** Bumped litellm upper bound from `<=1.82.6` to `<=1.83.0`. Closes
+  CVE-2026-35030 (critical, OIDC cache key collision auth bypass), CVE-2026-35029
+  (high, proxy config privilege escalation), and pass-the-hash auth bypass (high).
+  Supply-chain triage: Sigstore OIDC attestation confirmed, CI hardening verified
+  (cosign signing, pinned Codecov SHA, OpenSSF Scorecard), 9-day quarantine passed.
+- **SEC-001:** Formally closed sast.py auto-config expansion fix (shipped in v1.2.1,
+  commit `c7b01f7`). Semgrep `--config auto` expanded to explicit `p/python` and
+  `p/owasp-top-ten` rulesets with `--metrics=off`.
+
+### Added
+- **Concept pages:** Three new documentation pages — IDP for AI Coding, Policy as Code,
+  Supply Chain Security — framing OWB's three value pillars for the solo developer audience.
+- **Glossary:** New reference page defining IDP, Policy as Code, SSCA, SBOM, Golden Path,
+  Drift, Pattern Registry, Trust Tier, and Quarantine.
+- Cross-links from Security Model and Configuration pages to the new concept pages.
+
+### Changed
+- **DRN-066 docs sweep:** Stripped multi-user/team language from published documentation.
+  Phase 2/3 in `phases.md` collapsed to out-of-scope section. PRD personas 3-5 and use
+  cases UC-11 through UC-15 marked historical. Non-Goals updated with explicit multi-user
+  exclusion. ADR AD-6 annotated as historical context.
+- **README rewritten:** New one-liner ("open-source IDP for AI coding assistants"), three-pillar
+  structure (workspace platform, policy-as-code, supply chain security), explicit scope
+  boundary ("designed for individual developers, not teams"). Test badge updated to 1561.
+- **Landing page updated:** Hero tagline reframed. Phase 2 teaser replaced with three-pillar
+  overview linking to new concept pages.
+- MkDocs nav updated with 4 new pages (3 concepts + glossary).
+
+### Fixed
+- `test_quarantine.py`: Removed `mix_stderr=False` from CliRunner (Click 8.2 incompatibility).
+
 ## [1.2.1] - 2026-04-03
 
 ### Changed

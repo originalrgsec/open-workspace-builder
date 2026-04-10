@@ -1673,7 +1673,7 @@ wheels = [
 
 [[package]]
 name = "open-workspace-builder"
-version = "1.2.0"
+version = "1.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
@@ -1734,8 +1734,8 @@ requires-dist = [
     { name = "google-auth-oauthlib", marker = "extra == 'sheets'", specifier = ">=1.0" },
     { name = "keyring", marker = "extra == 'keyring'", specifier = ">=24.0" },
     { name = "keyring", marker = "extra == 'secrets'", specifier = ">=24.0" },
-    { name = "litellm", marker = "extra == 'llm'", specifier = ">=1.40.0,<=1.82.6" },
-    { name = "litellm", marker = "extra == 'security'", specifier = ">=1.40.0,<=1.82.6" },
+    { name = "litellm", marker = "extra == 'llm'", specifier = ">=1.40.0,<=1.83.0" },
+    { name = "litellm", marker = "extra == 'security'", specifier = ">=1.40.0,<=1.83.0" },
     { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.0.0" },
     { name = "pip-audit", marker = "extra == 'audit'", specifier = ">=2.7.0" },
     { name = "pip-audit", marker = "extra == 'dev'", specifier = ">=2.7.0" },

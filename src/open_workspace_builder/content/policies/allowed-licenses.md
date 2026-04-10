@@ -1,7 +1,7 @@
 ---
 type: policy
 created: 2026-03-13
-updated: 2026-03-25
+updated: 2026-04-08
 tags: [policy, licensing, open-source, compliance, volcanix]
 applies-to: all-volcanix-projects
 ---
@@ -27,6 +27,9 @@ These licenses impose no meaningful restrictions on commercial use or proprietar
 | ISC | Simplified BSD/MIT equivalent. Common in Node.js ecosystem. |
 | CC0 / Public Domain / Unlicense | No restrictions whatsoever. |
 | 0BSD | Zero-clause BSD. Even less restrictive than MIT (no notice requirement). |
+| PSF-2.0 (Python Software Foundation License) | Permissive license used by core Python ecosystem packages (`typing_extensions`, `pytz`, parts of the standard library). Functionally MIT-equivalent with a grant-back clause that does not affect downstream users. Added 2026-04-08 as part of the COR-S037 retrospective's policy-gap cleanup. |
+| CNRI-Python | Another Python-family permissive license. Appears in compound licenses for core Python tooling (e.g. `regex`). Treated as equivalent to PSF-2.0 / MIT. Added 2026-04-08. |
+| Zlib | Permissive license from the zlib compression library. Functionally equivalent to MIT/BSD. Appears in compound licenses for scientific-computing packages (notably `numpy`). Added 2026-04-08. |
 
 ## Allowed with Conditions
 

@@ -101,7 +101,9 @@ The single head agent is replaced by a three-tier hierarchy: the human + head ag
 
 ## Target Customers
 
-Claude Code and Cowork power users who want a structured, repeatable workspace with project management capabilities. The immediate audience is individual developers and technical professionals (Stage 0-1). The secondary audience is power users operating headless build farms (Stage 2) and teams running multi-agent hierarchies (Stage 3).
+Individual developers and technical professionals who use AI coding assistants (Claude Code, Cowork, or model-agnostic equivalents) and want a structured, repeatable workspace with built-in security scanning and policy enforcement.
+
+> **Note (DRN-066, 2026-04-09):** OWB is scoped to solo developers. Personas 3-5 and Stages 2-3 are historical — they describe capabilities extracted to a separate Volcanix commercial product. They are preserved here as design context.
 
 ### Personas
 
@@ -115,17 +117,17 @@ Claude Code and Cowork power users who want a structured, repeatable workspace w
 - Pain points: The current prototype is a single file with all content inline. The README describes the output structure but not the value proposition for each component. No getting-started guide split by environment (Claude Code vs. Cowork).
 - Goals: Install via pip, run one command, understand what was generated and why, start using the workspace within 15 minutes.
 
-**Persona 3: Team Lead / Workspace Maintainer**
+**Persona 3: Team Lead / Workspace Maintainer** *(historical — out of scope per DRN-066)*
 - Context: Wants to establish a standard workspace configuration for a team. Needs to customize the default templates, add team-specific skills, and distribute updates.
 - Pain points: No fork-and-customize workflow. No way to push workspace updates to team members. No way to audit what content is installed across team members' environments.
 - Goals: Fork the builder, add team customizations, distribute via repo clone or private fork, push updates that team members can review and accept incrementally.
 
-**Persona 4: Build Farm Operator** *(Stage 2)*
+**Persona 4: Build Farm Operator** *(historical — out of scope per DRN-066)*
 - Context: Has completed multiple successful interactive sprint cycles and wants to shift from driving every session to managing a backlog. Comfortable with sandboxed execution and has the infrastructure (or is willing to build it) for headless agent sessions.
 - Pain points: The bottleneck is human attention, not agent capability. Every session requires the human to start it, monitor it, and close it. Sprint velocity is capped by the number of hours the human can sit at a terminal.
 - Goals: Define the work (stories, acceptance criteria), let the build farm execute it, review results asynchronously through a chat channel. Maintain full audit trail and the ability to intervene at any time.
 
-**Persona 5: Multi-Agent Team Operator** *(Stage 3)*
+**Persona 5: Multi-Agent Team Operator** *(historical — out of scope per DRN-066)*
 - Context: Operating a Stage 2 build farm successfully but hitting capacity limits. The single head agent cannot efficiently manage tasks across multiple domains simultaneously. The operator wants to delegate domain-specific coordination to director agents.
 - Pain points: Task decomposition and specialist routing is a bottleneck at the head-agent level. Cross-domain features require manual coordination. The operator spends time on routing decisions that a domain-aware director could handle.
 - Goals: Stand up a director-specialist hierarchy where each director owns a domain, manages its specialists, and coordinates with other directors on cross-domain work. The operator's role is design, planning, and exception handling.
@@ -141,7 +143,7 @@ Claude Code and Cowork power users who want a structured, repeatable workspace w
 
 ### UC-2: Drift Detection
 
-- **Actor:** Solo Power User or Team Lead
+- **Actor:** Solo Power User
 - **Trigger:** User runs `owb diff <vault-path>` to compare their existing workspace against the current builder reference
 - **Flow:** The builder walks the target directory, compares every expected file against the reference (presence, content hash for structural files, version for templates), and produces a gap report. The report categorizes gaps as: missing files, outdated templates, extra files (user additions), and modified files (user customizations).
 - **Outcome:** A structured report showing exactly where the workspace has diverged, with recommendations per gap.
@@ -155,7 +157,7 @@ Claude Code and Cowork power users who want a structured, repeatable workspace w
 
 ### UC-4: ECC Upstream Update
 
-- **Actor:** Solo Power User or Team Lead
+- **Actor:** Solo Power User
 - **Trigger:** User runs `owb ecc update` to pull the latest from the upstream ECC repo
 - **Flow:** The builder fetches the latest upstream commit, diffs each file against the pinned vendored copy, runs the three-layer security scan on every changed file, presents results with security flags, and prompts accept/reject per file. Accepted changes update the vendored copy. The reputation ledger is updated.
 - **Outcome:** The vendored ECC copy is updated with reviewed, security-scanned changes. Rejected or flagged changes are logged. If the upstream repo exceeds the flag threshold, the builder recommends dropping it.
@@ -169,7 +171,7 @@ Claude Code and Cowork power users who want a structured, repeatable workspace w
 
 ### UC-6: Skill Evaluation — New Skill
 
-- **Actor:** Solo Power User or Team Lead
+- **Actor:** Solo Power User
 - **Trigger:** User runs `owb eval <skill-path>` to evaluate a new skill before incorporating it
 - **Flow:** The evaluator classifies the skill type, generates a tailored test suite, executes tests against both a baseline (raw LLM) and the skill-augmented LLM, scores each on four dimensions (novelty, efficiency, precision, defect_rate), computes weighted composites, and decides whether to incorporate or reject.
 - **Outcome:** An evaluation result with per-dimension scores, composite delta vs baseline, and an incorporate/reject decision with reasoning.
@@ -183,7 +185,7 @@ Claude Code and Cowork power users who want a structured, repeatable workspace w
 
 ### UC-8: Multi-Source Update
 
-- **Actor:** Solo Power User or Team Lead
+- **Actor:** Solo Power User
 - **Trigger:** User runs `owb update <source>` to pull updates from a named upstream source
 - **Flow:** The updater discovers files in the source according to configured glob patterns, runs a repo-level security audit (checking for hooks dirs, setup scripts, event triggers), presents results for review, and applies accepted changes. Each source is independently configured with its own repo URL, pin, and discovery rules.
 - **Outcome:** The local copy of the source is updated with reviewed, security-audited changes. Backward-compatible: `owb ecc update` still works as an alias.
@@ -193,7 +195,7 @@ Claude Code and Cowork power users who want a structured, repeatable workspace w
 - **Actor:** Solo Power User or New Adopter
 - **Trigger:** User runs `owb init` (deploys stubs), `owb context status` (checks fill state), or `owb context migrate` (reformats existing files)
 - **Flow:** During `owb init`, the builder checks if context files (about-me.md, brand-voice.md, working-style.md) already exist at the target. Existing files are skipped with a message. Missing files receive template stubs with placeholder text. The workspace config file includes a "First Session Tasks" section that instructs the assistant to check for unfilled context stubs and initiate a guided dialogue. `owb context status` reports whether each file is missing, a stub, or filled. `owb context migrate` compares existing files against the latest template, identifies missing sections, and offers interactive reformatting.
-- **Outcome:** Context files are never overwritten without consent. Stubs are filled collaboratively during the first assistant session. Existing files can be reformatted to match new template sections without losing content.
+- **Outcome:** Context files are never overwritten without consent. Stubs are filled interactively during the first assistant session. Existing files can be reformatted to match new template sections without losing content.
 
 ### UC-10: Dependency Supply Chain Audit
 
@@ -202,35 +204,35 @@ Claude Code and Cowork power users who want a structured, repeatable workspace w
 - **Flow:** `owb audit deps` scans installed packages against the OSV vulnerability database via pip-audit, with optional `--deep` flag to add GuardDog heuristic malware detection. `owb audit package <name>` runs both pip-audit and GuardDog against a single package before installation. An ECC rule enforces running this scan before any pip/uv install command in Claude Code sessions. `owb audit check-suppressions` queries the OSV API to check whether upstream fixes have landed for suppressed CVEs. A weekly CI job (suppression-monitor.yml) opens GitHub issues when fixes become available.
 - **Outcome:** Known vulnerabilities and malicious code patterns are detected before dependencies enter the environment. Suppressed CVEs are automatically tracked and flagged for action when patches ship.
 
-### UC-11: Stage Promotion *(Stage 1 → 2, Stage 2 → 3)*
+### UC-11: Stage Promotion *(Stage 1 → 2, Stage 2 → 3)* — *historical, out of scope per DRN-066*
 
 - **Actor:** Build Farm Operator or Multi-Agent Team Operator
 - **Trigger:** User runs `owb stage promote` after believing they have met exit criteria for their current stage
 - **Flow:** OWB evaluates the exit criteria checklist for the current stage. For Stage 1 → 2: verifies sprint cycle count, vault policy compliance, scanner coverage, SCA/SAST integration, and prompts the user to define an initial delegation policy through an interactive wizard. For Stage 2 → 3: verifies unattended sprint cycles, sandbox enforcement, delegation calibration, audit log completeness, and prompts for director agent definitions and team composition. Unmet criteria are reported with specific remediation guidance.
 - **Outcome:** The workspace stage is promoted and recorded in config. Stage-appropriate templates, policies, and scaffolding are deployed. If criteria are unmet, the user receives a clear report of what remains.
 
-### UC-12: Delegation Policy Configuration *(Stage 2+)*
+### UC-12: Delegation Policy Configuration *(Stage 2+)* — *historical, out of scope per DRN-066*
 
 - **Actor:** Build Farm Operator
 - **Trigger:** User runs `owb delegation wizard` or `owb delegation edit`
 - **Flow:** The wizard walks the user through categories of decisions: architectural (new dependency, API design, schema change), security (CVE response, secrets rotation, scanner override), release (version bump, changelog, tag), financial (API cost thresholds, compute budget). For each category, the user sets a delegation level: autonomous (agent decides), inform (agent decides and notifies), approve (agent proposes, human approves), or escalate (agent stops and asks). Thresholds can be numeric (e.g., "approve any dependency addition with fewer than 100 GitHub stars") or categorical.
 - **Outcome:** A `delegation-policy.yaml` is written to the workspace. The head agent and director agents reference this policy when deciding whether to proceed autonomously or escalate. The policy is version-controlled and auditable.
 
-### UC-13: Agent Roster Ingestion *(Stage 2+)*
+### UC-13: Agent Roster Ingestion *(Stage 2+)* — *historical, out of scope per DRN-066*
 
 - **Actor:** Build Farm Operator or Multi-Agent Team Operator
 - **Trigger:** User runs `owb agents ingest <source>` to evaluate and incorporate agent definitions from an external project
 - **Flow:** OWB clones or fetches the source repository, discovers agent definition files using configured glob patterns, runs the three-layer security scan on every agent file, runs the skill evaluator to classify and score each agent, and presents a ranked list with security verdicts and evaluation scores. The user accepts or rejects each agent. Accepted agents are copied to the workspace agent roster with provenance metadata (source repo, commit hash, evaluation score, scan verdict, ingestion date).
 - **Outcome:** The agent roster is populated with security-scanned, evaluated agent definitions from external sources. Provenance is tracked for audit. Rejected agents are logged with reasons.
 
-### UC-14: Sandbox Policy Configuration *(Stage 2+)*
+### UC-14: Sandbox Policy Configuration *(Stage 2+)* — *historical, out of scope per DRN-066*
 
 - **Actor:** Build Farm Operator
 - **Trigger:** User runs `owb sandbox wizard` or edits `sandbox-policy.yaml` directly
 - **Flow:** The wizard walks the user through sandbox boundary definitions: filesystem mount points (read-only source, read-write workspace, no access to host home directory), network allowlist (package registries, Git remotes, API endpoints), tool permissions (which CLI tools are available inside the sandbox), session timeout, and resource limits (CPU, memory, disk). Multiple sandbox tiers can be defined (e.g., "build" for code-producing sessions, "scan" for security-only sessions, "research" for web-accessing sessions).
 - **Outcome:** A `sandbox-policy.yaml` is written. The orchestrator references this policy when launching headless sessions. Sessions that attempt to exceed their sandbox boundary are terminated and logged.
 
-### UC-15: Director Agent Definition *(Stage 3)*
+### UC-15: Director Agent Definition *(Stage 3)* — *historical, out of scope per DRN-066*
 
 - **Actor:** Multi-Agent Team Operator
 - **Trigger:** User runs `owb director create <domain>` or defines a director agent manually using OWB's director template
@@ -246,27 +248,25 @@ Claude Code and Cowork power users who want a structured, repeatable workspace w
 3. **Goal:** Enable non-destructive workspace maintenance — **Metric:** User customizations preserved through update cycles — **Target:** Zero user files overwritten without explicit consent
 4. **Goal:** Distribute as an installable Python package — **Metric:** Successful install via `pip install git+https://...` on Python 3.10+ across macOS, Linux, Windows — **Target:** Works on all three platforms with zero extra dependencies for core functionality
 
-### Stage 2 Goals
+### Stage 2-3 Goals *(historical — out of scope per DRN-066)*
+
+> The following goals describe capabilities extracted to the Volcanix commercial platform. They are preserved as design context.
 
 5. **Goal:** Enable unattended build execution with human oversight — **Metric:** Percentage of sprint tasks completed without human intervention during execution — **Target:** 80%+ of tasks complete autonomously; remaining 20% escalated cleanly
 6. **Goal:** Enforce sandbox boundaries on headless sessions — **Metric:** Sandbox escape attempts detected and blocked — **Target:** 100% of boundary violations caught; zero successful escapes
 7. **Goal:** Provide complete audit trail for unattended sessions — **Metric:** Session log completeness — **Target:** Every tool invocation, file modification, and decision point logged with timestamp and context
-
-### Stage 3 Goals
-
 8. **Goal:** Enable domain-specialized agent coordination — **Metric:** Cross-director handoff success rate — **Target:** 95%+ of cross-domain tasks completed without human routing intervention
 9. **Goal:** Maintain full agent hierarchy provenance — **Metric:** Agents with complete provenance records — **Target:** 100% of agents at all tiers have source, version, evaluation score, and security verdict on record
 
 ## Non-Goals
 
-- Building a GUI or web interface. OWB is a CLI tool. Chat-based interaction (Stage 2+) happens through third-party tools (Slack, Matrix), not a custom UI.
-- Building sandbox infrastructure. OWB defines sandbox policies; the user or a separate tool provisions the actual sandboxes (Docker, VMs, cloud instances). OWB may evaluate and recommend sandbox tooling through the OSS health pipeline.
-- Building the orchestrator or chat bot. OWB defines the policies and agent roster that the orchestrator consumes. The orchestrator itself is a separate component, likely adopted from an evaluated open-source project.
+- Building a GUI or web interface. OWB is a CLI tool.
+- Multi-user or team workflows. OWB is designed for individual developers (see DRN-066). Team collaboration, build farms, and multi-agent orchestration are served by a separate Volcanix commercial product.
+- Building sandbox infrastructure or orchestrators. OWB defines policies; infrastructure is a separate concern.
 - Managing Claude API keys, billing, or account configuration.
 - Replacing Obsidian as a knowledge management tool. The vault is an Obsidian vault; the builder scaffolds it.
-- Real-time sync at Stage 0-1. The builder runs on-demand, not as a daemon. (Stage 2+ introduces a long-running orchestrator, but that is a separate component, not OWB itself.)
-- Supporting non-Claude AI coding assistants (Cursor, Copilot, etc.) at Stage 0-1. The model-agnostic backend supports any LiteLLM provider, but the ECC content and workspace conventions assume Claude. Multi-tool agent deployment may become relevant at Stage 2+ as agent rosters are ingested from projects that support multiple tools.
-- Community skill marketplace. Skills are either bundled or user-provided; there is no discovery/install-from-registry flow. Agent roster ingestion (UC-13) handles the equivalent function for external agent sources.
+- Real-time sync. The builder runs on-demand, not as a daemon.
+- Community skill marketplace. Skills are either bundled or user-provided; there is no discovery/install-from-registry flow.
 
 ## Assumptions
 

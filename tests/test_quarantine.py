@@ -91,15 +91,19 @@ source = { editable = "." }
 
 def _make_pypi_response(upload_time: str) -> bytes:
     """Build a minimal PyPI JSON API response."""
-    return json.dumps({"info": {"version": "8.1.7"}, "urls": [{"upload_time_iso_8601": upload_time}]}).encode()
+    return json.dumps(
+        {"info": {"version": "8.1.7"}, "urls": [{"upload_time_iso_8601": upload_time}]}
+    ).encode()
 
 
 def _make_pypi_latest_response(version: str, upload_time: str) -> bytes:
     """Build a minimal PyPI JSON API response for the latest version."""
-    return json.dumps({
-        "info": {"version": version},
-        "urls": [{"upload_time_iso_8601": upload_time}],
-    }).encode()
+    return json.dumps(
+        {
+            "info": {"version": version},
+            "urls": [{"upload_time_iso_8601": upload_time}],
+        }
+    ).encode()
 
 
 class TestCheckPinAdvancements:
@@ -281,7 +285,7 @@ class TestCLIPins:
 
         from open_workspace_builder.cli import owb
 
-        runner = CliRunner(mix_stderr=False)
+        runner = CliRunner()
         bypass_log = tmp_path / ".owb" / "quarantine-bypasses.jsonl"
 
         mock_config = QuarantineConfig(bypass_log_path=bypass_log)

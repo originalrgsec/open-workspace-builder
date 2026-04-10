@@ -9,11 +9,11 @@ hide:
 <img src="assets/images/profile-avatar.jpg" alt="originalrgsec" class="rg-hero__avatar">
 
 <p class="rg-hero__tagline">
-  Build AI workspaces that remember what you're building and why.
+  An open-source IDP for AI coding assistants.
 </p>
 
 <p class="rg-hero__sub">
-  OWB scaffolds a structured workspace — knowledge vault, context files, development rules, security scanner — from a single command. Then it keeps that workspace current as your projects evolve.
+  OWB scaffolds a structured workspace — knowledge vault, context files, development rules, security scanner — from a single command. Built-in policy-as-code and supply chain security protect the workspace itself. Designed for individual developers, not teams.
 </p>
 
 <div class="rg-hero__actions">
@@ -126,10 +126,10 @@ Before a skill enters the workspace, the evaluator classifies it, generates a te
 
 <div class="rg-section" markdown>
 
-<p class="rg-section__title">What comes next: Phase 2</p>
+<p class="rg-section__title">Three pillars</p>
 
 <p class="rg-section__desc">
-  OWB is designed around a <a href="concepts/phases/">four-phase maturity model</a>. Phase 1 (interactive sessions) is fully operational. Phase 2 introduces hybrid model routing — cheaper open-weight models handle code generation while Claude provides oversight and review. The existing LiteLLM integration means the codebase is already model-agnostic. Phase 2 adds the operational infrastructure: environment bootstrap, sandbox execution, and cost optimization. <a href="concepts/phases/">Read the phase model documentation</a> for details.
+  OWB is built around three concepts: <a href="concepts/idp-for-ai-coding/">IDP for AI coding</a> (golden-path workspace provisioning and drift management), <a href="concepts/policy-as-code/">policy as code</a> (inline rules, scanner patterns, and pre-commit hooks enforced automatically), and <a href="concepts/supply-chain-security/">supply chain security</a> (package quarantine, SCA gates, secrets scanning, and content provenance). Read the <a href="concepts/phases/">phase model</a> for how these capabilities are organized.
 </p>
 
 </div>

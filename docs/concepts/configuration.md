@@ -108,3 +108,8 @@ Credentials are encrypted using the configured secrets backend (age, keyring, or
 ## Example Config
 
 See [`config.example.yaml`](https://github.com/originalrgsec/open-workspace-builder/blob/main/config.example.yaml) in the repository root for the full schema with inline comments documenting every key.
+
+## Related concepts
+
+- [Policy as Code](policy-as-code.md) — inline rules and scanner patterns configured through this system
+- [IDP for AI Coding](idp-for-ai-coding.md) — why consistent configuration matters for workspace provisioning

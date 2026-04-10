@@ -380,6 +380,8 @@ graph LR
 
 ### AD-6: Junior Dev Team Workflow with Branch Protection
 
+> **Historical context.** This ADR predates [DRN-066](https://github.com/originalrgsec/open-workspace-builder) (2026-04-09), which rescoped OWB to solo-developer-only. The team workflow described here is no longer part of OWB's operating model. The ADR is preserved as a design record.
+
 - **Context:** First team development effort. One collaborator added as junior dev. Owner is a git team workflow novice.
 - **Decision:** Branch protection on `main` requiring owner review for all merges. CODEOWNERS for security-critical files. Collaborator has Write permission (can push branches, open PRs) but cannot merge without approval. Owner has Admin (can bypass in emergencies). CI runs tests and security scan on all PRs.
 - **Alternatives considered:** Co-developer model (mutual review) was considered but rejected because the collaborator's commitment level is uncertain, and the owner does not want to be blocked by unresponsive reviews. Trunk-based development (no branches) was rejected because it provides no review gate.
