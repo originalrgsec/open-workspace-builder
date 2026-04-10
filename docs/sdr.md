@@ -755,6 +755,17 @@ class ReputationLedger:
 - Version: v1.4.0
 - Tests: 1561 → 1563 (+2)
 
+### Sprint 19: Quality Improvements (S110 Implementation)
+- Stories: OWB-S084 (S, template consolidation + integration verification plan), OWB-S114 (XS, instruction dedup), OWB-S115 (XS, memory cleanup), OWB-S116 (M, sprint-close skill enhancement + hook), OWB-S117 (XS, session budget + memory delineation policy)
+- Goal: Implement all five recommendations from S110 context window budget research. Reduce fixed context overhead (~13.7kT savings), structurally enforce sprint closeout quality, consolidate templates, add integration verification to story template.
+- S084: research-spike.md merged into story.md with `deliverable: decision` mode and HTML-commented spike sections. Integration Verification Plan section added. Process docs updated.
+- S114: 7 duplicate rule files deleted from `~/projects/.claude/rules/common/`, security.md trimmed to PII delta. ~2,700 tokens saved per session.
+- S115: 9 memory entries removed across 4 projects. ~11,000 tokens saved. Memory delineation rule adopted.
+- S116: sprint-complete skill enhanced with session budget check (Item 0), integration verification sub-check (Item 1a), memory hygiene check (Item 7). PreToolUse hook added for release commit reminders.
+- S117: Session budget model (8pt cap table) added to development-process.md. Memory delineation policy added to global CLAUDE.md.
+- Version: v1.5.0
+- Tests: 1563 → 1563 (net zero: 1 template removed from expected list, 1 test renamed)
+
 ## Open Questions
 
 1. Should the CLI use `click` or `argparse`? Click provides a cleaner subcommand model but adds a dependency. Argparse is stdlib but verbose for this many subcommands. Recommendation: click.

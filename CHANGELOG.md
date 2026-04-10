@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-04-10
+
+### Changed
+- **Template consolidation (OWB-S084):** `research-spike.md` merged into `story.md`.
+  Stories now support `deliverable: decision` mode with research spike sections as
+  HTML comments. New `Integration Verification Plan` section added to the story
+  template for system boundary verification.
+- **Sprint-close skill enhanced (OWB-S116):** Three new checklist items — session
+  budget check (8pt cap warning), integration verification sub-check (doctor/smoke
+  test), and memory hygiene check (delineation policy enforcement). Fresh context
+  reload documented. Commit-message hook added for release commit reminders.
+
+### Removed
+- `_templates/research-spike.md` — consolidated into `story.md`
+
 ## [1.4.0] - 2026-04-10
 
 ### Changed
