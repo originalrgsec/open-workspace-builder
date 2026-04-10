@@ -1,6 +1,6 @@
 # Phase Model
 
-OWB organizes workspace maturity into four phases. Each phase adds capabilities on top of the previous one. Most users operate in Phase 1 and that is the recommended starting point.
+OWB organizes workspace maturity into phases. Phase 0 (cold start) and Phase 1 (interactive sessions) are fully operational and represent the project's scope ceiling. Phase 2 and Phase 3 are documented below for historical context but have been extracted to a separate product (see DRN-066).
 
 ## Phase Overview
 
