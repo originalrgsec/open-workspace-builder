@@ -108,7 +108,6 @@ class TestTemplates:
         "project-index.md",
         "readme.md",
         "research-note.md",
-        "research-spike.md",
         "retrospective.md",
         "roadmap.md",
         "sdr.md",

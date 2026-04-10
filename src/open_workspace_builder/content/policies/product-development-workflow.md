@@ -57,7 +57,12 @@ Stories are derived from the SDR's story breakdown section. Each story uses the 
 - Given/When/Then format with CLI commands as the "When"
 - Edge cases and error cases as explicit sections
 - Integration contracts when a story's output feeds another story's input
+- Integration verification plan (what system boundaries are touched and how they are verified beyond unit tests)
 - Test file mapping (filled in during implementation)
+
+The story template supports two modes via the `deliverable` frontmatter field:
+- `deliverable: code` (default) — standard implementation story with AC/edge/error sections
+- `deliverable: decision` or `deliverable: research` — research spike mode with tracks, evaluation criteria, time box, and outcome sections (embedded as HTML comments in the template; expand when needed)
 
 Stories are grouped into sprints in the SDR. The sprint plan specifies which stories ship together and what is demonstrable at sprint end.
 

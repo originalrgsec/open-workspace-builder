@@ -23,10 +23,14 @@ Each story has testable acceptance criteria for TDD.
 - project-index.md — Project folder _index.md template
 - research-note.md — Processed research note
 - roadmap.md — Phased delivery roadmap
+
+**Note:** `research-spike.md` was consolidated into `story.md` as of v1.5.0.
+Use `deliverable: decision` or `deliverable: research` in the story frontmatter
+and expand the HTML-commented research sections at the bottom of the template.
 - sdr.md — Software Design Record
 - selections-tracker.md — Materials/fixtures tracker
 - session-log.md — Claude session log
 - spec.md — Lightweight spec (deprecated in favor of full chain)
-- story.md — Implementation story with acceptance criteria
+- story.md — Implementation story with acceptance criteria (also supports `deliverable: decision` for research spikes)
 - threat-model.md — STRIDE threat model with NIST scoring
 - vendor-contact-list.md — Vendor and contact tracker

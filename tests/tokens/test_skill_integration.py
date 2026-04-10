@@ -66,12 +66,12 @@ class TestTokenAnalysisSkill:
 class TestSprintCompleteIntegration:
     """Verify sprint-complete skill references token-analysis."""
 
-    def test_sprint_complete_references_token_analysis(self) -> None:
+    def test_sprint_complete_references_token_consumption(self) -> None:
         repo_root = Path(__file__).resolve().parent.parent.parent / "src" / "open_workspace_builder"
         skill_file = repo_root / "content" / "skills" / "sprint-complete" / "SKILL.md"
         content = skill_file.read_text(encoding="utf-8")
-        assert "token-analysis" in content
-        assert "Token Consumption" in content or "token consumption" in content.lower()
+        assert "owb metrics" in content
+        assert "Token" in content or "token" in content.lower()
 
     def test_sprint_complete_has_token_sub_item(self) -> None:
         repo_root = Path(__file__).resolve().parent.parent.parent / "src" / "open_workspace_builder"

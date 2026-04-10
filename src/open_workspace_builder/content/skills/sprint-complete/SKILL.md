@@ -1,9 +1,10 @@
 ---
-name: sprint-complete
+name: sprint-close
 description: >-
   Walk through the full sprint completion checklist to ensure no steps are
   missed. Use this skill when finishing a sprint, closing a release, or when
-  the user says 'sprint complete', 'close the sprint', or 'release checklist'.
+  the user says 'sprint complete', 'close the sprint', 'sprint close', or
+  'release checklist'.
 ---
 
 # Sprint Completion Orchestration
@@ -13,12 +14,27 @@ This skill walks through the development-process sprint completion checklist, ru
 ## When to Run
 
 - Sprint is finished and the final PR is about to merge
-- Operator says "sprint complete", "close the sprint", "release checklist", or "are we done"
+- Operator says "sprint complete", "close the sprint", "sprint close", "release checklist", or "are we done"
 - Before tagging a release
+- A commit-message hook prints a reminder about this skill
+
+## Important: Fresh Context
+
+This skill exists specifically to solve the problem of process instructions being compressed out of context during long sessions. When invoked, it reads the checklist source fresh from the vault or policy file rather than relying on cached context. If the session is long and you are uncertain whether you have the full checklist, re-read `Obsidian/code/development-process.md` before proceeding.
 
 ## Checklist Execution
 
 Work through each item sequentially. For each item, report its status as PASS, FAIL, SKIP, or NEEDS REVIEW. Produce a summary table at the end.
+
+### Item 0: Session Budget Check
+
+**Automated check.** Before running the full closeout, assess whether the current session has headroom for it.
+
+The recommended session budget cap is 8 story points. Sprint closeout itself consumes approximately 20-30kT of context. If the session has already executed a large sprint (9+ story points), warn the operator:
+
+"This session has executed a large sprint. Consider starting a fresh session for closeout to avoid context pressure degrading the quality of documentation and vault updates."
+
+If the operator chooses to proceed in the current session, continue but flag this as a risk in the summary.
 
 ### Item 1: Stories Complete — All AC Green
 
@@ -33,7 +49,14 @@ Work through each item sequentially. For each item, report its status as PASS, F
 
 If tests fail, report the failures and stop. The sprint cannot close with failing tests.
 
-Also check for a pipeline smoke test. Per the integration verification policy, the application's primary command must be exercised end-to-end before sprint closure. If a smoke test exists, run it. If not, warn the operator that a smoke test is missing and ask whether to proceed.
+**Integration verification sub-check.** Check whether the project has:
+- A doctor command (e.g., `homeops doctor`)
+- Tests marked with `@pytest.mark.integration_verification`
+- A pipeline smoke test
+
+If any exist, they must be executed as part of this item. If the project has a doctor command, run it and verify all checks pass. If the project has integration verification tests, run them. If neither exists, prompt the operator to confirm that system boundaries were manually verified or that no system boundaries were touched.
+
+Per the integration verification policy, the application's primary command must be exercised end-to-end before sprint closure.
 
 ### Item 2: Project Docs Updated
 
@@ -42,6 +65,8 @@ Also check for a pipeline smoke test. Per the integration verification policy, t
 Ask: "Have project documents (PRD, ADR, SDR, threat model) been updated to reflect design changes made during this sprint?"
 
 List the project doc files found in the repo (e.g., `docs/prd.md`, `docs/adr.md`, `docs/sdr.md`, `docs/threat-model.md`). Check their last git commit date relative to source code changes in the sprint. If docs were not touched but source code changed significantly, flag this as a concern.
+
+**SDR sprint plan gate.** The SDR must contain an entry for the completing sprint with stories delivered, goal summary, and final test count. Check for the sprint number in the SDR. If missing, report FAIL.
 
 ### Item 3: CHANGELOG Updated
 
@@ -62,7 +87,7 @@ If the CHANGELOG is missing or the latest section is empty, report FAIL with ins
 
 **Conditional check.** Two sub-items:
 
-**5a: Token consumption.** Invoke the **token-analysis** skill's sprint close workflow. This runs `owb metrics tokens` for the sprint date range, writes the cost section to the retro, and updates the tracking Google Sheet. If the token-analysis skill is available, run it. If not, run `owb metrics tokens --since <sprint_start> --until <sprint_end>` directly and include the summary in the retro manually.
+**5a: Token consumption.** Run `owb metrics record` to flush any unrecorded sessions to the ledger. Then run `owb metrics tokens --since <sprint_start> --until <sprint_end>` (or `owb metrics by-story`) to produce the sprint cost summary. Include the summary in the release manifest.
 
 **5b: Pipeline metrics.** Determine if the project has an active pipeline metrics system (look for metrics configuration, metrics directory, or pipeline metrics files). If metrics are active, prompt the operator to confirm metrics have been recorded for this sprint. If no metrics system is detected, report SKIP for 5b.
 
@@ -72,9 +97,23 @@ If the CHANGELOG is missing or the latest section is empty, report FAIL with ins
 
 Per the development-process policy, this is a sprint completion gate, not an optional post-step. If vault audit finds issues, they must be fixed before the sprint can close.
 
+**6a: Research review.** Review all research notes tagged to this project (search `projects:` frontmatter in `research/processed/`). Assign dispositions: pending, accepted, rejected, or deferred.
+
+**6b: PII and secrets audit.** Run the `vault-pii-audit` skill against files modified during the sprint. If findings are confirmed, redact per the PII handling policy.
+
 If the project does not use an Obsidian vault, report SKIP.
 
-### Item 7: Tag the Release
+### Item 7: Memory Hygiene Check
+
+**Automated check.** Scan the project's Claude memory directory for entries that violate the memory delineation policy:
+
+- Memory entries longer than 10 lines (should be vault notes instead)
+- Memory entries that describe project state, decisions, or architecture (should be in the vault)
+- Memory entries that duplicate content already in CLAUDE.md or vault files
+
+Report any violations as NEEDS REVIEW with a recommendation to migrate or delete.
+
+### Item 8: Tag the Release
 
 **Prompt the operator.** This step happens after the PR merges, not before. Remind the operator:
 
@@ -91,13 +130,16 @@ Present a final table:
 
 | # | Item                    | Status       | Notes                     |
 |---|-------------------------|--------------|---------------------------|
+| 0 | Session budget          | PASS / WARN  | Within cap / over budget  |
 | 1 | Stories / tests green   | PASS / FAIL  | X tests passed, Y failed  |
+| 1a| Integration verification| PASS / SKIP  | Doctor / smoke test run   |
 | 2 | Project docs updated    | PASS / NEEDS REVIEW | Operator confirmed / flagged |
 | 3 | CHANGELOG updated       | PASS / FAIL  | Entry found / missing     |
 | 4 | Release manifest        | PASS / FAIL  | docs/releases/vX.Y.Z.md  |
 | 5 | Metrics recorded        | PASS / SKIP  | Active / not configured   |
 | 6 | Vault audit             | PASS / FAIL / SKIP | Issues found / clean / no vault |
-| 7 | Release tagged          | PENDING      | Tag after PR merge        |
+| 7 | Memory hygiene          | PASS / NEEDS REVIEW | Clean / violations found |
+| 8 | Release tagged          | PENDING      | Tag after PR merge        |
 ```
 
 If any item is FAIL, the sprint is not ready to close. List the blocking items and what the operator needs to do to resolve them.
