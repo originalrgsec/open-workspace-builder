@@ -7,6 +7,86 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-04-11
+
+### Added
+- **SBOM enrichment: provenance, capability, license (OWB-S107b).** Each
+  component in `owb sbom generate` output is now decorated with three new
+  enrichment surfaces:
+  - **Provenance** under `owb:provenance:*` properties: detection priority
+    is explicit frontmatter `source:` → install record (`.owb/install-records/skills.json`,
+    reader-only in S107b) → git history via `git log --follow` → local
+    fallback. Each entry carries a confidence score (`high`/`medium`/`low`).
+    Git-history detection records the commit SHA and the canonical
+    `https://` form of the origin remote when present (SSH URLs are
+    normalized).
+  - **Capabilities** under `owb:capability:*` properties: declared tools
+    (one property per tool, e.g. `owb:capability:tool:Read`), MCP server
+    references, explicit `network:` declarations, MCP server transport
+    type, exec command names, and env *keys*. Tool wildcards (`*`) raise
+    a `owb:capability:warning` marker. **MCP env values are never
+    recorded** — only keys, enforced by a dedicated test that asserts
+    no env value appears in any extracted output.
+  - **License detection** in the spec-native CycloneDX `licenses` field:
+    detection priority is frontmatter `license:` → sibling `LICENSE` /
+    `LICENSE.md` / `COPYING` → parent-directory walk → workspace root
+    `LICENSE` → `NOASSERTION`. SPDX identification uses distinctive-phrase
+    fingerprinting (case- and whitespace-normalized), robust to copyright
+    year and holder variation. Recognized licenses today: MIT, Apache-2.0,
+    BSD-2-Clause, BSD-3-Clause, ISC, GPL-2.0, GPL-3.0, AGPL-3.0, LGPL-2.1,
+    LGPL-3.0, MPL-2.0, Unlicense, 0BSD.
+- **`allowed_licenses.toml` shipped with the package** at
+  `src/open_workspace_builder/data/allowed_licenses.toml`. Runtime
+  authority for the SBOM license cross-reference, machine-readable twin
+  of the human-authored vault doc at `Obsidian/code/allowed-licenses.md`.
+  Sync is currently manual; the unit tests verify the toml parses and
+  contains expected SPDX IDs.
+- **CLI exit code 2 for license warnings.** `owb sbom generate` now exits
+  with code 2 when one or more components have a non-allowed (or
+  unrecognized custom) license. Code 0 stays "clean," code 1 stays
+  "hard error." A new top-level metadata aggregate
+  `owb:license:non-allowed-count` exposes the count without re-walking
+  components.
+- **Hash stability regression test** (`tests/sbom/test_example_fixture.py`)
+  asserts that every S107a `bom-ref` and content hash from v1.6.0 remains
+  byte-identical under S107b regeneration. Any future change to the
+  normalization algorithm or `bom-ref` derivation must bump `norm1` →
+  `norm2` rather than break this test.
+
+### Changed
+- `Component` dataclass extended with three optional fields
+  (`provenance`, `capabilities`, `license`) defaulting to empty so all
+  S107a callers continue to work unchanged. The first seven fields
+  participating in identity are unchanged.
+- `examples/sbom/example.cdx.json` regenerated to reflect S107b enrichment;
+  CI drift check (introduced in S107a) verifies the committed copy stays
+  in sync with regeneration.
+- `pyproject.toml` and `MANIFEST.in` extended to ship `data/*.toml` files
+  in the package distribution.
+
+### Tests
+- 77 new tests across the S107b surface: 28 license, 25 capability,
+  13 provenance, 1 hash-stability regression, 10 workflow-level AC tests
+  (4 enrichment cases × invocation patterns). Total test count
+  1646 → 1723. SBOM module coverage 92%.
+- Workflow-level AC test (`tests/sbom/test_workflow_ac_s107b.py`)
+  exercises the full `owb sbom generate` CLI on a four-case fixture
+  (frontmatter source, git-history with origin remote, local fallback,
+  GPL-3.0 sibling LICENSE) per integration-verification-policy §1.
+
+### Deferred
+- **OWB-SEC-003 (cryptography 46.0.7 patch)** was planned as Sprint 21
+  filler but deferred due to a 7-day quarantine collision: 46.0.7
+  published 2026-04-08, the supply-chain quarantine window does not
+  clear until 2026-04-15, and Sprint 21 began 2026-04-11. SEC-003 will
+  ship as a v1.7.1 patch on/after 2026-04-15 or roll into Sprint 22.
+- S107c (`diff`/`verify`/`show` operational commands, SPDX 2.3 output,
+  package quarantine SBOM consultation, concept page + howto) — Sprint
+  22 anchor candidate.
+- Proper CI sync check between vault `allowed-licenses.md` and
+  `allowed_licenses.toml`. Currently manual; the existing toml-parse
+  unit test catches the most common drift modes.
+
 ## [1.6.0] - 2026-04-11
 
 ### Added
