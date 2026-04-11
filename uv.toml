@@ -1,1 +1,13 @@
-exclude-newer = "2026-04-02"
+# Supply-chain post-release quarantine pin per Obsidian/code/supply-chain-protection.md.
+# Advances are deliberate, audited via the dependency pre-install gate.
+#
+# 2026-04-11 (OWB-S118 / OWB-SEC-003): pin advanced from 2026-04-02 to
+# 2026-04-09 to allow cryptography 46.0.7 (CVE-2026-39892, published
+# 2026-04-08, 7-day quarantine clears 2026-04-15). Sprint 23 schedule
+# required the SEC-003 patch to ship inside the sprint window rather
+# than slip to a v1.9.1 patch, so the package owner authorized a
+# 4-day-early quarantine override. Only cryptography is upgraded;
+# `uv lock --upgrade-package cryptography` keeps every other package
+# at its previous lock entry. The override and rationale are recorded
+# in the Sprint 23 session log and the v1.9.0 release manifest.
+exclude-newer = "2026-04-09"

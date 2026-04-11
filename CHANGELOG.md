@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.9.0] - 2026-04-15
+## [1.9.0] - 2026-04-11
 
 ### Release Notes
 
@@ -199,8 +199,13 @@ errata) and a forthcoming DRN under the vault `decisions/` folder.
   Dependabot alert #16). Medium-severity buffer overflow in
   `Hash.update()` on non-contiguous buffers. In-context risk is low
   because OWB does not route user bytes into crypto APIs, but the patch
-  is applied proactively. Previously blocked on a 7-day supply-chain
-  quarantine window that cleared 2026-04-15.
+  is applied proactively. The supply-chain quarantine pin in `uv.toml`
+  was advanced from 2026-04-02 to 2026-04-09 to allow the upgrade four
+  days ahead of the natural 7-day window clear (2026-04-15). The
+  override is package-owner authorized and recorded in the
+  `uv.toml` header comment, the Sprint 23 session log, and this
+  release manifest. Only `cryptography` was upgraded — every other
+  package remains at its prior lock entry.
 
 ### Changed
 
