@@ -5,7 +5,238 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.9.0] - 2026-04-15
+
+### Release Notes
+
+**v1.9.0 is a consolidation release.** Versions 1.6.0, 1.7.0, and 1.8.0 were
+tagged in the repository and closed out in the vault between 2026-04-10 and
+2026-04-11 but were **never actually published to PyPI** due to a silent
+failure in the release workflow's `test` job (missing `[sbom]` extra caused
+`ModuleNotFoundError: No module named 'cyclonedx'` at pytest collection
+time, blocking the `publish` job). The failure went undetected because the
+sprint-close checklist verified only that the tag was pushed, not that the
+`publish` job succeeded.
+
+The last version actually present on PyPI before v1.9.0 was **v1.5.0**
+(shipped 2026-04-10). Users who ran `pip install open-workspace-builder`
+between then and v1.9.0 have been running v1.5.0 and have not seen any of
+the SBOM work from Sprints 20, 21, or 22. v1.9.0 ships all of that work
+together, plus the release pipeline fix (OWB-S118, Sprint 23) that prevents
+this class of silent publish failure from recurring, plus the
+`cryptography` 46.0.7 CVE patch (OWB-SEC-003) that had been waiting on its
+supply-chain quarantine window.
+
+Detailed changelog entries for `[1.8.0]`, `[1.7.0]`, and `[1.6.0]` remain
+below as the historical record of what each tag contained. The
+user-facing consolidation of those changes appears in this v1.9.0 entry.
+
+The discovery and no-backfill decision are documented in OWB-S121 (vault
+errata) and a forthcoming DRN under the vault `decisions/` folder.
+
+### Added
+
+#### Release pipeline: GitHub Releases adoption (OWB-S118)
+
+- **Canonical release distribution surface.** New `github_release` job in
+  `.github/workflows/release.yml` runs after PyPI publish succeeds,
+  creating a first-class GitHub Release for every `v*` tag push. The
+  Release body is sourced from the `CHANGELOG.md` section matching the
+  tag; the assets attached are the wheel, the sdist, and a CycloneDX 1.6
+  SBOM of OWB's own Python dependency tree. Downstream consumers can now
+  fetch signed release artifacts and audit OWB's supply chain without
+  scraping PyPI metadata or cloning the repository. See
+  [`docs/contributing/release-process.md`](docs/contributing/release-process.md)
+  for the full contributor-facing guide.
+- **PEP 440 pre-release detection.** The workflow detects canonical PEP 440
+  pre-release versions (`1.9.0a1`, `1.9.0b2`, `1.9.0rc1`, `1.9.0.dev3`,
+  `1.9.0.post1`) via regex and flags the resulting Release as a
+  prerelease. The RC rehearsal procedure is documented alongside the
+  release process. Pre-release tags still publish to PyPI as pre-release
+  versions (PEP 440 compliant), visible only via `pip install --pre`.
+- **`scripts/extract_changelog.py`**: Keep-a-Changelog section parser that
+  extracts the body for a specific version header. Fails loud on missing
+  or empty sections — a release cannot proceed with an empty or
+  mismatched body.
+- **`scripts/generate_sbom.py`**: project SBOM generator. Creates an
+  isolated venv, installs the wheel into it, enumerates the installed
+  distributions via `importlib.metadata`, and constructs a CycloneDX 1.6
+  BOM with OWB as `metadata.component` (APPLICATION) and its transitive
+  Python dependency closure in `components` (LIBRARY). Uses
+  `cyclonedx-python-lib` directly — already an OWB dependency via the
+  `[sbom]` extra, no new third-party tooling introduced. Venv bootstrap
+  packages (`pip`, `setuptools`, `wheel`, `distribute`, `pkg_resources`)
+  are filtered by canonical name so the SBOM describes OWB's declared
+  closure rather than the Python install layer.
+- **`docs/contributing/release-process.md`**: new contributor-facing guide
+  covering prerequisites, tagging, RC rehearsal procedure, artifact
+  inventory, manual fallback, historical tag policy, troubleshooting.
+- **AD-17 (vault)**: architectural decision record for GitHub Releases
+  adoption, filed in the OWB vault under
+  `projects/Open Source/open-workspace-builder/adr.md`.
+
+#### Release pipeline: test job replaced with smoke job (OWB-S118)
+
+- **New `smoke` job in `.github/workflows/release.yml`**. Replaces the
+  previous `test` job, which had been silently failing since Sprint 20
+  due to two preexisting bugs exposed during the Sprint 23 RC rehearsal:
+  - The `test` job installed `dist/*.whl` without the `[sbom]` extra, so
+    `cyclonedx-python-lib` was missing, causing `tests/sbom/test_builder.py`
+    to fail at pytest collection time with
+    `ModuleNotFoundError: No module named 'cyclonedx'`.
+  - Even with the extra installed, `tests/sbom/test_example_fixture.py`
+    computes `_REPO_ROOT` via `Path(__file__).resolve().parents[3]`, which
+    resolves to `/opt/hostedtoolcache/Python/3.12.13/` when OWB is imported
+    from an installed wheel rather than the repo root. The example SBOM
+    drift check then fails with "Missing committed example SBOM at ..."
+    (filed as OWB-S120).
+- The new `smoke` job installs the wheel into a clean environment with
+  the `[sbom]` extra and verifies the CLI entry point responds to
+  `--help` and `--version`. The full test suite is the responsibility of
+  `ci.yml`, which runs `uv sync --all-extras && pytest` on every push to
+  main across a Python 3.11/3.12/3.13 matrix. Running the full suite
+  again in the release workflow was redundant and introduced
+  source-tree-assumption bugs that the source-tree-native CI run cannot
+  see.
+- **Sprint-close skill Item 8a (user-level)**: the `sprint-close` skill
+  at `~/.claude/skills/sprint-close/SKILL.md` now verifies that a
+  GitHub Release object exists post-tag as part of the close checklist.
+  This closes the gap that allowed the ghost-release chain to go
+  undetected across three sprints.
+
+#### SBOM foundation (OWB-S107a, originally v1.6.0)
+
+- **`owb sbom generate <workspace>` command.** Produces a CycloneDX 1.6
+  JSON Software Bill of Materials for every skill, agent, command, and
+  MCP server in a workspace. Output writes to stdout by default;
+  `--output PATH` writes to a file.
+- **Scanner SBOM emission.** `owb scan <path> --emit-sbom PATH` produces
+  both the scan report and an SBOM in a single pass.
+- **Versioned content normalization (`norm1`).** New
+  `open_workspace_builder.sbom.normalize` module implements the `norm1`
+  algorithm — strip trailing whitespace, normalize line endings to LF,
+  strip `updated:` YAML frontmatter field before hashing. Hashes are
+  tagged `sha256-norm1:<hex>` so future rule changes stay
+  backward-compatible. Hash stability is enforced by workflow-level AC
+  tests: modifying whitespace or the `updated:` field produces no drift;
+  modifying a skill body flips exactly one component hash.
+- **`[sbom]` optional extra.** `cyclonedx-python-lib` promoted from
+  transitive (via `pip-audit`) to direct dependency. Apache-2.0 (allowed),
+  pinned `>=9.0,<11`.
+- **Example SBOM fixture.** `examples/sbom/example.cdx.json` committed,
+  with a deterministic regeneration path via
+  `python -m open_workspace_builder.sbom._example`. CI drift check
+  ensures the committed fixture stays in sync with regeneration.
+
+#### SBOM enrichment (OWB-S107b, originally v1.7.0)
+
+- **Provenance** under `owb:provenance:*` properties. Detection priority
+  is explicit frontmatter `source:` → install record → git history via
+  `git log --follow` → local fallback. Each entry carries a confidence
+  score (`high`/`medium`/`low`). Git-history detection records the commit
+  SHA and the canonical `https://` form of the origin remote when
+  present (SSH URLs normalized).
+- **Capabilities** under `owb:capability:*` properties. Declared tools
+  (one property per tool, e.g. `owb:capability:tool:Read`), MCP server
+  references, explicit `network:` declarations, MCP server transport
+  type, exec command names, and env *keys*. Tool wildcards (`*`) raise a
+  `owb:capability:warning` marker. **MCP env values are never
+  recorded** — only keys, enforced by a dedicated test.
+- **License detection** in the spec-native CycloneDX `licenses` field.
+  Detection priority is frontmatter `license:` → sibling
+  `LICENSE`/`LICENSE.md`/`COPYING` → parent-directory walk → workspace
+  root `LICENSE` → `NOASSERTION`. SPDX identification uses
+  distinctive-phrase fingerprinting (case- and whitespace-normalized).
+  Recognized licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC,
+  GPL-2.0, GPL-3.0, AGPL-3.0, LGPL-2.1, LGPL-3.0, MPL-2.0, Unlicense,
+  0BSD.
+- **`allowed_licenses.toml`** shipped with the package at
+  `src/open_workspace_builder/data/allowed_licenses.toml`. Runtime
+  authority for the SBOM license cross-reference.
+- **CLI exit code 2 for license warnings.** `owb sbom generate` exits
+  with code 2 when one or more components have a non-allowed or
+  unrecognized custom license. Top-level metadata aggregate
+  `owb:license:non-allowed-count` exposes the count without re-walking
+  components.
+- **Hash stability regression test** asserts that every S107a `bom-ref`
+  and content hash remains byte-identical under S107b regeneration.
+
+#### SBOM operational commands (OWB-S107c, originally v1.8.0)
+
+- **`owb sbom diff <old> <new>`** — structural diff joined by `bom-ref`
+  over content hash, license, capability set, and provenance. JSON by
+  default; `--format text` for human-readable. Exit codes 0 (clean) /
+  1 (error) / 2 (differences).
+- **`owb sbom verify [--workspace PATH] [--against PATH]`** — regenerate
+  the workspace SBOM and compare against `.owb/sbom.cdx.json` (or a
+  custom canonical). The pre-commit / CI drift gate. Exit codes
+  0 / 1 / 2.
+- **`owb sbom show <sbom> [--component BOM-REF]`** — read-only inspector
+  with a one-line-per-component summary by default and a full property
+  dump when a single component is selected. Both `text` and `json`
+  formats.
+- **`owb sbom quarantine [--workspace PATH] [--days N] [--sbom PATH]`** —
+  flag AI extensions added inside the last N days (default 7) using the
+  `owb:provenance:added-at` field. Exit codes 0 / 1 / 2.
+- **`owb sbom generate --format spdx`** — SPDX 2.3 JSON output via a
+  hand-rolled emitter (no new dependency). CycloneDX 1.6 remains the
+  canonical internal format.
+- **`owb scan --skill-quarantine`** — opt-in scanner gate that wires the
+  quarantine check into the existing scan pipeline. Default off.
+- **Provenance `added_at` field** on every detected `Provenance` record.
+  ISO 8601 first-add date sourced from
+  `git log --diff-filter=A --follow` (high confidence) or file `mtime`
+  (low confidence). Emitted as `owb:provenance:added-at` CycloneDX
+  property. **Excluded from the normalized content hash by construction**
+  — hash operates on file content, not metadata.
+- **Documentation.** New concept page `docs/concepts/sbom.md` and
+  how-to `docs/howto-sbom.md` with worked examples and pre-commit / CI
+  recipes.
+
+### Security
+
+- **OWB-SEC-003: bump `cryptography` to 46.0.7** (CVE-2026-39892,
+  Dependabot alert #16). Medium-severity buffer overflow in
+  `Hash.update()` on non-contiguous buffers. In-context risk is low
+  because OWB does not route user bytes into crypto APIs, but the patch
+  is applied proactively. Previously blocked on a 7-day supply-chain
+  quarantine window that cleared 2026-04-15.
+
+### Changed
+
+- `owb sbom generate --format` now accepts `cyclonedx` or `spdx`.
+- `Component` dataclass extended with three optional fields
+  (`provenance`, `capabilities`, `license`) defaulting to empty so all
+  v1.5.0 callers continue to work unchanged.
+- `pyproject.toml` and `MANIFEST.in` extended to ship `data/*.toml`
+  files in the package distribution.
+- PRD: new UC-18 (AI Workspace SBOM Generation).
+- ADR: new AD-17 (GitHub Releases distribution), plus the previously
+  filed AD-17 (CycloneDX 1.6) and AD-18 (versioned normalization) from
+  Sprint 20. Vault ADR numbering reconciled separately.
+
+### Tests
+
+- Total test count grew across the Sprint 20–23 work. v1.5.0 had 1563
+  tests; v1.9.0 ships 1814+ (exact count pinned at sprint close).
+- Workflow-level AC tests exercise the full SBOM lifecycle through the
+  CLI per the integration-verification-policy.
+- 40 new tests for the release pipeline helper scripts
+  (`tests/test_extract_changelog.py`, `tests/test_generate_sbom.py`).
+- SBOM module coverage 93% post-S107c.
+
+### Known Limitations
+
+- `cyclonedx-python-lib` emits a `UserWarning` during project SBOM
+  generation because the BOM does not declare the root component's
+  direct-vs-transitive dependency graph. Declaring the graph requires
+  parsing the wheel's `Requires-Dist` metadata and doing a full
+  topological walk; deferred as future enrichment, not a correctness
+  issue.
+- `src/open_workspace_builder/sbom/_example.py` still computes
+  `_REPO_ROOT` via a source-tree assumption. Works when OWB is imported
+  from the source tree, fails against an installed wheel. Worked around
+  in the release pipeline via the `smoke` job. Fix tracked as OWB-S120.
 
 ## [1.8.0] - 2026-04-11
 
