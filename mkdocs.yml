@@ -98,9 +98,11 @@ nav:
     - IDP for AI Coding: concepts/idp-for-ai-coding.md
     - Policy as Code: concepts/policy-as-code.md
     - Supply Chain Security: concepts/supply-chain-security.md
+    - AI Extension SBOMs: concepts/sbom.md
   - Guides:
     - Upgrading: howto-upgrade.md
     - Using as a Library: guides/library-usage.md
+    - SBOM Operations: howto-sbom.md
   - Reference:
     - CLI Commands: reference/cli.md
     - Lifecycle and Agents: reference/lifecycle.md

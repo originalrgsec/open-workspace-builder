@@ -258,6 +258,51 @@ class TestPriorityOrdering:
         assert prov.type == ProvenanceType.FRONTMATTER
         assert prov.source == "https://explicit.example.com/foo"
 
+    def test_added_at_present_for_local_file(self, tmp_path: Path) -> None:
+        """S107c — every detected provenance carries an added_at value."""
+        skill = tmp_path / "SKILL.md"
+        skill.write_text("---\nname: demo\n---\nbody\n")
+        prov = detect_provenance(
+            component_path=skill,
+            workspace=tmp_path,
+            frontmatter={},
+        )
+        assert prov.added_at is not None
+        # ISO 8601 date form YYYY-MM-DD
+        assert len(prov.added_at) == 10
+        assert prov.added_at[4] == "-" and prov.added_at[7] == "-"
+
+    def test_added_at_from_git_first_add(self, git_repo_with_skill: tuple[Path, Path]) -> None:
+        """added_at sourced from `git log --diff-filter=A --follow`."""
+        repo, skill = git_repo_with_skill
+        prov = detect_provenance(
+            component_path=skill,
+            workspace=repo,
+            frontmatter={},
+        )
+        assert prov.added_at is not None
+        assert len(prov.added_at) == 10
+
+    def test_added_at_with_frontmatter_provenance(self, tmp_path: Path) -> None:
+        """Frontmatter provenance still picks up added_at from filesystem."""
+        skill = tmp_path / "SKILL.md"
+        skill.write_text("---\nsource: https://github.com/foo/bar\n---\nbody\n")
+        prov = detect_provenance(
+            component_path=skill,
+            workspace=tmp_path,
+            frontmatter={"source": "https://github.com/foo/bar"},
+        )
+        assert prov.type == ProvenanceType.FRONTMATTER
+        assert prov.added_at is not None
+
+    def test_added_at_none_for_missing_file(self, tmp_path: Path) -> None:
+        prov = detect_provenance(
+            component_path=tmp_path / "nope.md",
+            workspace=tmp_path,
+            frontmatter={},
+        )
+        assert prov.added_at is None
+
     def test_install_record_beats_git(self, git_repo_with_skill: tuple[Path, Path]) -> None:
         repo, skill = git_repo_with_skill
         _git(repo, "remote", "add", "origin", "https://github.com/example/test.git")

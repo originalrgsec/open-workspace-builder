@@ -46,6 +46,10 @@ Known false positives are tracked in a suppression registry. The `owb audit chec
 
 When OWB pulls content from upstream sources (`owb update`), every file runs through the three-layer security scanner. The reputation ledger tracks source history: how many updates have been clean, how many have been flagged, and what the overall trust posture of each source is. Sources that exceed a flag threshold are recommended for removal.
 
+### AI extension SBOMs
+
+OWB produces a CycloneDX 1.6 (and optionally SPDX 2.3) Software Bill of Materials for the AI extension surface of any workspace: every skill, agent, slash command, and MCP server. Each component is enriched with provenance (frontmatter, install-record, git history, or local), declared capabilities (tools, MCP connections, network, env keys, transport), a detected license cross-referenced against the bundled allowed-licenses policy, and a first-add timestamp. The same `owb sbom quarantine` command applies a 7-day window to AI extensions that the package quarantine applies to Python dependencies, so a freshly-imported skill gets the same hygiene treatment as a freshly-published pip package. See the [AI Extension SBOMs concept page](sbom.md) and the [SBOM howto](../howto-sbom.md) for the full model and worked examples.
+
 ## What OWB does not protect
 
 OWB's SSCA protects the AI workspace and its development dependencies. It does not protect the artifacts you ship to production. If you are building a web application, OWB scans the tools and libraries you use during development, not the application's runtime dependencies (unless they overlap). Production supply chain assurance requires additional tooling in your CI/CD pipeline.
@@ -55,3 +59,4 @@ OWB's SSCA protects the AI workspace and its development dependencies. It does n
 - [IDP for AI Coding](idp-for-ai-coding.md) — the platform model that SSCA fits within
 - [Policy as Code](policy-as-code.md) — the enforcement mechanism for supply chain policies
 - [Security Model](security.md) — the three-layer scanner that content passes through
+- [AI Extension SBOMs](sbom.md) — the CycloneDX/SPDX Software Bill of Materials for the AI workspace surface

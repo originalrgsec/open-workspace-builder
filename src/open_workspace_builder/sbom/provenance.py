@@ -1,4 +1,4 @@
-"""OWB-S107b — SBOM provenance detection.
+"""OWB-S107b / S107c — SBOM provenance detection.
 
 Where did this skill or agent come from? Four sources, in priority order:
 
@@ -24,7 +24,8 @@ from __future__ import annotations
 import json
 import re
 import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Mapping
@@ -64,6 +65,12 @@ class Provenance:
         package: Package name from an install record, when known.
         version: Package version from an install record, when known.
         installed_at: ISO timestamp from an install record, when known.
+        added_at: ISO 8601 date (YYYY-MM-DD) the component was added to the
+            workspace. S107c. Sourced from ``git log --diff-filter=A --follow``
+            (high confidence) or file ``mtime`` (low confidence). Used by
+            ``owb sbom quarantine`` to flag recently-added AI extensions.
+            Excluded from the normalized content hash by construction:
+            normalization operates on file content, not metadata.
         confidence: How much to trust this entry.
     """
 
@@ -74,6 +81,7 @@ class Provenance:
     package: str | None = None
     version: str | None = None
     installed_at: str | None = None
+    added_at: str | None = None
 
 
 @dataclass(frozen=True)
@@ -256,6 +264,63 @@ def _detect_git_provenance(
 
 
 # ---------------------------------------------------------------------------
+# added_at detection (S107c) — used by `owb sbom quarantine`
+# ---------------------------------------------------------------------------
+
+
+def _detect_added_at(component_path: Path, workspace: Path) -> str | None:
+    """Detect when a component file was first added to the workspace.
+
+    Priority order:
+
+    1. ``git log --diff-filter=A --follow`` — first-add commit author date.
+       Returns an ISO 8601 date string (``YYYY-MM-DD``).
+    2. File ``mtime`` fallback — when not in git or git history unavailable.
+
+    Returns ``None`` only when the file does not exist.
+
+    Excluded from the normalized content hash by construction: the hash
+    function operates on file content (see ``sbom/normalize.py``), not
+    metadata. Adding this field cannot perturb existing v1.6.0 / v1.7.0
+    component hashes.
+    """
+    if not component_path.is_file():
+        return None
+
+    # Try git first.
+    inside = _run_git(workspace, "rev-parse", "--is-inside-work-tree")
+    if inside == "true":
+        try:
+            rel = component_path.relative_to(workspace)
+        except ValueError:
+            rel = None
+
+        if rel is not None:
+            log_out = _run_git(
+                workspace,
+                "log",
+                "--follow",
+                "--diff-filter=A",
+                "--format=%aI",
+                "-1",
+                "--",
+                str(rel),
+            )
+            if log_out:
+                # Author date in strict ISO 8601, e.g. 2026-04-11T10:23:45-07:00.
+                date_str = log_out.splitlines()[0].strip()
+                if len(date_str) >= 10:
+                    return date_str[:10]
+
+    # Fallback: file mtime.
+    try:
+        ts = component_path.stat().st_mtime
+        return datetime.fromtimestamp(ts, tz=timezone.utc).date().isoformat()
+    except OSError:
+        return None
+
+
+# ---------------------------------------------------------------------------
 # Top-level detection
 # ---------------------------------------------------------------------------
 
@@ -266,15 +331,25 @@ def detect_provenance(
     workspace: Path,
     frontmatter: Mapping[str, str],
 ) -> Provenance:
-    """Detect provenance for a component using the four-source priority order."""
+    """Detect provenance for a component using the four-source priority order.
+
+    S107c: every returned record also carries an ``added_at`` field
+    (sourced from git first-add or mtime). The four-source priority is
+    unchanged; ``added_at`` is an orthogonal metadata field.
+    """
+    added_at = _detect_added_at(component_path, workspace)
+
+    base: Provenance
+
     # Step 1: explicit frontmatter
     explicit = frontmatter.get("source") if frontmatter else None
     if explicit:
-        return Provenance(
+        base = Provenance(
             type=ProvenanceType.FRONTMATTER,
             confidence=ProvenanceConfidence.HIGH,
             source=explicit,
         )
+        return replace(base, added_at=added_at)
 
     # Step 2: install record
     if component_path.is_file():
@@ -285,7 +360,7 @@ def detect_provenance(
                 component_relpath=relpath,
             )
             if record is not None:
-                return Provenance(
+                base = Provenance(
                     type=ProvenanceType.INSTALL_RECORD,
                     confidence=ProvenanceConfidence.HIGH,
                     source=record.source,
@@ -293,6 +368,7 @@ def detect_provenance(
                     version=record.version,
                     installed_at=record.installed_at,
                 )
+                return replace(base, added_at=added_at)
         except ValueError:
             pass
 
@@ -300,10 +376,11 @@ def detect_provenance(
     if component_path.is_file():
         git_prov = _detect_git_provenance(component_path, workspace)
         if git_prov is not None:
-            return git_prov
+            return replace(git_prov, added_at=added_at)
 
     # Step 4: local fallback
-    return Provenance(
+    base = Provenance(
         type=ProvenanceType.LOCAL,
         confidence=ProvenanceConfidence.LOW,
     )
+    return replace(base, added_at=added_at)

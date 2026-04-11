@@ -190,8 +190,11 @@ def _check_quarantine(package: str, version: str | None, days: int) -> GateCheck
     """
     try:
         from open_workspace_builder.security.quarantine import check_quarantine_age
-    except ImportError:
-        # S089 quarantine module not yet merged — stub the check
+    except (ImportError, AttributeError):
+        # S089 quarantine module not yet merged, or `check_quarantine_age`
+        # symbol absent under a future refactor — degrade to a "skipped"
+        # rather than swallowing the failure later inside the broad
+        # `except Exception` below.
         return GateCheck(
             name="quarantine",
             passed=True,
@@ -217,6 +220,67 @@ def _check_quarantine(package: str, version: str | None, days: int) -> GateCheck
             passed=True,
             details=f"skipped — quarantine check error: {exc}",
         )
+
+
+# ── Skill quarantine (S107c) ────────────────────────────────────────────
+
+
+def _check_skill_quarantine(workspace: Path, days: int = 7) -> GateCheck:
+    """Flag AI extensions added inside the last *days* days.
+
+    OWB-S107c. Consults the SBOM ``added_at`` provenance field for every
+    skill, agent, command, and MCP server in the workspace. Wired into
+    the scanner pipeline behind ``--skill-quarantine`` (default off).
+
+    Returns ``passed=True`` with a "skipped" detail when the workspace is
+    not a directory or when the quarantine module is unavailable, so a
+    misconfigured workspace cannot turn the gate into a hard failure.
+    """
+    if not workspace.is_dir():
+        return GateCheck(
+            name="skill-quarantine",
+            passed=True,
+            details=f"skipped — workspace not found: {workspace}",
+        )
+
+    try:
+        from open_workspace_builder.sbom.quarantine import check_workspace_quarantine
+    except ImportError:
+        return GateCheck(
+            name="skill-quarantine",
+            passed=True,
+            details="skipped — sbom.quarantine module unavailable",
+        )
+
+    try:
+        report = check_workspace_quarantine(workspace=workspace, days=days)
+    except Exception as exc:  # noqa: BLE001
+        return GateCheck(
+            name="skill-quarantine",
+            passed=True,
+            details=f"skipped — quarantine check error: {exc}",
+        )
+
+    if report.has_quarantined:
+        names = ", ".join(q.name for q in report.quarantined[:5])
+        more = "" if len(report.quarantined) <= 5 else f" (+{len(report.quarantined) - 5} more)"
+        return GateCheck(
+            name="skill-quarantine",
+            passed=False,
+            details=(
+                f"{len(report.quarantined)} of {report.total_components} "
+                f"AI extensions inside the {days}-day quarantine window: "
+                f"{names}{more}"
+            ),
+        )
+
+    return GateCheck(
+        name="skill-quarantine",
+        passed=True,
+        details=(
+            f"0 of {report.total_components} AI extensions inside the {days}-day quarantine window"
+        ),
+    )
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────
@@ -295,7 +359,7 @@ def _parse_direct_deps() -> list[str]:
 
     # Extract the dependencies array from [project] section
     match = re.search(
-        r'^\s*dependencies\s*=\s*\[(.*?)\]',
+        r"^\s*dependencies\s*=\s*\[(.*?)\]",
         content,
         re.MULTILINE | re.DOTALL,
     )

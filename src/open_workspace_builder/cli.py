@@ -612,6 +612,13 @@ def security() -> None:
     type=click.Path(),
     help="Write a CycloneDX 1.6 SBOM for the workspace extension surface to this path (S107a).",
 )
+@click.option(
+    "--skill-quarantine",
+    "skill_quarantine",
+    is_flag=True,
+    default=False,
+    help="Enable AI extension quarantine gate (S107c). Flags skills/agents/MCP added inside the last 7 days. Opt-in until a future deprecation cycle flips the default.",
+)
 @click.pass_context
 def scan(
     ctx: click.Context,
@@ -626,6 +633,7 @@ def scan(
     trivy: bool,
     run_all: bool,
     emit_sbom: str | None,
+    skill_quarantine: bool,
 ) -> None:
     """Scan a file or directory for security issues.
 
@@ -743,6 +751,19 @@ def scan(
     if output_file:
         Path(output_file).write_text(json.dumps(report_data, indent=2) + "\n", encoding="utf-8")
         click.echo(f"Report written to {output_file}")
+
+    # S107c: optional skill quarantine gate (default off).
+    if skill_quarantine and target.is_dir():
+        from open_workspace_builder.security.gate import _check_skill_quarantine
+
+        gate_check = _check_skill_quarantine(target, days=7)
+        report_data["skill_quarantine"] = {
+            "passed": gate_check.passed,
+            "details": gate_check.details,
+        }
+        if not gate_check.passed:
+            click.echo(f"skill-quarantine: {gate_check.details}", err=True)
+            has_issues = True
 
     # S107a: optional SBOM emission alongside the scan report.
     if emit_sbom:
@@ -3134,18 +3155,19 @@ def sbom() -> None:
     "--format",
     "fmt",
     default="cyclonedx",
-    type=click.Choice(["cyclonedx"], case_sensitive=False),
-    help="Output format. Only 'cyclonedx' is supported in S107a; SPDX is deferred to S107c.",
+    type=click.Choice(["cyclonedx", "spdx"], case_sensitive=False),
+    help="Output format. 'cyclonedx' (default, CycloneDX 1.6) or 'spdx' (SPDX 2.3, S107c).",
 )
 def sbom_generate(workspace: str, output_file: str | None, fmt: str) -> None:
-    """Produce a CycloneDX 1.6 SBOM for an AI workspace.
+    """Produce a CycloneDX 1.6 or SPDX 2.3 SBOM for an AI workspace.
 
     Discovers every skill, agent, command, and MCP server in the workspace
-    and emits a CycloneDX 1.6 JSON document with stable content hashes
-    (algorithm sha256-norm1). S107b enriches each component with declared
-    capabilities, provenance (frontmatter / install record / git history /
-    local), and a detected license cross-referenced against the bundled
-    `allowed_licenses.toml` policy.
+    and emits an SBOM with stable content hashes (algorithm sha256-norm1).
+    Each component is enriched with declared capabilities, provenance
+    (frontmatter / install record / git history / local), and a detected
+    license cross-referenced against the bundled `allowed_licenses.toml`
+    policy. CycloneDX is the canonical format; SPDX 2.3 is a write-only
+    secondary format for downstream tools that only consume SPDX.
 
     Writes to stdout by default; use --output to write to a file instead.
 
@@ -3160,21 +3182,25 @@ def sbom_generate(workspace: str, output_file: str | None, fmt: str) -> None:
         serialize_bom,
     )
     from open_workspace_builder.sbom.discover import discover_components
+    from open_workspace_builder.sbom.spdx import serialize_spdx
 
     workspace_path = Path(workspace)
     try:
         components = discover_components(workspace_path)
         bom = build_bom(components)
-        json_str = serialize_bom(bom)
+        if fmt.lower() == "spdx":
+            output_str = serialize_spdx(components)
+        else:
+            output_str = serialize_bom(bom)
     except Exception as exc:  # pragma: no cover - defensive
         click.echo(f"Error generating SBOM: {exc}", err=True)
         sys.exit(1)
 
     if output_file:
-        Path(output_file).write_text(json_str + "\n", encoding="utf-8")
+        Path(output_file).write_text(output_str + "\n", encoding="utf-8")
         click.echo(f"SBOM written to {output_file}", err=True)
     else:
-        click.echo(json_str)
+        click.echo(output_str)
 
     non_allowed = count_non_allowed_licenses(bom)
     if non_allowed > 0:
@@ -3186,3 +3212,253 @@ def sbom_generate(workspace: str, output_file: str | None, fmt: str) -> None:
         sys.exit(2)
 
     sys.exit(0)
+
+
+# ── owb sbom diff ───────────────────────────────────────────────────────────
+
+
+@sbom.command("diff")
+@click.argument("old", type=click.Path(exists=True, dir_okay=False))
+@click.argument("new", type=click.Path(exists=True, dir_okay=False))
+@click.option(
+    "--format",
+    "fmt",
+    default="json",
+    type=click.Choice(["json", "text"], case_sensitive=False),
+    help="Output format. 'json' (default, stable shape) or 'text' (one-line-per-change).",
+)
+def sbom_diff(old: str, new: str, fmt: str) -> None:
+    """Structurally diff two CycloneDX SBOMs (joined by bom-ref).
+
+    Reports added, removed, and changed components. Field-level deltas
+    cover content hash, license, capability set, and provenance source/
+    commit. The added_at metadata field is intentionally excluded so
+    cosmetic mtime changes do not show as drift.
+
+    Exit codes:
+      0  no differences
+      1  read or parse error
+      2  differences present
+    """
+    from open_workspace_builder.sbom.diff import (
+        diff_boms,
+        load_bom,
+        render_json,
+        render_text,
+    )
+
+    try:
+        old_bom = load_bom(Path(old))
+        new_bom = load_bom(Path(new))
+    except (FileNotFoundError, ValueError) as exc:
+        click.echo(f"Error reading SBOM: {exc}", err=True)
+        sys.exit(1)
+
+    result = diff_boms(old_bom, new_bom)
+    if fmt.lower() == "text":
+        click.echo(render_text(result))
+    else:
+        click.echo(render_json(result))
+
+    sys.exit(2 if result.has_differences else 0)
+
+
+# ── owb sbom verify ─────────────────────────────────────────────────────────
+
+
+@sbom.command("verify")
+@click.option(
+    "--workspace",
+    "-w",
+    "workspace",
+    default=".",
+    type=click.Path(file_okay=False),
+    help="Workspace root to verify. Defaults to the current directory.",
+)
+@click.option(
+    "--against",
+    "-a",
+    "against",
+    default=None,
+    type=click.Path(dir_okay=False),
+    help="Canonical SBOM file. Defaults to <workspace>/.owb/sbom.cdx.json.",
+)
+@click.option(
+    "--format",
+    "fmt",
+    default="text",
+    type=click.Choice(["json", "text"], case_sensitive=False),
+    help="Output format for any drift report.",
+)
+def sbom_verify(workspace: str, against: str | None, fmt: str) -> None:
+    """Verify that a workspace's current state matches a canonical SBOM.
+
+    Regenerates the workspace SBOM in-memory and diffs against the
+    canonical file. Use this in pre-commit / CI to fail fast on drift.
+
+    Exit codes:
+      0  match (workspace state matches canonical SBOM)
+      1  error (workspace not found, canonical SBOM missing or malformed)
+      2  drift (regenerated SBOM differs from canonical)
+    """
+    from open_workspace_builder.sbom.diff import render_json, render_text
+    from open_workspace_builder.sbom.verify import verify_workspace
+
+    workspace_path = Path(workspace)
+    canonical_path = Path(against) if against else None
+
+    try:
+        outcome = verify_workspace(workspace=workspace_path, canonical=canonical_path)
+    except (FileNotFoundError, ValueError) as exc:
+        click.echo(f"Error verifying SBOM: {exc}", err=True)
+        sys.exit(1)
+
+    if outcome.ok:
+        click.echo("OK — workspace SBOM matches canonical.", err=True)
+        sys.exit(0)
+
+    click.echo("DRIFT — workspace SBOM differs from canonical:", err=True)
+    if fmt.lower() == "text":
+        click.echo(render_text(outcome.diff))
+    else:
+        click.echo(render_json(outcome.diff))
+    sys.exit(2)
+
+
+# ── owb sbom show ───────────────────────────────────────────────────────────
+
+
+@sbom.command("show")
+@click.argument("sbom_file", type=click.Path(exists=True, dir_okay=False))
+@click.option(
+    "--component",
+    "-c",
+    "component_ref",
+    default=None,
+    help="Show full enrichment for a single component by bom-ref.",
+)
+@click.option(
+    "--format",
+    "fmt",
+    default="text",
+    type=click.Choice(["json", "text"], case_sensitive=False),
+    help="Output format.",
+)
+def sbom_show(sbom_file: str, component_ref: str | None, fmt: str) -> None:
+    """Pretty-print an SBOM (or one component) from a CycloneDX file.
+
+    Default mode prints a one-line-per-component summary with name,
+    version, kind, license, provenance, and capability count. With
+    --component, prints the full property and license dump for one
+    component.
+
+    Exit codes:
+      0  success
+      1  read or parse error
+      2  --component specified and not found
+    """
+    from open_workspace_builder.sbom.diff import load_bom
+    from open_workspace_builder.sbom.show import (
+        find_component,
+        render_detail_json,
+        render_detail_text,
+        render_summary_json,
+        render_summary_text,
+        summarize,
+    )
+
+    try:
+        bom = load_bom(Path(sbom_file))
+    except (FileNotFoundError, ValueError) as exc:
+        click.echo(f"Error reading SBOM: {exc}", err=True)
+        sys.exit(1)
+
+    if component_ref:
+        detail = find_component(bom, component_ref)
+        if detail is None:
+            click.echo(f"Component not found: {component_ref}", err=True)
+            sys.exit(2)
+        if fmt.lower() == "json":
+            click.echo(render_detail_json(detail))
+        else:
+            click.echo(render_detail_text(detail))
+        sys.exit(0)
+
+    rows = summarize(bom)
+    if fmt.lower() == "json":
+        click.echo(render_summary_json(rows))
+    else:
+        click.echo(render_summary_text(rows))
+    sys.exit(0)
+
+
+# ── owb sbom quarantine ─────────────────────────────────────────────────────
+
+
+@sbom.command("quarantine")
+@click.option(
+    "--workspace",
+    "-w",
+    "workspace",
+    default=".",
+    type=click.Path(file_okay=False),
+    help="Workspace root. Defaults to the current directory.",
+)
+@click.option(
+    "--days",
+    "-d",
+    default=7,
+    type=click.IntRange(min=0),
+    help="Quarantine window in days (default 7).",
+)
+@click.option(
+    "--sbom",
+    "sbom_path",
+    default=None,
+    type=click.Path(dir_okay=False),
+    help="Use a pre-built SBOM file instead of regenerating from the workspace.",
+)
+@click.option(
+    "--format",
+    "fmt",
+    default="text",
+    type=click.Choice(["json", "text"], case_sensitive=False),
+    help="Output format.",
+)
+def sbom_quarantine(workspace: str, days: int, sbom_path: str | None, fmt: str) -> None:
+    """Flag AI extensions added inside the last N days.
+
+    Reads the workspace SBOM (regenerates in-memory if --sbom is not
+    given) and reports each component whose owb:provenance:added-at falls
+    inside the quarantine window. Use during onboarding once with
+    --days 0 to baseline a new clone.
+
+    Exit codes:
+      0  no components inside the window
+      1  error
+      2  one or more components inside the window
+    """
+    from open_workspace_builder.sbom.diff import load_bom
+    from open_workspace_builder.sbom.quarantine import (
+        check_quarantine,
+        check_workspace_quarantine,
+        render_report_json,
+        render_report_text,
+    )
+
+    try:
+        if sbom_path:
+            bom = load_bom(Path(sbom_path))
+            report = check_quarantine(bom, days=days)
+        else:
+            report = check_workspace_quarantine(workspace=Path(workspace), days=days)
+    except (FileNotFoundError, ValueError) as exc:
+        click.echo(f"Error running quarantine check: {exc}", err=True)
+        sys.exit(1)
+
+    if fmt.lower() == "json":
+        click.echo(render_report_json(report))
+    else:
+        click.echo(render_report_text(report))
+
+    sys.exit(2 if report.has_quarantined else 0)

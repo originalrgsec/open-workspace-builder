@@ -198,6 +198,8 @@ def _provenance_properties(provenance: Provenance | None) -> list[Property]:
         out.append(Property(name="owb:provenance:version", value=provenance.version))
     if provenance.installed_at:
         out.append(Property(name="owb:provenance:installed-at", value=provenance.installed_at))
+    if provenance.added_at:
+        out.append(Property(name="owb:provenance:added-at", value=provenance.added_at))
     return out
 
 
