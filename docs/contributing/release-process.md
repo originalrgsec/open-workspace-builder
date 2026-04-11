@@ -38,36 +38,45 @@ Do not tag before the merge. Do not force-push or move tags after the release wo
 
 ## Pre-release tags (RC rehearsal)
 
-Release workflow changes cannot be validated in isolation — the workflow only runs on a real tag push. The sanctioned way to exercise a workflow change without burning a real version number is a release candidate tag against a scratch branch:
+Release workflow changes cannot be validated in isolation — the workflow only runs on a real tag push. The sanctioned way to exercise a workflow change without burning a real version number is a PEP 440 pre-release tag against a scratch branch.
+
+**Pre-release versions must be canonical PEP 440.** That means `1.9.0rc1`, not `1.9.0-rc.1`. Python packaging tools normalize the latter to the former when building wheels, so if you use the hyphen-dot form in `pyproject.toml` the built wheel and the git tag will disagree on the version string. Stick to canonical PEP 440 for tags, `pyproject.toml`, and CHANGELOG section headers. Supported pre-release suffixes: `a<N>`, `b<N>`, `rc<N>`, `.dev<N>`, `.post<N>` (per PEP 440).
 
 ```bash
 git checkout -b sprint-23-release-rehearsal
-# make workflow changes
-git commit -am "chore: release workflow rehearsal"
+
+# 1. bump pyproject.toml version to the PEP 440 pre-release form
+#    version = "1.9.0rc1"
+
+# 2. add a temporary CHANGELOG section for the RC
+#    ## [1.9.0rc1] - 2026-04-12
+#    ### Rehearsal
+#    - Validating AD-17 GitHub Release workflow.
+
+git commit -am "chore: release workflow rehearsal (1.9.0rc1)"
 git push origin sprint-23-release-rehearsal
 
-# add a temporary CHANGELOG section for the RC
-# ## [1.9.0-rc.1] - 2026-04-12
-# ### Rehearsal
-# - Validating AD-17 GitHub Release workflow.
-
-git commit -am "chore: rc.1 CHANGELOG stub"
-git tag v1.9.0-rc.1
-git push origin v1.9.0-rc.1
+git tag v1.9.0rc1
+git push origin v1.9.0rc1
 ```
 
-Tags matching `v*-rc.*`, `v*-alpha.*`, and `v*-beta.*` produce a prerelease-flagged GitHub Release. They still publish to PyPI as pre-release versions (PEP 440) and are visible to users who opt into pre-releases. Prefer separate pre-release PyPI project names if you want to avoid any PyPI surface for rehearsal — or accept that RC tags are a real pre-release.
+The workflow detects pre-release versions via a PEP 440 regex (`(a|b|rc|dev|post)[0-9]+$`) and adds `--prerelease` to the `gh release create` call. The resulting GitHub Release is flagged as a prerelease, clearly distinguishable from canonical releases.
+
+Pre-release tags still publish to PyPI via the existing `publish` job. PyPI stores them as pre-release versions per PEP 440 and surfaces them only to users who opt in via `pip install --pre`. **PyPI is append-only** — the published version string is permanently reserved even if you later yank the file. Budget one version number per rehearsal and accept that `v1.9.0rc1` cannot be reused.
 
 After validation:
 
 ```bash
-gh release delete v1.9.0-rc.1 --yes
-git push origin :refs/tags/v1.9.0-rc.1
+gh release delete v1.9.0rc1 --yes
+git push origin :refs/tags/v1.9.0rc1
+git tag -d v1.9.0rc1
 git branch -D sprint-23-release-rehearsal
-# revert the temporary CHANGELOG stub before merging the real release
+git push origin --delete sprint-23-release-rehearsal
+# revert the temporary CHANGELOG stub and pyproject.toml version bump
+# before merging the real release PR
 ```
 
-RC tags and their Release objects are not part of canonical release history and should be deleted after the rehearsal. The sprint-close skill reminds the operator to clean them up.
+The PyPI pre-release file can be yanked via `pypi.org` if the rehearsal produced a broken artifact, but the version string itself is not reclaimable. The sprint-close skill reminds the operator to clean up the tag and Release object; PyPI cleanup is manual.
 
 ## What the workflow produces
 

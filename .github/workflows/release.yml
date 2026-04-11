@@ -106,7 +106,10 @@ jobs:
           VERSION="${TAG#v}"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          if [[ "${VERSION}" =~ -(rc|alpha|beta)\. ]]; then
+          # PEP 440 pre-release segments: a|b|rc|dev|post followed by digits
+          # (e.g. 1.9.0a1, 1.9.0b2, 1.9.0rc1, 1.9.0.dev3). Canonical Python
+          # package versions do not use hyphens.
+          if [[ "${VERSION}" =~ (a|b|rc|dev|post)[0-9]+$ ]]; then
             echo "prerelease=true" >> "$GITHUB_OUTPUT"
           else
             echo "prerelease=false" >> "$GITHUB_OUTPUT"

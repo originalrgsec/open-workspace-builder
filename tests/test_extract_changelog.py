@@ -87,6 +87,12 @@ class TestExtractSection:
         body = extract_changelog.extract_section(changelog, "1.9.0-rc.1")
         assert "rehearsal" in body
 
+    def test_pep440_prerelease_section_matches(self) -> None:
+        # Canonical PEP 440 form used by Python packaging tools
+        changelog = SAMPLE_CHANGELOG + "\n## [1.9.0rc1] - 2026-04-12\n\n- rc rehearsal\n"
+        body = extract_changelog.extract_section(changelog, "1.9.0rc1")
+        assert "rc rehearsal" in body
+
 
 class TestMainCli:
     def test_main_happy_path(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
