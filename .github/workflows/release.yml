@@ -123,14 +123,22 @@ jobs:
           cat release-body.md
           echo "--- end release body ---"
 
+      - name: Install SBOM construction library
+        # AD-17: the SBOM generator builds a CycloneDX BOM directly via
+        # cyclonedx-python-lib rather than shelling out to pip-audit (which
+        # was the scaffold approach but failed to include the subject
+        # package and polluted the component list). cyclonedx-python-lib is
+        # an OWB dependency via the [sbom] extra; we install it directly
+        # here to avoid installing OWB itself into the host environment.
+        run: pip install "cyclonedx-python-lib>=9.0,<11"
+
       - name: Generate project SBOM (CycloneDX)
         # AD-17: project SBOM captures OWB's own installed Python dependency
         # tree so downstream consumers can audit OWB's supply chain
         # independently of PyPI metadata. The helper script creates an
-        # isolated venv, installs the wheel into it, runs pip-audit against
-        # that venv, and validates the CycloneDX output. pip-audit exit
-        # code 1 (vulns found) is accepted as success for SBOM generation;
-        # any other failure hard-fails the workflow.
+        # isolated venv, installs only the wheel into it, enumerates the
+        # resulting distributions via importlib.metadata, and constructs a
+        # CycloneDX 1.6 BOM with OWB as metadata.component.
         run: |
           WHEEL=$(ls dist/*.whl | head -n1)
           python scripts/generate_sbom.py \

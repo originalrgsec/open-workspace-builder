@@ -129,11 +129,12 @@ Fix: fill in the CHANGELOG section, re-tag, and re-push.
 
 ### SBOM generation fails
 
-The `generate_sbom.py` helper creates an isolated venv, installs the wheel plus `pip-audit`, and runs `pip-audit --local --format cyclonedx-json`. Failures usually fall into one of:
+The `generate_sbom.py` helper creates an isolated venv, installs only the wheel into it, enumerates the resulting installed distributions via the venv's `importlib.metadata`, and constructs a CycloneDX 1.6 BOM directly via `cyclonedx-python-lib` with OWB in `metadata.component` and its dependencies in `components`. Venv bootstrap packages (`pip`, `setuptools`, `wheel`, etc.) are filtered out of the component list. Failures usually fall into one of:
 
 - **Missing wheel** — the build job did not produce a wheel. Check the build job logs.
-- **`pip-audit` hard failure** (exit code ≥ 2) — `pip-audit` itself errored. Check the job logs for the underlying cause (network, dependency resolution, etc.). Exit codes 0 (clean) and 1 (vulnerabilities found) are both accepted as success for SBOM generation.
-- **Invalid JSON output** — `pip-audit` produced a file that is not parseable CycloneDX JSON. Usually a `pip-audit` version regression; pin the version in the helper script if this recurs.
+- **`venv creation` / `pip upgrade` / `wheel install` failed** — a pip or venv-layer error. Check the job logs. Usually network or index-resolution issues.
+- **`dist enumeration failed`** — the isolated venv's Python could not run the `importlib.metadata` enumeration snippet. Almost always means the wheel install succeeded but left the venv in an inconsistent state. Re-run the workflow.
+- **`generated BOM is not a CycloneDX document`** — `cyclonedx-python-lib` produced output that did not round-trip through JSON parsing. This is a library-level defect and should not happen; pin the library version if it recurs.
 
 ### PyPI publish succeeded but no GitHub Release was created
 
