@@ -32,12 +32,18 @@ jobs:
           name: dist
           path: dist/
 
-  test:
+  smoke:
+    # Smoke-test the built wheel end-to-end: install it into a clean env
+    # and verify the CLI entry point responds. The full test suite is
+    # the responsibility of ci.yml, which runs `uv sync --all-extras` and
+    # `pytest` on every push to main across a Python version matrix.
+    # Running the full suite here again is (a) redundant and (b) bakes
+    # in source-tree assumptions that do not survive running against an
+    # installed wheel (see `src/open_workspace_builder/sbom/_example.py`
+    # _REPO_ROOT computation).
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -49,20 +55,19 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Install wheel and verify entry point
+      - name: Install wheel into clean environment
         run: |
-          pip install dist/*.whl
+          WHEEL=$(ls dist/*.whl | head -n1)
+          pip install "${WHEEL}[sbom]"
+
+      - name: Verify CLI entry point
+        run: |
           owb --help
           owb --version
 
-      - name: Run tests
-        run: |
-          pip install pytest
-          pytest tests/ -x
-
   publish:
     runs-on: ubuntu-latest
-    needs: test
+    needs: smoke
     environment: pypi
     steps:
       - name: Download dist artifacts
