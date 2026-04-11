@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-04-11
+
+### Added
+- **SBOM operational commands, SPDX 2.3, quarantine, docs (OWB-S107c).**
+  Third and final slice of OWB-S107. Adds the operator-facing surface on
+  top of the S107a/b SBOM substrate:
+  - `owb sbom diff <old> <new>` — structural diff joined by `bom-ref` over
+    content hash, license, capability set, and provenance source/commit.
+    JSON output by default; `--format text` for human-readable. Exit codes
+    0 (clean) / 1 (error) / 2 (differences).
+  - `owb sbom verify [--workspace PATH] [--against PATH]` — regenerate the
+    workspace SBOM and compare against `.owb/sbom.cdx.json` (or a custom
+    canonical). The pre-commit / CI drift gate. Exit codes 0 / 1 / 2.
+  - `owb sbom show <sbom> [--component BOM-REF]` — read-only inspector with
+    a one-line-per-component summary by default and a full property dump
+    when a single component is selected. Both `text` and `json` formats.
+  - `owb sbom quarantine [--workspace PATH] [--days N] [--sbom PATH]` —
+    flag AI extensions added inside the last N days (default 7) using the
+    new `owb:provenance:added-at` field. Mirrors the Python package
+    quarantine policy from S089. Exit codes 0 / 1 / 2.
+  - `owb sbom generate --format spdx` — SPDX 2.3 JSON output via a
+    hand-rolled emitter (no new dependency). CycloneDX 1.6 remains the
+    canonical internal format; SPDX is a write-only secondary format for
+    downstream tools that only consume SPDX.
+  - `owb scan --skill-quarantine` — opt-in scanner gate that wires the
+    quarantine check into the existing scan pipeline. Default off until a
+    future deprecation cycle.
+- **Provenance `added_at` field.** Every detected `Provenance` record now
+  carries an ISO 8601 first-add date sourced from
+  `git log --diff-filter=A --follow` (high confidence) or file `mtime`
+  (low confidence). Emitted as the `owb:provenance:added-at` CycloneDX
+  property. **Excluded from the normalized content hash by construction**:
+  the hash function operates on file content, not metadata, so v1.6.0 and
+  v1.7.0 component hashes remain byte-stable. The hash-stability regression
+  test enforces this.
+- **Documentation.** New concept page `docs/concepts/sbom.md` (CycloneDX
+  rationale, normalization model, property namespaces, capability honesty
+  caveat, SPDX as secondary, quarantine model). New how-to
+  `docs/howto-sbom.md` with worked examples for `generate`, `show`, `diff`,
+  `verify`, `quarantine`, `--format spdx`, plus pre-commit and GitHub
+  Actions recipes. New cross-link from `docs/concepts/supply-chain-security.md`.
+  mkdocs nav updated for both pages.
+
+### Changed
+- `owb sbom generate --format` now accepts `cyclonedx` or `spdx` (was
+  CycloneDX-only with an "SPDX is deferred to S107c" disclaimer).
+- The example fixture `examples/sbom/example.cdx.json` is regenerated to
+  include the `owb:provenance:added-at` property on every component.
+- `tests/sbom/test_cli.py::test_format_spdx_rejected_in_s107a` is replaced
+  by `test_format_spdx_accepted_in_s107c` to reflect the new behavior.
+
 ## [1.7.0] - 2026-04-11
 
 ### Added
