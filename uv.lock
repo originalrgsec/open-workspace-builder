@@ -1710,6 +1710,9 @@ mcp = [
 sast = [
     { name = "semgrep" },
 ]
+sbom = [
+    { name = "cyclonedx-python-lib" },
+]
 secrets = [
     { name = "keyring" },
     { name = "pyrage" },
@@ -1730,6 +1733,7 @@ xlsx = [
 requires-dist = [
     { name = "build", marker = "extra == 'dev'" },
     { name = "click", specifier = ">=8.0" },
+    { name = "cyclonedx-python-lib", marker = "extra == 'sbom'", specifier = ">=9.0,<11" },
     { name = "google-api-python-client", marker = "extra == 'sheets'", specifier = ">=2.0" },
     { name = "google-auth-oauthlib", marker = "extra == 'sheets'", specifier = ">=1.0" },
     { name = "keyring", marker = "extra == 'keyring'", specifier = ">=24.0" },
@@ -1751,7 +1755,7 @@ requires-dist = [
     { name = "semgrep", marker = "extra == 'sast'", specifier = ">=1.50.0" },
     { name = "xlsxwriter", marker = "extra == 'xlsx'", specifier = ">=3.0" },
 ]
-provides-extras = ["llm", "security", "keyring", "age", "secrets", "audit", "sast", "mcp", "sheets", "xlsx", "hooks", "dev"]
+provides-extras = ["llm", "security", "keyring", "age", "secrets", "audit", "sbom", "sast", "mcp", "sheets", "xlsx", "hooks", "dev"]
 
 [[package]]
 name = "openai"

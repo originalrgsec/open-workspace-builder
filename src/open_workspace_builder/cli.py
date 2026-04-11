@@ -605,6 +605,13 @@ def security() -> None:
     default=False,
     help="Enable all scanners (three-layer + SCA + SAST + secrets + trivy).",
 )
+@click.option(
+    "--emit-sbom",
+    "emit_sbom",
+    default=None,
+    type=click.Path(),
+    help="Write a CycloneDX 1.6 SBOM for the workspace extension surface to this path (S107a).",
+)
 @click.pass_context
 def scan(
     ctx: click.Context,
@@ -618,6 +625,7 @@ def scan(
     secrets: bool,
     trivy: bool,
     run_all: bool,
+    emit_sbom: str | None,
 ) -> None:
     """Scan a file or directory for security issues.
 
@@ -735,6 +743,22 @@ def scan(
     if output_file:
         Path(output_file).write_text(json.dumps(report_data, indent=2) + "\n", encoding="utf-8")
         click.echo(f"Report written to {output_file}")
+
+    # S107a: optional SBOM emission alongside the scan report.
+    if emit_sbom:
+        from open_workspace_builder.sbom.builder import build_bom, serialize_bom
+        from open_workspace_builder.sbom.discover import discover_components
+
+        if target.is_dir():
+            components = discover_components(target)
+            bom = build_bom(components)
+            Path(emit_sbom).write_text(serialize_bom(bom) + "\n", encoding="utf-8")
+            click.echo(f"SBOM written to {emit_sbom}")
+        else:
+            click.echo(
+                f"--emit-sbom requires a directory target; skipping (got file: {target})",
+                err=True,
+            )
 
     sys.exit(2 if has_issues else 0)
 
@@ -3086,3 +3110,61 @@ def serve() -> None:
 
     click.echo("Starting OWB MCP server...")
     run_server()
+
+
+# ── owb sbom ─────────────────────────────────────────────────────────────────
+
+
+@owb.group()
+def sbom() -> None:
+    """Generate and inspect Software Bills of Materials for AI workspace extensions."""
+
+
+@sbom.command("generate")
+@click.argument("workspace", type=click.Path(exists=True, file_okay=False))
+@click.option(
+    "--output",
+    "-o",
+    "output_file",
+    default=None,
+    type=click.Path(),
+    help="Write the SBOM to this file. Defaults to stdout.",
+)
+@click.option(
+    "--format",
+    "fmt",
+    default="cyclonedx",
+    type=click.Choice(["cyclonedx"], case_sensitive=False),
+    help="Output format. Only 'cyclonedx' is supported in S107a; SPDX is deferred to S107c.",
+)
+def sbom_generate(workspace: str, output_file: str | None, fmt: str) -> None:
+    """Produce a CycloneDX 1.6 SBOM for an AI workspace.
+
+    Discovers every skill, agent, command, and MCP server in the workspace
+    and emits a CycloneDX 1.6 JSON document with stable content hashes
+    (algorithm sha256-norm1). Writes to stdout by default; use --output to
+    write to a file instead.
+
+    Exit codes:
+      0  success
+      1  error (missing workspace, serialization failure, etc.)
+    """
+    from open_workspace_builder.sbom.builder import build_bom, serialize_bom
+    from open_workspace_builder.sbom.discover import discover_components
+
+    workspace_path = Path(workspace)
+    try:
+        components = discover_components(workspace_path)
+        bom = build_bom(components)
+        json_str = serialize_bom(bom)
+    except Exception as exc:  # pragma: no cover - defensive
+        click.echo(f"Error generating SBOM: {exc}", err=True)
+        sys.exit(1)
+
+    if output_file:
+        Path(output_file).write_text(json_str + "\n", encoding="utf-8")
+        click.echo(f"SBOM written to {output_file}", err=True)
+    else:
+        click.echo(json_str)
+
+    sys.exit(0)

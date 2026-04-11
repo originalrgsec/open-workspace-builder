@@ -21,6 +21,10 @@ Thumbs.db
 
 # Claude Code local config
 .claude/
+# Exception: the SBOM example fixture needs its .claude/ tree committed so
+# the example-drift test (OWB-S107a) runs in CI.
+!tests/fixtures/sbom-example/.claude/
+!tests/fixtures/sbom-example/.claude/**
 
 # IDE
 .vscode/

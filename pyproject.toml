@@ -53,6 +53,14 @@ secrets = [
 audit = [
     "pip-audit>=2.7.0",
 ]
+# SBOM support (OWB-S107a): CycloneDX 1.6 schema + serializer. The library is
+# Apache-2.0 (allowed) and was already transitive via pip-audit; S107a
+# promotes it to a direct dependency so the relationship is explicit. Pinned
+# to ≤10 to avoid the 11.x major bump, which will be evaluated separately
+# during S107b or S107c.
+sbom = [
+    "cyclonedx-python-lib>=9.0,<11",
+]
 sast = [
     "semgrep>=1.50.0",
 ]

@@ -1,0 +1,125 @@
+{
+  "components": [
+    {
+      "bom-ref": "owb:mcp-server/example-server@15f39f7ed12e",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "15f39f7ed12e2bcaea788dcc1367d992acaa3dc45ea0865fb4a22aa5ba3136ed"
+        }
+      ],
+      "name": "example-server",
+      "properties": [
+        {
+          "name": "owb:content-hash",
+          "value": "sha256-norm1:15f39f7ed12e2bcaea788dcc1367d992acaa3dc45ea0865fb4a22aa5ba3136ed"
+        },
+        {
+          "name": "owb:evidence-path",
+          "value": ".mcp.json"
+        },
+        {
+          "name": "owb:kind",
+          "value": "mcp-server"
+        },
+        {
+          "name": "owb:normalization",
+          "value": "norm1"
+        },
+        {
+          "name": "owb:source",
+          "value": "local"
+        }
+      ],
+      "type": "application",
+      "version": "15f39f7ed12e"
+    },
+    {
+      "bom-ref": "owb:agent/example-agent@84a0a9aacdfa",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "84a0a9aacdfa9550d4a3d9b24ef30e3ee7067d698c4d785ecc6b4251c64fff25"
+        }
+      ],
+      "name": "example-agent",
+      "properties": [
+        {
+          "name": "owb:content-hash",
+          "value": "sha256-norm1:84a0a9aacdfa9550d4a3d9b24ef30e3ee7067d698c4d785ecc6b4251c64fff25"
+        },
+        {
+          "name": "owb:evidence-path",
+          "value": ".claude/agents/example-agent.md"
+        },
+        {
+          "name": "owb:kind",
+          "value": "agent"
+        },
+        {
+          "name": "owb:normalization",
+          "value": "norm1"
+        },
+        {
+          "name": "owb:source",
+          "value": "local"
+        }
+      ],
+      "type": "library",
+      "version": "84a0a9aacdfa"
+    },
+    {
+      "bom-ref": "owb:skill/hello@1.0.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "2579ac6a87666b22758285050a5cf04c67f46ecc62848a454dddb14ffa3be87c"
+        }
+      ],
+      "name": "hello",
+      "properties": [
+        {
+          "name": "owb:content-hash",
+          "value": "sha256-norm1:2579ac6a87666b22758285050a5cf04c67f46ecc62848a454dddb14ffa3be87c"
+        },
+        {
+          "name": "owb:evidence-path",
+          "value": ".claude/skills/hello/SKILL.md"
+        },
+        {
+          "name": "owb:kind",
+          "value": "skill"
+        },
+        {
+          "name": "owb:normalization",
+          "value": "norm1"
+        },
+        {
+          "name": "owb:source",
+          "value": "local"
+        }
+      ],
+      "type": "library",
+      "version": "1.0.0"
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "owb:agent/example-agent@84a0a9aacdfa"
+    },
+    {
+      "ref": "owb:mcp-server/example-server@15f39f7ed12e"
+    },
+    {
+      "ref": "owb:skill/hello@1.0.0"
+    }
+  ],
+  "metadata": {
+    "timestamp": "2026-04-10T00:00:00+00:00"
+  },
+  "serialNumber": "urn:uuid:00000000-0000-4107-a000-000000000107",
+  "version": 1,
+  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6"
+}
