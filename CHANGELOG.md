@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-04-11
+
+### Added
+- **SBOM foundation for AI workspace extensions (OWB-S107a):** New
+  `owb sbom generate <workspace>` command produces a CycloneDX 1.6 JSON Software
+  Bill of Materials for every skill, agent, command, and MCP server in a
+  workspace. Output writes to stdout by default; `--output PATH` writes to a
+  file. First slice of the parent S107 story, split into S107a/b/c per the
+  8-point session budget policy from S117.
+- **Scanner SBOM emission:** `owb scan <path> --emit-sbom PATH` produces both
+  the scan report and an SBOM in a single pass.
+- **Versioned content normalization (`norm1`):** New
+  `open_workspace_builder.sbom.normalize` module implements the `norm1`
+  algorithm — strip trailing whitespace, normalize line endings to LF, strip
+  `updated:` YAML frontmatter field before hashing. Hashes are tagged
+  `sha256-norm1:<hex>` so future rule changes stay backward-compatible. Hash
+  stability is enforced by workflow-level AC tests: modifying whitespace or
+  the `updated:` field produces no drift; modifying a skill body flips exactly
+  one component hash.
+- **`[sbom]` optional extra:** `cyclonedx-python-lib` promoted from transitive
+  (via `pip-audit`) to direct dependency. Apache-2.0 (allowed), pinned
+  `>=9.0,<11` to defer the 11.x major bump.
+- **Example SBOM fixture:** `examples/sbom/example.cdx.json` committed, with
+  a deterministic regeneration path via
+  `python -m open_workspace_builder.sbom._example`. CI drift check ensures the
+  committed fixture stays in sync with regeneration.
+
+### Changed
+- PRD: new UC-18 (AI Workspace SBOM Generation) documenting the new command
+  flow and outcome.
+- ADR: new AD-17 (CycloneDX 1.6 as primary SBOM format) and AD-18 (versioned
+  normalization for SBOM content hashing) recording the architectural decisions.
+
+### Deferred
+- S107b (provenance + capability extraction + license detection), S107c
+  (diff/verify/show commands, SPDX 2.3 output, quarantine integration, docs).
+- Migration from `owb:evidence-path` property to spec-native
+  `evidence.occurrences[].location` is blocked on `cyclonedx-python-lib` upgrade
+  past the 9.x line and will be revisited in S107b/c.
+
+### Filed during sprint
+- OWB-SEC-003: bump `cryptography` 46.0.6 → 46.0.7 for CVE-2026-39892
+  (Dependabot alert #16, medium-severity buffer overflow in `Hash.update()` on
+  non-contiguous buffers). In-context risk is low because OWB does not route
+  user bytes into crypto APIs. Queued for the next sprint.
+
 ## [1.5.0] - 2026-04-10
 
 ### Changed

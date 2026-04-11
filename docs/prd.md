@@ -204,6 +204,13 @@ Individual developers and technical professionals who use AI coding assistants (
 - **Flow:** `owb audit deps` scans installed packages against the OSV vulnerability database via pip-audit, with optional `--deep` flag to add GuardDog heuristic malware detection. `owb audit package <name>` runs both pip-audit and GuardDog against a single package before installation. An ECC rule enforces running this scan before any pip/uv install command in Claude Code sessions. `owb audit check-suppressions` queries the OSV API to check whether upstream fixes have landed for suppressed CVEs. A weekly CI job (suppression-monitor.yml) opens GitHub issues when fixes become available.
 - **Outcome:** Known vulnerabilities and malicious code patterns are detected before dependencies enter the environment. Suppressed CVEs are automatically tracked and flagged for action when patches ship.
 
+### UC-18: AI Workspace SBOM Generation *(added Sprint 20, S107a)*
+
+- **Actor:** Any user, CI pipeline, downstream SSCA tool
+- **Trigger:** User runs `owb sbom generate <workspace>` or `owb scan --emit-sbom PATH`
+- **Flow:** OWB walks the workspace extension surface (skills under `.claude/skills`, agents under `.claude/agents`, commands under `.claude/commands`, and MCP server declarations in `.mcp.json`) and emits a CycloneDX 1.6 JSON Software Bill of Materials. Each component carries a stable content hash using the versioned `sha256-norm1` algorithm so that cosmetic edits (whitespace, line endings, `updated:` frontmatter bumps) do not produce false drift. The scanner command supports an `--emit-sbom PATH` flag that produces both the scan report and the SBOM in one pass.
+- **Outcome:** A machine-readable inventory of every skill, agent, command, and MCP server in the workspace, consumable by downstream SSCA tools (Dependency-Track, Harness SSCA, GitHub Dependency Graph). Future slices (S107b, S107c) extend this with provenance, capability extraction, license detection, drift verification, and quarantine integration.
+
 ### UC-11: Stage Promotion *(Stage 1 → 2, Stage 2 → 3)* — *historical, out of scope per DRN-066*
 
 - **Actor:** Build Farm Operator or Multi-Agent Team Operator

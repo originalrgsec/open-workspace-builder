@@ -521,6 +521,28 @@ The builder is a stateless CLI tool. If it fails mid-build, the user re-runs it.
 
 **Status:** Accepted (Sprint 12).
 
+## AD-17: CycloneDX 1.6 as Primary SBOM Format (S107a)
+
+**Decision:** Use CycloneDX 1.6 JSON as the primary SBOM format for the AI workspace extension surface. Serialize via `cyclonedx-python-lib` (Apache-2.0). SPDX 2.3 output is deferred to S107c.
+
+**Context:** OWB-S107a needed a durable inventory format for skills, agents, commands, and MCP servers so that downstream SSCA tools (Dependency-Track, Harness SSCA, GitHub Dependency Graph) could ingest OWB workspaces. CycloneDX and SPDX are the two industry-standard SBOM formats.
+
+**Rationale:** CycloneDX is more permissive about vendor-specific properties, which is important for the OWB-specific metadata (`owb:normalization`, `owb:kind`, `owb:source`, `owb:evidence-path`, `owb:content-hash`). The 1.6 specification ships a JSON schema validator via `cyclonedx-python-lib` so validity can be enforced in tests. The library was already transitive via `pip-audit`, so adoption cost was low. SPDX 2.3 is a slightly more restrictive model; OWB will emit it as a secondary format in S107c once the primary shape is stable.
+
+**Alternatives considered:** (1) Custom JSON schema — rejected because downstream tools would not recognize it. (2) SPDX-only — rejected because the property model is less expressive for OWB's per-component metadata. (3) Vendor the CycloneDX schema and validate with `jsonschema` — reserved as a fallback if the library ever fails the license/health gate.
+
+**Status:** Accepted (Sprint 20).
+
+## AD-18: Versioned Normalization for SBOM Content Hashing (S107a)
+
+**Decision:** Hash SBOM component content with a versioned algorithm tag: `sha256-norm1:<hex>`. The `norm1` tag is mandatory in every hash string. Any future rule change must bump the tag (`norm1` → `norm2`) so SBOMs generated under older rules remain interpretable under their original algorithm.
+
+**Context:** SBOM content hashes must be stable across trivial formatting changes so that `owb sbom verify` (S107c) does not report drift for cosmetic edits. The obvious rules — strip trailing whitespace, normalize line endings to LF, strip the `updated:` YAML frontmatter field before hashing — are straightforward. The harder question is what happens when the rules evolve.
+
+**Rationale:** Without a version tag, a future change to the normalization algorithm silently invalidates every existing SBOM. Consumers cannot tell whether a hash mismatch means "the content changed" or "the algorithm changed." Embedding the version in the hash string itself makes the algorithm self-describing and forces downstream tools to handle the upgrade explicitly. The cost is a few bytes per hash and a mandatory tag in the builder, both trivial.
+
+**Status:** Accepted (Sprint 20).
+
 ## Open Questions
 
 1. Should `owb init` generate a `.gitignore` that excludes populated context files by default?
