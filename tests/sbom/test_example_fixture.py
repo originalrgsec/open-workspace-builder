@@ -42,3 +42,46 @@ class TestExampleSbomDriftCheck:
         validator = JsonStrictValidator(SchemaVersion.V1_6)
         errors = validator.validate_str(committed)
         assert errors is None, f"Committed example is not valid CycloneDX 1.6: {errors}"
+
+    def test_s107a_hash_stability_preserved(self) -> None:
+        """OWB-S107b regression: every component bom-ref and content-hash from
+        S107a output must remain byte-identical under S107b regeneration.
+
+        This is the core S107b promise: enrichment fields are additive only;
+        existing identity (bom-ref, hash) is never perturbed.
+
+        The known-good baseline below is the S107a output (committed at
+        v1.6.0) for the example fixture workspace. If S107b ever changes
+        any normalization rule or any bom-ref derivation logic, this test
+        will fail loudly and force the change to ship as `norm2` instead.
+        """
+        import json
+
+        regenerated = json.loads(regenerate_example_sbom())
+        components = {c["bom-ref"]: c["hashes"][0]["content"] for c in regenerated["components"]}
+
+        # Captured from the S107a output at v1.6.0 commit 5ae481f. These
+        # values are load-bearing — any change here is a hash-stability
+        # regression and must trigger a `norm1` → `norm2` bump rather than
+        # a fix-the-test response.
+        s107a_baseline = {
+            "owb:mcp-server/example-server@15f39f7ed12e": (
+                "15f39f7ed12e2bcaea788dcc1367d992acaa3dc45ea0865fb4a22aa5ba3136ed"
+            ),
+            "owb:agent/example-agent@84a0a9aacdfa": (
+                "84a0a9aacdfa9550d4a3d9b24ef30e3ee7067d698c4d785ecc6b4251c64fff25"
+            ),
+            "owb:skill/hello@1.0.0": (
+                "2579ac6a87666b22758285050a5cf04c67f46ecc62848a454dddb14ffa3be87c"
+            ),
+        }
+
+        for ref, expected_hash in s107a_baseline.items():
+            assert ref in components, f"S107a bom-ref {ref!r} missing from S107b output"
+            assert components[ref] == expected_hash, (
+                f"HASH STABILITY REGRESSION for {ref!r}:\n"
+                f"  S107a: {expected_hash}\n"
+                f"  S107b: {components[ref]}\n"
+                "Any normalization or bom-ref change must bump the algorithm "
+                "tag from norm1 to norm2 instead of breaking existing hashes."
+            )

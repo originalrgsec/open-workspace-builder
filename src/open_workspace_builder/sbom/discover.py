@@ -1,8 +1,12 @@
-"""OWB-S107a — Component discovery for the SBOM builder.
+"""OWB-S107a / S107b — Component discovery for the SBOM builder.
 
 Walks a workspace and emits one :class:`Component` per skill, agent,
 command, or MCP server declaration. Discovery is additive: it reads files
 but does not modify the scanner walk.
+
+S107b extends each :class:`Component` with provenance, capabilities, and
+license enrichment. The new fields default to empty so S107a callers (and
+the persisted CycloneDX output for unmodified components) remain unchanged.
 """
 
 from __future__ import annotations
@@ -13,7 +17,22 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
+from open_workspace_builder.sbom.capability import (
+    Capability,
+    extract_mcp_server_capabilities,
+    extract_skill_capabilities,
+)
+from open_workspace_builder.sbom.license import (
+    AllowedLicensePolicy,
+    LicenseEntry,
+    detect_license,
+    load_allowed_licenses,
+)
 from open_workspace_builder.sbom.normalize import compute_hash
+from open_workspace_builder.sbom.provenance import (
+    Provenance,
+    detect_provenance,
+)
 
 _FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 _FRONTMATTER_KEY_RE = re.compile(r"^([A-Za-z0-9_-]+)\s*:\s*(.*)$")
@@ -30,7 +49,13 @@ class ComponentKind(str, Enum):
 
 @dataclass(frozen=True)
 class Component:
-    """A single SBOM component representing one AI workspace extension."""
+    """A single SBOM component representing one AI workspace extension.
+
+    The first seven fields are the S107a substrate and must remain stable —
+    they participate in `bom-ref` and content-hash identity. S107b enrichment
+    fields (provenance, capabilities, license) default to empty so adding
+    them does not perturb existing hashes for unmodified components.
+    """
 
     kind: ComponentKind
     name: str
@@ -39,6 +64,10 @@ class Component:
     content_hash: str
     evidence_path: str
     source: str
+    # S107b enrichment — defaults preserve S107a behavior.
+    provenance: Provenance | None = None
+    capabilities: tuple[Capability, ...] = ()
+    license: LicenseEntry | None = None
 
 
 def discover_components(workspace: Path) -> tuple[Component, ...]:
@@ -54,11 +83,16 @@ def discover_components(workspace: Path) -> tuple[Component, ...]:
     if not workspace.is_dir():
         return ()
 
+    # Load the allowed-license policy once per discover() call so the
+    # per-component license cross-reference doesn't re-parse the toml on
+    # every file.
+    policy = load_allowed_licenses()
+
     components: list[Component] = []
-    components.extend(_discover_skills(workspace))
-    components.extend(_discover_agents(workspace))
-    components.extend(_discover_commands(workspace))
-    components.extend(_discover_mcp_servers(workspace))
+    components.extend(_discover_skills(workspace, policy))
+    components.extend(_discover_agents(workspace, policy))
+    components.extend(_discover_commands(workspace, policy))
+    components.extend(_discover_mcp_servers(workspace, policy))
 
     return tuple(sorted(components, key=lambda c: (c.kind.value, c.name, c.bom_ref)))
 
@@ -68,7 +102,7 @@ def discover_components(workspace: Path) -> tuple[Component, ...]:
 # ---------------------------------------------------------------------------
 
 
-def _discover_skills(workspace: Path) -> list[Component]:
+def _discover_skills(workspace: Path, policy: AllowedLicensePolicy) -> list[Component]:
     """Find every .claude/skills/**/SKILL.md file."""
     skills_dir = workspace / ".claude" / "skills"
     if not skills_dir.is_dir():
@@ -84,12 +118,13 @@ def _discover_skills(workspace: Path) -> list[Component]:
                 path=skill_file,
                 workspace=workspace,
                 name_default=skill_file.parent.name,
+                policy=policy,
             )
         )
     return found
 
 
-def _discover_agents(workspace: Path) -> list[Component]:
+def _discover_agents(workspace: Path, policy: AllowedLicensePolicy) -> list[Component]:
     """Find every .claude/agents/**/*.md file."""
     agents_dir = workspace / ".claude" / "agents"
     if not agents_dir.is_dir():
@@ -105,12 +140,13 @@ def _discover_agents(workspace: Path) -> list[Component]:
                 path=agent_file,
                 workspace=workspace,
                 name_default=agent_file.stem,
+                policy=policy,
             )
         )
     return found
 
 
-def _discover_commands(workspace: Path) -> list[Component]:
+def _discover_commands(workspace: Path, policy: AllowedLicensePolicy) -> list[Component]:
     """Find every .claude/commands/**/*.md file."""
     commands_dir = workspace / ".claude" / "commands"
     if not commands_dir.is_dir():
@@ -126,12 +162,13 @@ def _discover_commands(workspace: Path) -> list[Component]:
                 path=cmd_file,
                 workspace=workspace,
                 name_default=cmd_file.stem,
+                policy=policy,
             )
         )
     return found
 
 
-def _discover_mcp_servers(workspace: Path) -> list[Component]:
+def _discover_mcp_servers(workspace: Path, policy: AllowedLicensePolicy) -> list[Component]:
     """Parse .mcp.json and emit one component per declared server."""
     mcp_file = workspace / ".mcp.json"
     if not mcp_file.is_file():
@@ -162,6 +199,27 @@ def _discover_mcp_servers(workspace: Path) -> list[Component]:
         rel_path = str(mcp_file.relative_to(workspace))
         bom_ref = f"owb:mcp-server/{server_name}@{version}"
 
+        # S107b enrichment for MCP servers: capabilities from the per-server
+        # config (transport, exec, env keys), license from the workspace
+        # (the .mcp.json file itself rarely has its own LICENSE), provenance
+        # from .mcp.json's git history.
+        capabilities = (
+            extract_mcp_server_capabilities(server_name, server_config)
+            if isinstance(server_config, dict)
+            else ()
+        )
+        license_entry = detect_license(
+            component_path=mcp_file,
+            workspace=workspace,
+            frontmatter={},
+            policy=policy,
+        )
+        provenance = detect_provenance(
+            component_path=mcp_file,
+            workspace=workspace,
+            frontmatter={},
+        )
+
         found.append(
             Component(
                 kind=ComponentKind.MCP_SERVER,
@@ -171,6 +229,9 @@ def _discover_mcp_servers(workspace: Path) -> list[Component]:
                 content_hash=content_hash,
                 evidence_path=rel_path,
                 source="local",
+                provenance=provenance,
+                capabilities=capabilities,
+                license=license_entry,
             )
         )
     return found
@@ -187,6 +248,7 @@ def _component_from_markdown_file(
     path: Path,
     workspace: Path,
     name_default: str,
+    policy: AllowedLicensePolicy,
 ) -> Component:
     """Build a Component from a markdown file with optional YAML frontmatter."""
     content = path.read_text(encoding="utf-8", errors="replace")
@@ -204,6 +266,20 @@ def _component_from_markdown_file(
     bom_ref = f"owb:{kind.value}/{name}@{version}"
     rel_path = str(path.relative_to(workspace))
 
+    # S107b enrichment
+    capabilities = extract_skill_capabilities(frontmatter)
+    license_entry = detect_license(
+        component_path=path,
+        workspace=workspace,
+        frontmatter=frontmatter,
+        policy=policy,
+    )
+    provenance = detect_provenance(
+        component_path=path,
+        workspace=workspace,
+        frontmatter=frontmatter,
+    )
+
     return Component(
         kind=kind,
         name=name,
@@ -212,6 +288,9 @@ def _component_from_markdown_file(
         content_hash=content_hash,
         evidence_path=rel_path,
         source=source,
+        provenance=provenance,
+        capabilities=capabilities,
+        license=license_entry,
     )
 
 

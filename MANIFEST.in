@@ -1,4 +1,5 @@
 recursive-include src/open_workspace_builder/security/data *.yaml
+recursive-include src/open_workspace_builder/data *.toml
 recursive-include src/open_workspace_builder/content *.md
 recursive-include src/open_workspace_builder/vendor *.md *.yaml
 include LICENSE

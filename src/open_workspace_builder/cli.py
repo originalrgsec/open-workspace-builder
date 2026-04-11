@@ -3142,14 +3142,23 @@ def sbom_generate(workspace: str, output_file: str | None, fmt: str) -> None:
 
     Discovers every skill, agent, command, and MCP server in the workspace
     and emits a CycloneDX 1.6 JSON document with stable content hashes
-    (algorithm sha256-norm1). Writes to stdout by default; use --output to
-    write to a file instead.
+    (algorithm sha256-norm1). S107b enriches each component with declared
+    capabilities, provenance (frontmatter / install record / git history /
+    local), and a detected license cross-referenced against the bundled
+    `allowed_licenses.toml` policy.
+
+    Writes to stdout by default; use --output to write to a file instead.
 
     Exit codes:
-      0  success
+      0  success, all components clean
       1  error (missing workspace, serialization failure, etc.)
+      2  warnings (e.g., one or more components have a non-allowed license)
     """
-    from open_workspace_builder.sbom.builder import build_bom, serialize_bom
+    from open_workspace_builder.sbom.builder import (
+        build_bom,
+        count_non_allowed_licenses,
+        serialize_bom,
+    )
     from open_workspace_builder.sbom.discover import discover_components
 
     workspace_path = Path(workspace)
@@ -3166,5 +3175,14 @@ def sbom_generate(workspace: str, output_file: str | None, fmt: str) -> None:
         click.echo(f"SBOM written to {output_file}", err=True)
     else:
         click.echo(json_str)
+
+    non_allowed = count_non_allowed_licenses(bom)
+    if non_allowed > 0:
+        click.echo(
+            f"WARNING: {non_allowed} component(s) have a non-allowed or "
+            "unrecognized license. See `owb:license:warning` properties.",
+            err=True,
+        )
+        sys.exit(2)
 
     sys.exit(0)
