@@ -103,6 +103,8 @@ nav:
     - Upgrading: howto-upgrade.md
     - Using as a Library: guides/library-usage.md
     - SBOM Operations: howto-sbom.md
+  - Contributing:
+    - Release Process: contributing/release-process.md
   - Reference:
     - CLI Commands: reference/cli.md
     - Lifecycle and Agents: reference/lifecycle.md
