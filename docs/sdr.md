@@ -842,6 +842,16 @@ class ReputationLedger:
 - Tests: 1855 → 1859 (+4 net: 7 new resolver tests, minus 3 skipped count changes from environment sync). 6 pre-existing quarantine failures.
 - Commits on branch `sprint-24-release-ops-hardening`: `a831feb` (S121 errata), `c666629` (S120 importlib.resources), `7bb0cd6` (S119 workflow + docs), `1db38f5` (SBOM regen after git history).
 
+### Sprint 25: Dependency Modernization
+- Stories: OWB-S113 (M, ~5 pt — replace secrets module with himitsubako); TD-001 residual (XS, ~1 pt — remove ClaudeMdConfig alias)
+- Goal: Replace OWB's bespoke secrets module (5 backends, 8 files) with a dependency on himitsubako, and finish genericizing Claude-specific remnants. Both stories reduce OWB's surface area by removing code that now belongs elsewhere.
+- S113: Added himitsubako>=0.4.0 as core dependency. Bumped requires-python from >=3.10 to >=3.12 (himitsubako requirement; Python 3.10 EOL October 2026). Rewrote `secrets/__init__.py` as deprecation shim re-exporting from himitsubako (removal target: v1.12.0). Rewrote `secrets/factory.py` to route to himitsubako backends (env, sops, keychain, bitwarden). Fixed `secrets/resolver.py` to handle both property and method `backend_name` patterns. Deleted 6 OWB-native backend files (age_backend, env_backend, keyring_backend, bitwarden_backend, onepassword_backend, base). Updated `SecretsConfig` dataclass: removed `age_identity`, `age_secrets_dir`, `onepassword_vault`; added `sops_secrets_file`. Updated CLI auth commands and wizard for himitsubako semantics (read-only env backend, property-style backend_name). Replaced 99 backend-internal tests with 13 shim tests (backend testing is himitsubako's responsibility at 210 tests). Advanced `uv.toml` exclude-newer to 2026-04-12 (first-party exemption for himitsubako). Updated `pyproject.toml` optional extras: removed `age` extra, rewired `keyring` and `secrets` extras to pull `himitsubako[keychain]`.
+- TD-001 residual: Removed `ClaudeMdConfig = AgentConfigConfig` backward-compat alias from `config.py`. No remaining Claude-specific references in source code; wizard presets are user-choice-driven, not default-driven.
+- Pre-existing test failures: 6 quarantine date-boundary + 1 version consistency (same as Sprint 24).
+- Version: TBD (pending version bump)
+- Tests: 1764 passed, 7 pre-existing failures. Net -2048 lines.
+- Commits on branch `sprint-25-dependency-modernization`: `60df496` (S113 + TD-001).
+
 ## Open Questions
 
 1. Should the CLI use `click` or `argparse`? Click provides a cleaner subcommand model but adds a dependency. Argparse is stdlib but verbose for this many subcommands. Recommendation: click.
