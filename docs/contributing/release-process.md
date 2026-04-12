@@ -4,12 +4,13 @@ This page documents the end-to-end process for cutting an OWB release. It is the
 
 ## Overview
 
-OWB releases ship through four stages on every `v*` tag push:
+OWB releases ship through four stages on every `v*` tag push, plus an independent notification:
 
 1. **Build** — construct the wheel and sdist with `pyproject-build`.
-2. **Test** — install the wheel into a clean environment and run the full test suite.
+2. **Smoke** — install the wheel into a clean environment and verify the CLI entry point responds.
 3. **Publish** — upload to PyPI via trusted publishing (`pypa/gh-action-pypi-publish@release/v1`, no API tokens).
 4. **GitHub Release** — create a canonical Release object on GitHub with the wheel, sdist, and project SBOM attached as assets. Body sourced from the `CHANGELOG.md` section matching the tag.
+5. **Slack notification** (parallel, failure-isolated) — post a Block Kit message to `#owb-releases` via `release-notify-slack.yml`. See [Release Notifications](#release-notifications) below.
 
 PyPI is the source of truth. If publish fails, no GitHub Release is created. If publish succeeds but the Release job fails, the Release can be created manually via `gh release create` — PyPI state is not affected.
 
@@ -149,10 +150,72 @@ The `generate_sbom.py` helper creates an isolated venv, installs only the wheel 
 
 Re-run the `github_release` job from the Actions tab, or create the Release manually via the fallback procedure. PyPI state is not affected — PyPI cannot be unpublished, so the v1.9.0 version is locked on PyPI even if the GitHub Release is missing.
 
+## Release Notifications
+
+Every published GitHub Release (including pre-releases) posts a Block Kit notification to the `#owb-releases` Slack channel via the `release-notify-slack.yml` workflow. The notification runs in parallel with the main release pipeline and is failure-isolated: a Slack outage or misconfigured webhook does not block PyPI publish or Release creation. Notification failure is not a sprint-close gate.
+
+### How it works
+
+1. The `release.yml` workflow creates a GitHub Release object (the `github_release` job).
+2. GitHub fires a `release: published` event.
+3. `release-notify-slack.yml` triggers, extracts the Release body (from the `release` event payload, not by re-parsing CHANGELOG), truncates at 2,800 characters if needed, and posts a Block Kit message with:
+   - **Header:** `OWB <version> released` (or `[PRE] OWB <version> released` for pre-releases).
+   - **Section:** release body text.
+   - **Context:** links to the GitHub Release page, SBOM asset (if present), and PyPI page.
+
+### Webhook provisioning (one-time)
+
+The Slack notification requires an Incoming Webhook URL stored as a GitHub repo secret.
+
+1. Go to [api.slack.com/apps](https://api.slack.com/apps) and create a new app named "OWB Release Bot" in your workspace (or reuse an existing app if you are close to the 10-app free-tier cap).
+2. Under **Incoming Webhooks**, toggle on, then **Add New Webhook to Workspace** and select `#owb-releases`.
+3. Copy the webhook URL.
+4. Store it as a repo secret:
+   ```bash
+   gh secret set SLACK_RELEASE_WEBHOOK
+   # paste the URL when prompted
+   ```
+
+The webhook URL grants write access to `#owb-releases`. Do not commit it to workflow YAML or any other file.
+
+### Webhook rotation
+
+If the webhook URL is exposed:
+
+1. Go to the Slack app's **Incoming Webhooks** page, delete the compromised webhook.
+2. Add a new webhook bound to the same channel.
+3. Update the repo secret: `gh secret set SLACK_RELEASE_WEBHOOK` with the new URL.
+
+No workflow file changes are needed; the secret name stays the same.
+
+### Adding notifications to additional channels
+
+To post to a second channel (e.g., a future `#owb-prereleases`):
+
+1. Add another Incoming Webhook under the same "OWB Release Bot" Slack app, bound to the new channel. Do not create a separate Slack app (free-tier 10-app cap).
+2. Store the new webhook URL as a separate repo secret (e.g., `SLACK_PRERELEASE_WEBHOOK`).
+3. Add a second job in `release-notify-slack.yml` (or a conditional step) referencing the new secret.
+
+### Trigger behavior
+
+| Event | Notification? |
+|-------|--------------|
+| `release: published` (stable) | Yes |
+| `release: published` (pre-release) | Yes, with `[PRE]` header prefix |
+| `release: edited` | No |
+| `release: deleted` | No (cannot retract webhook posts) |
+
+### Troubleshooting
+
+- **"Secret not found" or job skipped.** The `if: ${{ secrets.SLACK_RELEASE_WEBHOOK != '' }}` guard skips the job if the secret is missing. Common for forks or new contributors. Set the secret per the provisioning steps above.
+- **Payload too large.** Release bodies longer than 2,800 characters are truncated with a "see full release notes" link. If Slack still rejects the payload, check for non-UTF-8 characters or unexpected JSON in the CHANGELOG section.
+- **Notification did not post but workflow shows green.** Slack's Incoming Webhook API returns 200 even if the message is silently dropped (e.g., channel archived, webhook revoked). Check the channel directly.
+
 ## References
 
 - [AD-17: GitHub Releases as Canonical Release Distribution Surface](../adr.md#ad-17-github-releases-as-canonical-release-distribution-surface-sprint-23)
 - [`.github/workflows/release.yml`](https://github.com/originalrgsec/open-workspace-builder/blob/main/.github/workflows/release.yml)
+- [`.github/workflows/release-notify-slack.yml`](https://github.com/originalrgsec/open-workspace-builder/blob/main/.github/workflows/release-notify-slack.yml)
 - [`scripts/extract_changelog.py`](https://github.com/originalrgsec/open-workspace-builder/blob/main/scripts/extract_changelog.py)
 - [`scripts/generate_sbom.py`](https://github.com/originalrgsec/open-workspace-builder/blob/main/scripts/generate_sbom.py)
 - [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)
