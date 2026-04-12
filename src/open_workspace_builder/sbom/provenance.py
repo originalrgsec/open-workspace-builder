@@ -165,18 +165,27 @@ _GITHUB_SSH_RE = re.compile(r"^git@([^:]+):(.+?)(?:\.git)?$")
 _GITHUB_HTTPS_RE = re.compile(r"^https?://([^/]+)/(.+?)(?:\.git)?/?$")
 
 
+def _normalize_host(host: str) -> str:
+    """Normalize SSH host aliases (e.g. github.com-personal) to canonical form."""
+    if host.startswith("github.com"):
+        return "github.com"
+    return host
+
+
 def _normalize_remote_url(url: str) -> str:
     """Convert SSH-form git URLs to canonical https form for stable identity."""
     url = url.strip()
     ssh_match = _GITHUB_SSH_RE.match(url)
     if ssh_match:
         host, repo = ssh_match.group(1), ssh_match.group(2)
+        host = _normalize_host(host)
         if not repo.endswith(".git"):
             repo = f"{repo}.git"
         return f"https://{host}/{repo}"
     https_match = _GITHUB_HTTPS_RE.match(url)
     if https_match:
         host, repo = https_match.group(1), https_match.group(2)
+        host = _normalize_host(host)
         if not repo.endswith(".git"):
             repo = f"{repo}.git"
         return f"https://{host}/{repo}"
