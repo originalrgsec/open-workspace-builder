@@ -2,11 +2,11 @@
 
 ## Mandatory Security Checks
 
-Before ANY commit:
-- [ ] No hardcoded secrets (API keys, passwords, tokens)
+Before ANY commit, verify these LLM-judgment items. Items enforced by pre-commit
+hooks (secrets scanning, SAST, linting) are omitted; configure tooling-level
+enforcement separately.
+
 - [ ] All user inputs validated
-- [ ] SQL injection prevention (parameterized queries)
-- [ ] XSS prevention (sanitized HTML)
 - [ ] CSRF protection enabled
 - [ ] Authentication/authorization verified
 - [ ] Rate limiting on all endpoints
@@ -14,7 +14,6 @@ Before ANY commit:
 
 ## Secret Management
 
-- NEVER hardcode secrets in source code
 - ALWAYS use environment variables or a secret manager
 - Validate that required secrets are present at startup
 - Rotate any secrets that may have been exposed
