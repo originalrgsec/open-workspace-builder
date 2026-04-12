@@ -852,6 +852,17 @@ class ReputationLedger:
 - Tests: 1764 passed, 7 pre-existing failures. Net -2048 lines.
 - Commits on branch `sprint-25-dependency-modernization`: `60df496` (S113 + TD-001).
 
+### Sprint 26: Operational Autonomy
+- Stories: OWB-S122 (M, ~5 pt — autonomous sprint execution: root-cause audit + fixes to sprint-workflow.md, CLAUDE.md, development-workflow.md); OWB-S123 (S, ~3 pt — context-to-automation research spike: inventory of ~4,700 context tokens, 7 follow-up stories for ~1,625 tokens savings); OWB-S080 (S, ~2 pt — research review section in project-index.md template)
+- Goal: Reduce operator interruptions during sprint execution and identify context window content that can move to automation. Process leverage sprint: every future sprint benefits.
+- S122 deliverables: Rewrote sprint-workflow.md "Scope of Autonomous" section into "Execution Phase Contract" covering full sprint lifecycle (setup + implementation + closeout). Added sprint-execution carve-outs to global CLAUDE.md, project CLAUDE.md, and development-workflow.md. Root-cause audit identified 8 prompt sources, fixed 4 files.
+- S123 deliverables: Full inventory of context window content classified as LLM-behavioral (62%), mechanically enforceable (28%), redundant (3%), and stale (3%). Produced 7 prioritized follow-up stories (S124-S130). Output at vault `sprints/s123-context-to-automation-inventory.md`.
+- S080 deliverables: Added Research section with disposition tracking table (pending/accepted/rejected/deferred) to `project-index.md` template. TDD: test added to `test_build_integration.py`.
+- Pre-existing test failures: 1 version consistency (`__init__.py` 1.9.0 vs pyproject.toml 1.11.0).
+- Version: No version bump (process + template changes only).
+- Tests: 1771 passed, 1 pre-existing failure.
+- Commits on branch `sprint-26-operational-autonomy`: `98be3f3` (S122 + S123 + S080).
+
 ## Open Questions
 
 1. Should the CLI use `click` or `argparse`? Click provides a cleaner subcommand model but adds a dependency. Argparse is stdlib but verbose for this many subcommands. Recommendation: click.
