@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Dependency pre-install gate moved from ~400-token CLAUDE.md instruction block
+  to a mechanical PreToolUse hook (`dependency-gate.py`). The hook checks PyPI
+  license, 7-day quarantine, and first-party exemption before any install command
+  (OWB-S124).
+- `vault-policies.md` compressed from verbose descriptions (~540 tokens) to
+  pointer-only format (~302 tokens) (OWB-S125).
+- Security checklist trimmed to LLM-judgment items only; tooling-enforced items
+  (gitleaks, semgrep, ruff) removed with attribution note (OWB-S128).
+- Model reference updated from Opus 4.5 to Opus 4.6 in `performance.md`
+  (OWB-S129).
+- Dependency gate origin narratives in CLAUDE.md trimmed to one-line vault
+  pointers (OWB-S130).
+
 ## [1.12.0] - 2026-04-12
 
 ### Added
