@@ -36,15 +36,23 @@
         },
         {
           "name": "owb:provenance:added-at",
-          "value": "2026-04-12"
+          "value": "2026-04-11"
+        },
+        {
+          "name": "owb:provenance:commit",
+          "value": "5ae481f2f15995da850dbcb7af01aa18adf1502e"
         },
         {
           "name": "owb:provenance:confidence",
-          "value": "low"
+          "value": "high"
+        },
+        {
+          "name": "owb:provenance:source",
+          "value": "https://github.com-personal/originalrgsec/open-workspace-builder.git"
         },
         {
           "name": "owb:provenance:type",
-          "value": "local"
+          "value": "git-history"
         },
         {
           "name": "owb:source",
@@ -82,15 +90,23 @@
         },
         {
           "name": "owb:provenance:added-at",
-          "value": "2026-04-12"
+          "value": "2026-04-11"
+        },
+        {
+          "name": "owb:provenance:commit",
+          "value": "5ae481f2f15995da850dbcb7af01aa18adf1502e"
         },
         {
           "name": "owb:provenance:confidence",
-          "value": "low"
+          "value": "high"
+        },
+        {
+          "name": "owb:provenance:source",
+          "value": "https://github.com-personal/originalrgsec/open-workspace-builder.git"
         },
         {
           "name": "owb:provenance:type",
-          "value": "local"
+          "value": "git-history"
         },
         {
           "name": "owb:source",
@@ -128,15 +144,23 @@
         },
         {
           "name": "owb:provenance:added-at",
-          "value": "2026-04-12"
+          "value": "2026-04-11"
+        },
+        {
+          "name": "owb:provenance:commit",
+          "value": "5ae481f2f15995da850dbcb7af01aa18adf1502e"
         },
         {
           "name": "owb:provenance:confidence",
-          "value": "low"
+          "value": "high"
+        },
+        {
+          "name": "owb:provenance:source",
+          "value": "https://github.com-personal/originalrgsec/open-workspace-builder.git"
         },
         {
           "name": "owb:provenance:type",
-          "value": "local"
+          "value": "git-history"
         },
         {
           "name": "owb:source",
