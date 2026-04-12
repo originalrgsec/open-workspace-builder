@@ -863,6 +863,18 @@ class ReputationLedger:
 - Tests: 1771 passed, 1 pre-existing failure.
 - Commits on branch `sprint-26-operational-autonomy`: `98be3f3` (S122 + S123 + S080).
 
+### Sprint 27: Context Window Diet
+- Stories: OWB-S130 (XS, ~1 pt — move dependency gate origin narrative to vault); OWB-S124 (M, ~5 pt — dependency gate as PreToolUse hook); OWB-S125 (S, ~2 pt — compress vault-policies.md to pointer-only); OWB-S128 (XS, ~1 pt — remove redundant security checklist items); OWB-S129 (XS, ~1 pt — update stale model references)
+- Goal: Implement highest-value automation from S123 spike to reduce per-session context window load by ~1,100 tokens (24% of baseline). All changes are to configuration files outside the OWB repo (hooks, rules, settings, vault policies).
+- S124 deliverables: New `dependency-gate.py` PreToolUse hook at `~/.claude/hooks/` with 38 tests. Checks PyPI license against allowed-licenses policy, enforces 7-day quarantine, honors first-party exemption. Registered in `settings.json`. Replaced 400-token CLAUDE.md instruction block with 2-line pointer.
+- S125 deliverables: Rewrote `vault-policies.md` from verbose 8-entry description table (~540 tokens) to compact pointer + activity mapping format (~302 tokens). All policy paths and activity mappings preserved.
+- S128 deliverables: Removed 3 tooling-enforced items from global security checklist (secrets/gitleaks, SQL injection/semgrep, XSS/semgrep). Added tooling attribution note. Kept 5 LLM-judgment items.
+- S129 deliverables: Updated Opus 4.5 → 4.6 in performance.md. Grep confirmed no other stale model references.
+- S130 deliverables: Trimmed COR-S037 origin narrative and Memory Delineation origin in global CLAUDE.md to one-line vault pointers.
+- Version: No version bump (configuration-only changes, no code in OWB repo).
+- Tests: 1,772 passed, 4 skipped (OWB repo unchanged). 38 passed (hook tests).
+- Total context window savings: ~1,093 tokens (23% of 4,700-token baseline).
+
 ## Open Questions
 
 1. Should the CLI use `click` or `argparse`? Click provides a cleaner subcommand model but adds a dependency. Argparse is stdlib but verbose for this many subcommands. Recommendation: click.
