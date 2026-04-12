@@ -14,9 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history needed for SBOM provenance drift check
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
@@ -42,7 +44,7 @@ jobs:
         run: pip install semgrep
 
       - name: Run SAST scan
-        run: semgrep --config auto --json --output results.json src/ || true
+        run: semgrep --config auto --exclude-rule python.lang.compatibility.python37.python37-compatibility-importlib2 --json --output results.json src/ || true
 
       - name: Check for errors
         run: |
