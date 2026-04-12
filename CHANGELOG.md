@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Secrets module replaced by himitsubako (OWB-S113).** The bespoke
+  `open_workspace_builder.secrets` module (5 backends, 8 files) is replaced by
+  a dependency on [himitsubako](https://github.com/originalrgsec/himitsubako)
+  `>=0.4.0`. The old import path emits a `DeprecationWarning` and will be
+  removed in v1.12.0. Backends are now: env, sops, keychain, bitwarden
+  (via himitsubako). The 1Password and standalone age backends are removed;
+  himitsubako uses SOPS+age as its primary encrypted backend.
+- **Python version floor bumped to >=3.12.** himitsubako requires Python 3.12+.
+  Python 3.10 reaches EOL October 2026.
+- `SecretsConfig` fields updated: `age_identity`, `age_secrets_dir`, and
+  `onepassword_vault` removed; `sops_secrets_file` added.
+- Wizard secrets step presents himitsubako's four backends instead of the
+  previous five (env, sops, keychain, bitwarden).
+
+### Removed
+
+- `ClaudeMdConfig` backward-compatibility alias (TD-001). Use
+  `AgentConfigConfig` directly.
+- 6 OWB-native backend files: `age_backend.py`, `env_backend.py`,
+  `keyring_backend.py`, `bitwarden_backend.py`, `onepassword_backend.py`,
+  `base.py`.
+- `[age]` optional extra removed from `pyproject.toml`.
+
+### Deprecated
+
+- `from open_workspace_builder.secrets import ...` — import from `himitsubako`
+  directly. Shim will be removed in v1.12.0.
+
 ## [1.10.0] - 2026-04-11
 
 ### Added
