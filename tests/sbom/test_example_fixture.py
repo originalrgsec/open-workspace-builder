@@ -28,7 +28,7 @@ class TestExampleSbomDriftCheck:
         assert committed == regenerated, (
             "Example SBOM has drifted from regeneration. "
             "This means either the fixture workspace at "
-            "tests/fixtures/sbom-example/ was modified, or the SBOM builder "
+            "src/open_workspace_builder/sbom/_data/fixture/ was modified, or the SBOM builder "
             "output shape changed. Review the diff and, if intentional, "
             "regenerate the committed copy with:\n\n"
             "    python -m open_workspace_builder.sbom._example\n"

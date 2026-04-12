@@ -21,10 +21,11 @@ Thumbs.db
 
 # Claude Code local config
 .claude/
-# Exception: the SBOM example fixture needs its .claude/ tree committed so
-# the example-drift test (OWB-S107a) runs in CI.
-!tests/fixtures/sbom-example/.claude/
-!tests/fixtures/sbom-example/.claude/**
+# Exception: the SBOM fixture workspace (package data) needs its .claude/
+# tree committed so discover_components() finds the example skill/agent.
+# S120 moved the fixture from tests/fixtures/sbom-example/ into package data.
+!src/open_workspace_builder/sbom/_data/fixture/.claude/
+!src/open_workspace_builder/sbom/_data/fixture/.claude/**
 
 # IDE
 .vscode/
