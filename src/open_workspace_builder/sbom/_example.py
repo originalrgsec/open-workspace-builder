@@ -1,18 +1,17 @@
-"""OWB-S107a — Deterministic example SBOM generator.
+"""OWB-S107a / S120 — Deterministic example SBOM generator.
 
 Used by the CI drift check (``tests/sbom/test_example_fixture.py``) to
-regenerate ``examples/sbom/example.cdx.json`` byte-identically so that
-drift against the committed copy is detectable.
+regenerate the committed example SBOM byte-identically so that drift
+against the committed copy is detectable.
 
-The serial and timestamp are hard-coded so that regeneration is stable
-across machines and times. Any change to the fixture workspace at
-``tests/fixtures/sbom-example/`` or to the normalization algorithm will
-intentionally produce drift and fail the test, prompting a manual
-regenerate step.
+S120 moved the fixture workspace and example SBOM into package data
+(``sbom/_data/``) so that path resolution works in both source-tree
+and installed-wheel layouts via ``importlib.resources``.
 """
 
 from __future__ import annotations
 
+from importlib.resources import files
 from pathlib import Path
 
 from open_workspace_builder.sbom.builder import BomOptions, build_bom, serialize_bom
@@ -21,18 +20,13 @@ from open_workspace_builder.sbom.discover import discover_components
 EXAMPLE_SERIAL = "urn:uuid:00000000-0000-4107-a000-000000000107"
 EXAMPLE_TIMESTAMP = "2026-04-10T00:00:00+00:00"
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
-FIXTURE_WORKSPACE = _REPO_ROOT / "tests" / "fixtures" / "sbom-example"
-EXAMPLE_SBOM_PATH = _REPO_ROOT / "examples" / "sbom" / "example.cdx.json"
+_DATA = files("open_workspace_builder.sbom") / "_data"
+FIXTURE_WORKSPACE = Path(str(_DATA / "fixture"))
+EXAMPLE_SBOM_PATH = Path(str(_DATA / "example.cdx.json"))
 
 
 def regenerate_example_sbom() -> str:
-    """Produce the byte-stable example SBOM JSON string.
-
-    Returns:
-        The serialized JSON string, suitable for writing to disk or for
-        comparison against the committed fixture.
-    """
+    """Produce the byte-stable example SBOM JSON string."""
     components = discover_components(FIXTURE_WORKSPACE)
     options = BomOptions(serial=EXAMPLE_SERIAL, timestamp=EXAMPLE_TIMESTAMP)
     bom = build_bom(components, options=options)
