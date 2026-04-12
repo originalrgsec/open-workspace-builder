@@ -93,7 +93,7 @@ owb = "open_workspace_builder.cli:owb"
 where = ["src"]
 
 [tool.setuptools.package-data]
-open_workspace_builder = ["py.typed", "security/data/*.yaml", "data/registry/**/*.yaml", "data/*.toml", "evaluator/data/*.yaml", "evaluator/data/**/*.yaml", "content/**/*.md", "vendor/**/*.md", "vendor/**/*.yaml", "sbom/_data/**"]
+open_workspace_builder = ["py.typed", "security/data/*.yaml", "data/registry/**/*.yaml", "data/*.toml", "evaluator/data/*.yaml", "evaluator/data/**/*.yaml", "content/**/*.md", "vendor/**/*.md", "vendor/**/*.yaml", "vendor/**/*.py", "sbom/_data/**"]
 
 [tool.ruff]
 target-version = "py312"
