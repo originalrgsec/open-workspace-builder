@@ -118,11 +118,6 @@ class AgentConfigConfig:
     filename: str = "WORKSPACE.md"
 
 
-# Backward-compatible alias so existing imports still work.
-# Deprecated: use AgentConfigConfig directly. Removal target: v0.6.0.
-ClaudeMdConfig = AgentConfigConfig
-
-
 @dataclass(frozen=True)
 class ModelsConfig:
     """Per-operation model strings. LiteLLM resolves provider from prefix."""
@@ -181,14 +176,12 @@ class SourcesConfig:
 
 @dataclass(frozen=True)
 class SecretsConfig:
-    """Secrets backend configuration."""
+    """Secrets backend configuration (delegates to himitsubako)."""
 
-    backend: str = "env"  # env | keyring | age | bitwarden | onepassword
-    age_identity: str = "~/.config/owb/key.txt"
-    age_secrets_dir: str = ""  # empty = derive from paths.config_dir
+    backend: str = "env"  # env | sops | keychain | bitwarden
+    sops_secrets_file: str = ".secrets.enc.yaml"
     keyring_service: str = "open-workspace-builder"
-    bitwarden_item: str = "OWB API Keys"
-    onepassword_vault: str = "Development"
+    bitwarden_item: str = "himitsubako"
 
 
 @dataclass(frozen=True)

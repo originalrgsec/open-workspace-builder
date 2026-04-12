@@ -1497,8 +1497,6 @@ def store_key(
 
         secrets_cfg = SecretsConfig(
             backend=backend_name,
-            age_identity=config.secrets.age_identity,
-            age_secrets_dir=config.secrets.age_secrets_dir,
             keyring_service=config.secrets.keyring_service,
         )
 
@@ -1519,7 +1517,7 @@ def store_key(
         click.echo(f"Error storing key: {exc}")
         sys.exit(1)
 
-    click.echo(f"Key '{key_name}' stored in {backend.backend_name()} backend.")
+    click.echo(f"Key '{key_name}' stored in {backend.backend_name} backend.")
 
 
 @auth.command("get-key")
@@ -1540,7 +1538,7 @@ def get_key(ctx: click.Context, key_name: str, config_path: str | None) -> None:
     Uses the configured backend with environment variable fallback.
     """
     from open_workspace_builder.secrets.factory import get_backend
-    from open_workspace_builder.secrets.resolver import resolve_key
+    from open_workspace_builder.secrets.resolver import resolve_key  # noqa: F811
 
     click.echo("WARNING: This displays sensitive data.")
     if not click.confirm("Display API key?", default=False):
@@ -1587,35 +1585,20 @@ def auth_status(ctx: click.Context, config_path: str | None) -> None:
         click.echo(f"Backend status: UNAVAILABLE ({exc})")
         return
 
-    # Backend-specific health check
-    backend_type = config.secrets.backend
-    if backend_type == "keyring":
-        from open_workspace_builder.secrets.keyring_backend import KeyringBackend
-
-        if KeyringBackend.is_available():
-            click.echo("Backend status: available")
-        else:
-            click.echo("Backend status: locked (fail backend active)")
-    elif backend_type == "age":
-        from pathlib import Path as _Path
-
-        identity = _Path(config.secrets.age_identity).expanduser()
-        if identity.is_file():
-            click.echo("Backend status: available (identity file found)")
-        else:
-            click.echo("Backend status: available (identity will be created on first store)")
-    else:
-        click.echo("Backend status: available")
+    click.echo("Backend status: available")
 
     # List stored keys
-    keys = backend.list_keys()
-    if keys:
-        click.echo(f"Stored keys: {', '.join(keys)}")
-    else:
-        click.echo("Stored keys: (none)")
+    try:
+        keys = backend.list_keys()
+        if keys:
+            click.echo(f"Stored keys: {', '.join(keys)}")
+        else:
+            click.echo("Stored keys: (none)")
+    except Exception:
+        click.echo("Stored keys: (unable to enumerate)")
 
     # For env backend, also show which OWB env vars are set (names only)
-    if backend_type == "env":
+    if config.secrets.backend == "env":
         _ENV_NAMES = ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "OWB_API_KEY", "LITELLM_API_KEY")
         present = [k for k in _ENV_NAMES if k in os.environ]
         if present:
@@ -1624,61 +1607,42 @@ def auth_status(ctx: click.Context, config_path: str | None) -> None:
 
 @auth.command("backends")
 def auth_backends() -> None:
-    """List all available secrets backends and their status."""
-    click.echo("Available backends:\n")
+    """List all available secrets backends and their status.
+
+    Backends are provided by himitsubako. See https://github.com/originalrgsec/himitsubako
+    for full documentation.
+    """
+    import shutil
+
+    click.echo("Available backends (via himitsubako):\n")
 
     # env — always available
     click.echo("  env       : available (reads from environment variables)")
 
-    # keyring
+    # sops — requires sops + age binaries
+    if shutil.which("sops") and shutil.which("age"):
+        click.echo("  sops      : available (sops + age found)")
+    else:
+        missing = []
+        if not shutil.which("sops"):
+            missing.append("sops")
+        if not shutil.which("age"):
+            missing.append("age")
+        click.echo(f"  sops      : not available (install {', '.join(missing)})")
+
+    # keychain — requires keyring package
     try:
-        from open_workspace_builder.secrets.keyring_backend import KeyringBackend
+        from himitsubako.backends.keychain import KeychainBackend  # noqa: F401
 
-        if KeyringBackend.is_available():
-            click.echo("  keyring   : available")
-        else:
-            click.echo("  keyring   : installed but using fail backend")
+        click.echo("  keychain  : available")
     except ImportError:
-        click.echo("  keyring   : not installed (pip install 'open-workspace-builder[keyring]')")
+        click.echo("  keychain  : not installed (pip install 'himitsubako[keychain]')")
 
-    # age
-    try:
-        from open_workspace_builder.secrets.age_backend import AgeBackend
-
-        if AgeBackend.is_available():
-            click.echo("  age       : available")
-        else:
-            click.echo("  age       : not available (install pyrage or age CLI)")
-    except ImportError:
-        click.echo("  age       : not installed (pip install 'open-workspace-builder[age]')")
-
-    # bitwarden
-    try:
-        from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
-
-        if BitwardenBackend.is_available():
-            click.echo("  bitwarden : available")
-        else:
-            click.echo(
-                "  bitwarden : not available (install bw CLI: https://bitwarden.com/help/cli/)"
-            )
-    except ImportError:
+    # bitwarden — requires bw CLI
+    if shutil.which("bw"):
+        click.echo("  bitwarden : available (bw CLI found)")
+    else:
         click.echo("  bitwarden : not available (install bw CLI: https://bitwarden.com/help/cli/)")
-
-    # onepassword
-    try:
-        from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
-
-        if OnePasswordBackend.is_available():
-            click.echo("  onepassword: available")
-        else:
-            click.echo(
-                "  onepassword: not available (install op CLI: https://developer.1password.com/docs/cli/)"
-            )
-    except ImportError:
-        click.echo(
-            "  onepassword: not available (install op CLI: https://developer.1password.com/docs/cli/)"
-        )
 
 
 @auth.command("google-store")
@@ -1714,12 +1678,23 @@ def auth_google_store(ctx: click.Context, config_path: str | None) -> None:
             client_id=client_id,
             client_secret=client_secret,
             config_dir=config_dir,
-            age_key_path=config.secrets.age_identity,
+            age_key_path=_resolve_age_key_path(),
         )
         click.echo(f"Google OAuth credentials stored at {secrets_file}")
     except (ImportError, FileNotFoundError) as exc:
         click.echo(f"Error: {exc}")
         sys.exit(1)
+
+
+def _resolve_age_key_path() -> str:
+    """Resolve the age identity key path for Google OAuth encryption.
+
+    Checks SOPS_AGE_KEY_FILE environment variable first, then falls back
+    to the sops/age default location.
+    """
+    import os
+
+    return os.environ.get("SOPS_AGE_KEY_FILE", "~/.config/sops/age/keys.txt")
 
 
 @auth.command("google")
@@ -1745,7 +1720,7 @@ def auth_google(ctx: click.Context, config_path: str | None) -> None:
 
         token_path = run_oauth_flow(
             config_dir=config.paths.config_dir,
-            age_key_path=config.secrets.age_identity,
+            age_key_path=_resolve_age_key_path(),
         )
         click.echo(f"Google Sheets OAuth token saved at {token_path}")
     except (ImportError, FileNotFoundError, ValueError) as exc:

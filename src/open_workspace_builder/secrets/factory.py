@@ -1,19 +1,23 @@
-"""Backend factory — instantiates the configured secrets backend."""
+"""Backend factory — routes to himitsubako backends.
+
+.. deprecated:: 1.11.0
+    Use ``himitsubako`` directly. This module will be removed in v1.12.0.
+"""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from open_workspace_builder.secrets.base import SecretsBackend
+    from himitsubako.backends.protocol import SecretBackend
 
 
-def get_backend(config: object) -> SecretsBackend:
-    """Instantiate the configured secrets backend.
+def get_backend(config: object) -> SecretBackend:
+    """Instantiate the configured secrets backend via himitsubako.
 
     Args:
-        config: A SecretsConfig object with backend, age_identity, age_secrets_dir,
-                and keyring_service fields.
+        config: A SecretsConfig object with a ``backend`` field and
+                backend-specific options.
 
     Raises:
         ValueError: If the backend name is not recognized.
@@ -21,36 +25,29 @@ def get_backend(config: object) -> SecretsBackend:
     backend_name = getattr(config, "backend", "env")
 
     if backend_name == "env":
-        from open_workspace_builder.secrets.env_backend import EnvVarBackend
+        from himitsubako.backends.env import EnvBackend
 
-        return EnvVarBackend()
+        return EnvBackend()
 
-    if backend_name == "keyring":
-        from open_workspace_builder.secrets.keyring_backend import KeyringBackend
+    if backend_name == "sops":
+        from himitsubako.backends.sops import SopsBackend
+
+        secrets_file = getattr(config, "sops_secrets_file", ".secrets.enc.yaml")
+        return SopsBackend(secrets_file=secrets_file)
+
+    if backend_name == "keyring" or backend_name == "keychain":
+        from himitsubako.backends.keychain import KeychainBackend
 
         service = getattr(config, "keyring_service", "open-workspace-builder")
-        return KeyringBackend(service=service)
-
-    if backend_name == "age":
-        from open_workspace_builder.secrets.age_backend import AgeBackend
-
-        identity = getattr(config, "age_identity", "~/.config/owb/key.txt")
-        secrets_dir = getattr(config, "age_secrets_dir", "") or "~/.owb/secrets"
-        return AgeBackend(identity_path=identity, secrets_dir=secrets_dir)
+        return KeychainBackend(service=service)
 
     if backend_name == "bitwarden":
-        from open_workspace_builder.secrets.bitwarden_backend import BitwardenBackend
+        from himitsubako.backends.bitwarden import BitwardenBackend
 
-        item_name = getattr(config, "bitwarden_item", "OWB API Keys")
-        return BitwardenBackend(item_name=item_name)
-
-    if backend_name == "onepassword":
-        from open_workspace_builder.secrets.onepassword_backend import OnePasswordBackend
-
-        vault_name = getattr(config, "onepassword_vault", "Development")
-        return OnePasswordBackend(vault_name=vault_name)
+        folder = getattr(config, "bitwarden_item", "himitsubako")
+        return BitwardenBackend(folder=folder)
 
     raise ValueError(
         f"Unknown secrets backend '{backend_name}'. "
-        f"Valid backends: env, keyring, age, bitwarden, onepassword"
+        f"Valid backends: env, sops, keyring, keychain, bitwarden"
     )

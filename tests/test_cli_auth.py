@@ -1,4 +1,4 @@
-"""Tests for the owb auth CLI command group."""
+"""Tests for the owb auth CLI command group (himitsubako backends)."""
 
 from __future__ import annotations
 
@@ -20,33 +20,32 @@ def runner() -> CliRunner:
 
 
 class TestStoreKey:
-    def test_store_key_env_backend(self, runner: CliRunner) -> None:
+    def test_store_key_env_backend_is_read_only(self, runner: CliRunner) -> None:
+        """himitsubako EnvBackend is read-only; store-key should error."""
         result = runner.invoke(owb, ["auth", "store-key"], input="my-secret\n")
-        assert result.exit_code == 0
-        assert "stored in env backend" in result.output
+        assert result.exit_code == 1
+        assert "Error" in result.output
 
-    def test_store_key_custom_key_name(self, runner: CliRunner) -> None:
-        result = runner.invoke(
-            owb,
-            ["auth", "store-key", "--key-name", "openai_api_key"],
-            input="sk-test\n",
-        )
-        assert result.exit_code == 0
-        assert "openai_api_key" in result.output
+    def test_store_key_with_mock_writable_backend(self, runner: CliRunner) -> None:
+        mock_backend = MagicMock()
+        mock_backend.backend_name = "mock"
+        with patch(
+            "open_workspace_builder.secrets.factory.get_backend",
+            return_value=mock_backend,
+        ):
+            result = runner.invoke(
+                owb,
+                ["auth", "store-key", "--key-name", "openai_api_key"],
+                input="sk-test\n",
+            )
+            assert result.exit_code == 0
+            assert "openai_api_key" in result.output
+            mock_backend.set.assert_called_once_with("openai_api_key", "sk-test")
 
     def test_store_key_empty_value_rejected(self, runner: CliRunner) -> None:
         result = runner.invoke(owb, ["auth", "store-key"], input="   \n")
         assert result.exit_code == 1
         assert "empty value" in result.output
-
-    def test_store_key_with_backend_override(self, runner: CliRunner) -> None:
-        result = runner.invoke(
-            owb,
-            ["auth", "store-key", "--backend", "env"],
-            input="test-value\n",
-        )
-        assert result.exit_code == 0
-        assert "stored in env backend" in result.output
 
     def test_store_key_unknown_backend_errors(self, runner: CliRunner) -> None:
         result = runner.invoke(
@@ -57,21 +56,21 @@ class TestStoreKey:
         assert result.exit_code == 1
         assert "Error" in result.output
 
-    def test_store_key_keyring_backend(self, runner: CliRunner) -> None:
-        mock_kr = MagicMock()
-        mock_kr.get_password.return_value = None
+    def test_store_key_keychain_backend(self, runner: CliRunner) -> None:
+        mock_backend = MagicMock()
+        mock_backend.backend_name = "keychain"
         with patch(
-            "open_workspace_builder.secrets.keyring_backend._import_keyring",
-            return_value=mock_kr,
+            "open_workspace_builder.secrets.factory.get_backend",
+            return_value=mock_backend,
         ):
             result = runner.invoke(
                 owb,
-                ["auth", "store-key", "--backend", "keyring", "--key-name", "my_key"],
-                input="keyring-secret\n",
+                ["auth", "store-key", "--backend", "keychain", "--key-name", "my_key"],
+                input="keychain-secret\n",
             )
             assert result.exit_code == 0
-            assert "stored in keyring backend" in result.output
-            mock_kr.set_password.assert_any_call("open-workspace-builder", "my_key", "keyring-secret")
+            assert "stored in keychain backend" in result.output
+            mock_backend.set.assert_called_once_with("my_key", "keychain-secret")
 
 
 # ── auth get-key ─────────────────────────────────────────────────────────
@@ -83,8 +82,9 @@ class TestGetKey:
         assert result.exit_code == 0
         assert "Aborted" in result.output
 
-    def test_get_key_displays_value(self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
-        # Clear any leftover from store-key tests, then set the env var
+    def test_get_key_displays_value(
+        self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.delenv("anthropic_api_key", raising=False)
         monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test123")
         result = runner.invoke(owb, ["auth", "get-key"], input="y\n")
@@ -93,21 +93,19 @@ class TestGetKey:
 
     def test_get_key_custom_name(self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("CUSTOM_KEY", "custom-val")
-        result = runner.invoke(
-            owb, ["auth", "get-key", "--key-name", "custom_key"], input="y\n"
-        )
+        result = runner.invoke(owb, ["auth", "get-key", "--key-name", "custom_key"], input="y\n")
         assert result.exit_code == 0
         assert "custom-val" in result.output
 
     def test_get_key_not_found(self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv("MISSING_KEY", raising=False)
-        result = runner.invoke(
-            owb, ["auth", "get-key", "--key-name", "missing_key"], input="y\n"
-        )
+        result = runner.invoke(owb, ["auth", "get-key", "--key-name", "missing_key"], input="y\n")
         assert result.exit_code == 1
         assert "Could not resolve key" in result.output
 
-    def test_get_key_shows_warning(self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_get_key_shows_warning(
+        self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
         result = runner.invoke(owb, ["auth", "get-key"], input="y\n")
         assert "WARNING" in result.output
@@ -125,35 +123,39 @@ class TestAuthStatus:
         assert "Configured backend: env" in result.output
         assert "available" in result.output
 
-    def test_status_shows_stored_keys(self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_status_shows_stored_keys(
+        self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
         result = runner.invoke(owb, ["auth", "status"])
         assert "ANTHROPIC_API_KEY" in result.output
 
-    def test_status_no_keys(self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
-        for key in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "OWB_API_KEY", "LITELLM_API_KEY"):
-            monkeypatch.delenv(key, raising=False)
+    def test_status_lists_env_vars(
+        self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """himitsubako EnvBackend.list_keys() enumerates all env vars."""
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
         result = runner.invoke(owb, ["auth", "status"])
-        assert "Stored keys: (none)" in result.output
+        assert "Stored keys:" in result.output
+        assert "ANTHROPIC_API_KEY" in result.output
 
-    def test_status_keyring_backend(self, runner: CliRunner, tmp_path: Path) -> None:
-        mock_kr = MagicMock()
-        mock_kr.get_password.return_value = None
+    def test_status_keychain_backend(self, runner: CliRunner, tmp_path: Path) -> None:
+        mock_backend = MagicMock()
+        mock_backend.backend_name = "keychain"
+        mock_backend.list_keys.return_value = ["my_key"]
         cfg_file = tmp_path / "config.yaml"
-        cfg_file.write_text("secrets:\n  backend: keyring\n", encoding="utf-8")
+        cfg_file.write_text("secrets:\n  backend: keychain\n", encoding="utf-8")
         with patch(
-            "open_workspace_builder.secrets.keyring_backend._import_keyring",
-            return_value=mock_kr,
+            "open_workspace_builder.secrets.factory.get_backend",
+            return_value=mock_backend,
         ):
-            with patch(
-                "open_workspace_builder.secrets.keyring_backend.KeyringBackend.is_available",
-                return_value=True,
-            ):
-                result = runner.invoke(owb, ["auth", "status", "-c", str(cfg_file)])
-                assert "Configured backend: keyring" in result.output
-                assert "available" in result.output
+            result = runner.invoke(owb, ["auth", "status", "-c", str(cfg_file)])
+            assert "Configured backend: keychain" in result.output
+            assert "available" in result.output
 
-    def test_status_env_vars_listed(self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_status_env_vars_listed(
+        self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setenv("OPENAI_API_KEY", "sk-openai")
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         result = runner.invoke(owb, ["auth", "status"])
@@ -170,28 +172,20 @@ class TestAuthBackends:
         assert "env" in result.output
         assert "available" in result.output
 
-    def test_backends_lists_keyring(self, runner: CliRunner) -> None:
-        with patch(
-            "open_workspace_builder.secrets.keyring_backend.KeyringBackend.is_available",
-            return_value=True,
-        ):
+    def test_backends_lists_sops(self, runner: CliRunner) -> None:
+        with patch("shutil.which", return_value="/usr/local/bin/sops"):
             result = runner.invoke(owb, ["auth", "backends"])
-            assert "keyring" in result.output
+            assert "sops" in result.output
 
-    def test_backends_lists_age(self, runner: CliRunner) -> None:
-        with patch(
-            "open_workspace_builder.secrets.age_backend.AgeBackend.is_available",
-            return_value=True,
-        ):
-            result = runner.invoke(owb, ["auth", "backends"])
-            assert "age" in result.output
-            assert "available" in result.output
+    def test_backends_lists_keychain(self, runner: CliRunner) -> None:
+        result = runner.invoke(owb, ["auth", "backends"])
+        assert "keychain" in result.output
 
-    def test_backends_shows_not_installed(self, runner: CliRunner) -> None:
-        with patch(
-            "open_workspace_builder.secrets.keyring_backend.KeyringBackend.is_available",
-            side_effect=ImportError("no keyring"),
-        ):
-            result = runner.invoke(owb, ["auth", "backends"])
-            # Should still complete without error
-            assert result.exit_code == 0
+    def test_backends_lists_bitwarden(self, runner: CliRunner) -> None:
+        result = runner.invoke(owb, ["auth", "backends"])
+        assert "bitwarden" in result.output
+
+    def test_backends_shows_himitsubako(self, runner: CliRunner) -> None:
+        result = runner.invoke(owb, ["auth", "backends"])
+        assert "himitsubako" in result.output
+        assert result.exit_code == 0

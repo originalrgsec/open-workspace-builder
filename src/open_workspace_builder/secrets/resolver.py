@@ -1,16 +1,28 @@
-"""Runtime key resolution with fallback chain."""
+"""Runtime key resolution with fallback chain.
+
+.. deprecated:: 1.11.0
+    This module will be removed in v1.12.0.
+"""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from open_workspace_builder.secrets.base import SecretsBackend
+    from himitsubako.backends.protocol import SecretBackend
+
+
+def _get_backend_name(backend: SecretBackend) -> str:
+    """Get backend name, handling both property and method patterns."""
+    name = backend.backend_name
+    if callable(name):
+        return name()
+    return name
 
 
 def resolve_key(
     key_name: str,
-    backend: SecretsBackend | None,
+    backend: SecretBackend | None,
     cli_override: str | None = None,
     env_var: str | None = None,
 ) -> str:
@@ -51,7 +63,7 @@ def resolve_key(
     # Step 4: Error
     sources = ["CLI flag"]
     if backend is not None:
-        sources.append(f"{backend.backend_name()} backend")
+        sources.append(f"{_get_backend_name(backend)} backend")
     sources.append(f"${resolved_env} environment variable")
 
     raise ValueError(
