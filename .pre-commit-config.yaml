@@ -22,3 +22,11 @@ repos:
       - id: semgrep
         args: [--config, p/default]
         types: [python]
+  - repo: local
+    hooks:
+      - id: commit-msg-check
+        name: conventional commit message
+        entry: python3 scripts/commit-msg-check.py
+        language: python
+        stages: [commit-msg]
+        always_run: true

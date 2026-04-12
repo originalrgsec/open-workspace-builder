@@ -133,7 +133,7 @@ class TestDependencyGateHook:
     def test_first_party_owners_empty(self, content: str) -> None:
         """First-party owners should be commented out placeholders."""
         # The frozenset should be empty (only comments inside).
-        assert "FIRST_PARTY_OWNERS: frozenset[str] = frozenset({" in content
+        assert "FIRST_PARTY_OWNERS: frozenset[str] = frozenset(" in content
         # Should not contain actual usernames.
         assert "originalrgsec" not in content
         assert "volcanixllc" not in content
