@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-04-11
+
+### Added
+
+- **Slack release notifications (OWB-S119).** New workflow
+  `.github/workflows/release-notify-slack.yml` posts a Block Kit message to
+  `#owb-releases` on every `release: published` event. Includes pre-release
+  `[PRE]` prefix, body truncation at 2,800 characters, and context links to
+  the GitHub Release page, SBOM asset, and PyPI page. Failure-isolated from
+  the main release pipeline. Uses `slackapi/slack-github-action@v3.0.1`
+  (MIT, GREEN health score). Requires repo secret `SLACK_RELEASE_WEBHOOK`.
+- Release Notifications section in `docs/contributing/release-process.md`
+  covering webhook provisioning, rotation, multi-channel expansion, and
+  trigger behavior.
+
+### Fixed
+
+- **SBOM fixture path resolution (OWB-S120).** `sbom/_example.py` no longer
+  uses `Path(__file__).resolve().parents[3]` to find the repo root, which
+  broke on installed wheels. Path resolution now uses
+  `importlib.resources.files()` against package data bundled at
+  `sbom/_data/`. The fixture workspace and committed example SBOM moved from
+  `tests/fixtures/sbom-example/` and `examples/sbom/` into the package.
+  7 new tests in `tests/sbom/test_example_resolver.py`.
+- **Ghost-release errata (OWB-S121).** Added errata banners to
+  `docs/releases/v1.6.0.md`, `v1.7.0.md`, and `v1.8.0.md` documenting that
+  these versions were tagged but never shipped to PyPI. Filed DRN-074
+  (no-backfill decision). See the v1.9.0 CHANGELOG entry for full context.
+
 ## [1.9.0] - 2026-04-11
 
 ### Release Notes
