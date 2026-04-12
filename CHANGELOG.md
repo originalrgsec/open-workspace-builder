@@ -7,8 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Genericized dependency gate PreToolUse hook distributed at
+  `vendor/ecc/hooks/dependency-gate.py`. Checks PyPI license, 7-day quarantine,
+  configurable first-party exemption (OWB-S131, from S124).
+- Genericized sprint-workflow execution contract rule at
+  `vendor/ecc/rules/common/sprint-workflow.md` (OWB-S131, from S122).
+- Conventional commit message hook (`scripts/commit-msg-check.py`) validates
+  `<type>: <description>` format with merge/revert exemptions. Wired into
+  `.pre-commit-config.yaml` commit-msg stage. Vendored copy for distribution
+  (OWB-S126).
+- Coverage gate in CI: pytest now runs with `--cov-fail-under=80` and
+  `--cov-report=term-missing` (OWB-S127).
+- 61 new tests (40 S131 vendor content + PII scrub, 21 S126 commit-msg).
+
 ### Changed
 
+- Vendored `security.md` trimmed to LLM-judgment-only checklist items; removed
+  tooling-enforced items (secrets, SQL injection, XSS) with note to configure
+  pre-commit hooks separately (OWB-S131, from S128).
+- Vendored `performance.md` model reference updated: Opus 4.5 → Opus 4.6
+  (OWB-S131, from S129).
+- `vendor/**/*.py` added to pyproject.toml package-data for hook distribution
+  (OWB-S131).
 - Dependency pre-install gate moved from ~400-token CLAUDE.md instruction block
   to a mechanical PreToolUse hook (`dependency-gate.py`). The hook checks PyPI
   license, 7-day quarantine, and first-party exemption before any install command

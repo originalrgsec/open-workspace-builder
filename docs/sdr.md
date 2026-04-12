@@ -875,6 +875,16 @@ class ReputationLedger:
 - Tests: 1,772 passed, 4 skipped (OWB repo unchanged). 38 passed (hook tests).
 - Total context window savings: ~1,093 tokens (23% of 4,700-token baseline).
 
+### Sprint 28: Ship & Harden
+- Stories: OWB-S131 (S, ~2-3 pt — distribute context window diet via vendored content); OWB-S126 (XS, ~1 pt — conventional commit hook); OWB-S127 (S, ~2 pt — coverage gate in CI)
+- Goal: Ship Sprint 26-27 context window optimizations to PyPI users via updated vendored rules and hooks, then add CI quality gates for commit format and test coverage.
+- S131 deliverables: Updated `vendor/ecc/rules/common/security.md` (trimmed to LLM-judgment items per S128), `vendor/ecc/rules/common/performance.md` (Opus 4.5 → 4.6 per S129). Added genericized `vendor/ecc/hooks/dependency-gate.py` (S124) and `vendor/ecc/rules/common/sprint-workflow.md` (S122). Added `vendor/**/*.py` to pyproject.toml package-data. 40 tests including 15-pattern PII scrub.
+- S126 deliverables: `scripts/commit-msg-check.py` validates `<type>: <description>` format. Merge/revert exemptions. Wired into `.pre-commit-config.yaml` commit-msg stage. Vendored copy for distribution. 21 tests.
+- S127 deliverables: Added `--cov-fail-under=80 --cov-report=term-missing` to CI pytest step. Current coverage: 85.45%.
+- Housekeeping: Closed S107 (SBOM parent) — all 15 ACs delivered across S107a/b/c (Sprints 20-22). Frontmatter updated, moved from backlog to completed.
+- Version: TBD (pending release decision).
+- Tests: 1,833 passed, 4 skipped, 0 failures.
+
 ## Open Questions
 
 1. Should the CLI use `click` or `argparse`? Click provides a cleaner subcommand model but adds a dependency. Argparse is stdlib but verbose for this many subcommands. Recommendation: click.
