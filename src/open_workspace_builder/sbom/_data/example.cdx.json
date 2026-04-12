@@ -1,4 +1,6 @@
 {
+  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+  "bomFormat": "CycloneDX",
   "components": [
     {
       "bom-ref": "owb:mcp-server/example-server@15f39f7ed12e",
@@ -192,8 +194,6 @@
     "timestamp": "2026-04-10T00:00:00+00:00"
   },
   "serialNumber": "urn:uuid:00000000-0000-4107-a000-000000000107",
-  "version": 1,
-  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
-  "bomFormat": "CycloneDX",
-  "specVersion": "1.6"
+  "specVersion": "1.6",
+  "version": 1
 }

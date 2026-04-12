@@ -136,7 +136,7 @@ def serialize_bom(bom: Bom) -> str:
     data = _json.loads(json_str)
     data.setdefault("metadata", {})
     data["metadata"]["timestamp"] = opts.timestamp
-    return _json.dumps(data, indent=2)
+    return _json.dumps(data, indent=2, sort_keys=True)
 
 
 # ---------------------------------------------------------------------------
