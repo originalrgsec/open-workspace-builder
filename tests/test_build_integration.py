@@ -128,6 +128,15 @@ class TestTemplates:
         assert path.is_file(), f"Template {template} not found"
         assert path.read_text(encoding="utf-8").strip() != ""
 
+    def test_project_index_has_research_section(self, built_workspace: Path) -> None:
+        """AC-1: project-index.md template includes Research section with disposition table."""
+        template = built_workspace / "Obsidian" / "_templates" / "project-index.md"
+        content = template.read_text(encoding="utf-8")
+        assert "## Research" in content, "Research section missing from project-index template"
+        assert "Disposition" in content, "Disposition column missing from Research table"
+        for disposition in ("pending", "accepted", "rejected", "deferred"):
+            assert disposition in content, f"Disposition value '{disposition}' missing"
+
     def test_template_count(self, built_workspace: Path) -> None:
         templates_dir = built_workspace / "Obsidian" / "_templates"
         actual = sorted(f.name for f in templates_dir.iterdir() if f.is_file())
