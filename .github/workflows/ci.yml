@@ -32,8 +32,8 @@ jobs:
       - name: Lint
         run: uv run ruff check src/ tests/
 
-      - name: Run tests
-        run: uv run pytest tests/ -x
+      - name: Run tests with coverage
+        run: uv run pytest tests/ -x --cov=src/open_workspace_builder --cov-fail-under=80 --cov-report=term-missing
 
   sast:
     runs-on: ubuntu-latest

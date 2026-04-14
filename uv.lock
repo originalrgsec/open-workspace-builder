@@ -1409,7 +1409,7 @@ wheels = [
 
 [[package]]
 name = "open-workspace-builder"
-version = "1.10.0"
+version = "1.13.0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
