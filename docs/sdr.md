@@ -882,8 +882,17 @@ class ReputationLedger:
 - S126 deliverables: `scripts/commit-msg-check.py` validates `<type>: <description>` format. Merge/revert exemptions. Wired into `.pre-commit-config.yaml` commit-msg stage. Vendored copy for distribution. 21 tests.
 - S127 deliverables: Added `--cov-fail-under=80 --cov-report=term-missing` to CI pytest step. Current coverage: 85.45%.
 - Housekeeping: Closed S107 (SBOM parent) — all 15 ACs delivered across S107a/b/c (Sprints 20-22). Frontmatter updated, moved from backlog to completed.
-- Version: TBD (pending release decision).
+- Version: v1.13.0.
 - Tests: 1,833 passed, 4 skipped, 0 failures.
+- Post-release fix (`e755b99`, pre-Sprint-29): the ci.yml and uv.lock changes described in S127's commit were never staged, so v1.13.0 tagged without actual coverage enforcement. Landed as fix-forward before the Sprint 29 branch cut.
+
+### Sprint 29: Secrets Plumbing
+- Stories: OWB-S132 (S, ~2-3 pt — himitsubako 0.7.0 upgrade + SOPS custom paths plumbing)
+- Goal: Consume the himitsubako v0.7.0 (HMB-S031) SOPS fix and expose its new `age_identity` and `sops_config_file` kwargs through OWB's `SecretsConfig`, factory, and wizard so users with non-default sops/age setups can configure decryption entirely in `workspace.yaml`.
+- S132 deliverables: `himitsubako>=0.7.0` pin across three `pyproject.toml` references. `SecretsConfig` gains two optional fields (default None preserves existing behavior). Factory expands `~`, fails loudly on missing paths, preserves env-var fallback when unset. Wizard detects `SOPS_AGE_KEY_FILE` and workspace-root `.sops.yaml`, offers opt-in prompts (default no). `_write_config_yaml` serializes only when set. New SOPS Backend Configuration docs section. `uv.toml` `exclude-newer` advanced to 2026-04-15 (first-party exemption). `pytest-cov` added to `[dev]` (Sprint 28 S127 gap).
+- Version: v1.14.0.
+- Tests: 1,859 passed, 1 skipped. Coverage 86.32% (up from 85.45%). 26 new tests (6 config, 11 factory, 9 wizard).
+- Follow-up: OWB-S133 (dependency-gate hook argv parsing bug, blocks `uv add` and related install commands; subsumes the himitsubako Sprint 7 follow-up on `==` pin respect). Added to backlog.
 
 ## Open Questions
 
