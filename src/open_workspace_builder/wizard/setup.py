@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -128,7 +129,33 @@ def _step_secrets_backend() -> SecretsConfig:
             click.echo("Install from: https://github.com/getsops/sops")
             click.echo("Falling back to env.")
             return SecretsConfig(backend="env")
-        return SecretsConfig(backend="sops")
+        # OWB-S132: opt-in prompts for non-default SOPS paths. The common
+        # setup uses ~/.config/sops/age/keys.txt and no .sops.yaml, so
+        # these prompts only fire when the environment already looks
+        # non-default.
+        age_identity: str | None = None
+        env_age = os.environ.get("SOPS_AGE_KEY_FILE")
+        if env_age and Path(env_age).exists():
+            if click.confirm(
+                f"Detected SOPS_AGE_KEY_FILE={env_age}. "
+                "Record this path in workspace.yaml so decryption works "
+                "without the shell env var?",
+                default=False,
+            ):
+                age_identity = env_age
+        sops_config_file: str | None = None
+        local_sops_yaml = Path.cwd() / ".sops.yaml"
+        if local_sops_yaml.exists():
+            if click.confirm(
+                f"Detected {local_sops_yaml}. Record this as sops_config_file?",
+                default=False,
+            ):
+                sops_config_file = str(local_sops_yaml)
+        return SecretsConfig(
+            backend="sops",
+            sops_age_identity=age_identity,
+            sops_config_file=sops_config_file,
+        )
 
     if choice == "3":
         if not keychain_ok:
@@ -346,6 +373,12 @@ def _write_config_yaml(config: Config, config_path: Path) -> None:
             and config.secrets.sops_secrets_file != ".secrets.enc.yaml"
         ):
             secrets_data["sops_secrets_file"] = config.secrets.sops_secrets_file
+        # OWB-S132: new optional SOPS path fields — emit only when set so
+        # we do not bloat existing configs with null keys.
+        if config.secrets.backend == "sops" and config.secrets.sops_age_identity is not None:
+            secrets_data["sops_age_identity"] = config.secrets.sops_age_identity
+        if config.secrets.backend == "sops" and config.secrets.sops_config_file is not None:
+            secrets_data["sops_config_file"] = config.secrets.sops_config_file
         if config.secrets.keyring_service != "open-workspace-builder":
             secrets_data["keyring_service"] = config.secrets.keyring_service
         if config.secrets.bitwarden_item != "himitsubako":

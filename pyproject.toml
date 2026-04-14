@@ -21,7 +21,7 @@ classifiers = [
 dependencies = [
     "click>=8.0",
     "pyyaml>=6.0",
-    "himitsubako>=0.4.0",
+    "himitsubako>=0.7.0",
 ]
 
 [project.optional-dependencies]
@@ -40,10 +40,10 @@ security = [
     "litellm>=1.40.0,<=1.83.0",
 ]
 keyring = [
-    "himitsubako[keychain]>=0.4.0",
+    "himitsubako[keychain]>=0.7.0",
 ]
 secrets = [
-    "himitsubako[keychain]>=0.4.0",
+    "himitsubako[keychain]>=0.7.0",
 ]
 audit = [
     "pip-audit>=2.7.0",
@@ -74,6 +74,7 @@ hooks = [
 ]
 dev = [
     "pytest>=7.0",
+    "pytest-cov>=5.0",
     "ruff>=0.1.0",
     "build",
     "pip-audit>=2.7.0",

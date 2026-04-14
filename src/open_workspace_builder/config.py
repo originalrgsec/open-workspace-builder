@@ -176,10 +176,19 @@ class SourcesConfig:
 
 @dataclass(frozen=True)
 class SecretsConfig:
-    """Secrets backend configuration (delegates to himitsubako)."""
+    """Secrets backend configuration (delegates to himitsubako).
+
+    SOPS custom paths (OWB-S132):
+        ``sops_age_identity`` and ``sops_config_file`` expose the
+        himitsubako 0.7.0 kwargs. When unset (None), himitsubako falls
+        back to the sops/age defaults and any ``SOPS_AGE_KEY_FILE``
+        environment variable set by the user's shell.
+    """
 
     backend: str = "env"  # env | sops | keychain | bitwarden
     sops_secrets_file: str = ".secrets.enc.yaml"
+    sops_age_identity: str | None = None  # path to age identity file; None = env/default
+    sops_config_file: str | None = None  # path to .sops.yaml; None = default discovery
     keyring_service: str = "open-workspace-builder"
     bitwarden_item: str = "himitsubako"
 

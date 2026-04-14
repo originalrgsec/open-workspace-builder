@@ -253,3 +253,119 @@ class TestWriteConfigYamlSecrets:
         _write_config_yaml(config, cfg_path)
         data = yaml.safe_load(cfg_path.read_text())
         assert data["secrets"]["sops_secrets_file"] == "custom.enc.yaml"
+
+    def test_sops_age_identity_written_when_set(self, tmp_path: Path) -> None:
+        """OWB-S132 AC-5: sops_age_identity survives YAML round trip."""
+        import yaml
+
+        from open_workspace_builder.config import Config
+        from open_workspace_builder.wizard.setup import _write_config_yaml
+
+        config = Config(
+            secrets=SecretsConfig(
+                backend="sops",
+                sops_age_identity="~/custom/age.txt",
+            )
+        )
+        cfg_path = tmp_path / "config.yaml"
+        _write_config_yaml(config, cfg_path)
+        data = yaml.safe_load(cfg_path.read_text())
+        assert data["secrets"]["sops_age_identity"] == "~/custom/age.txt"
+
+    def test_sops_config_file_written_when_set(self, tmp_path: Path) -> None:
+        """OWB-S132 AC-5: sops_config_file survives YAML round trip."""
+        import yaml
+
+        from open_workspace_builder.config import Config
+        from open_workspace_builder.wizard.setup import _write_config_yaml
+
+        config = Config(
+            secrets=SecretsConfig(
+                backend="sops",
+                sops_config_file="~/custom/.sops.yaml",
+            )
+        )
+        cfg_path = tmp_path / "config.yaml"
+        _write_config_yaml(config, cfg_path)
+        data = yaml.safe_load(cfg_path.read_text())
+        assert data["secrets"]["sops_config_file"] == "~/custom/.sops.yaml"
+
+    def test_sops_custom_paths_omitted_when_unset(self, tmp_path: Path) -> None:
+        """Unset fields must not bloat the generated YAML with null keys."""
+        import yaml
+
+        from open_workspace_builder.config import Config
+        from open_workspace_builder.wizard.setup import _write_config_yaml
+
+        config = Config(secrets=SecretsConfig(backend="sops"))
+        cfg_path = tmp_path / "config.yaml"
+        _write_config_yaml(config, cfg_path)
+        data = yaml.safe_load(cfg_path.read_text())
+        assert "sops_age_identity" not in data["secrets"]
+        assert "sops_config_file" not in data["secrets"]
+
+
+class TestStepSecretsBackendSopsCustomPaths:
+    """OWB-S132 AC-4: wizard optionally prompts for non-default SOPS paths."""
+
+    def test_sops_prompts_for_age_identity_when_env_var_set(
+        self, monkeypatch, tmp_path: Path
+    ) -> None:
+        """When SOPS_AGE_KEY_FILE is set and points at an existing file,
+        the wizard offers to record it. Accepting it populates the config."""
+        monkeypatch.setenv("SOPS_AGE_KEY_FILE", str(tmp_path / "age.txt"))
+        (tmp_path / "age.txt").write_text("# dummy", encoding="utf-8")
+        # backend choice = 2 (sops); age prompt = y; record env path; config prompt = n
+        prompts = iter(["2", "y", "n"])
+        confirms = iter([True, False])
+        with (
+            patch("click.prompt", side_effect=lambda *a, **kw: next(prompts)),
+            patch("click.confirm", side_effect=lambda *a, **kw: next(confirms)),
+            patch("shutil.which", return_value="/usr/local/bin/sops"),
+        ):
+            from open_workspace_builder.wizard.setup import _step_secrets_backend
+
+            result = _step_secrets_backend()
+        assert result.backend == "sops"
+        assert result.sops_age_identity == str(tmp_path / "age.txt")
+        assert result.sops_config_file is None
+
+    def test_sops_skips_age_identity_prompt_by_default(self, monkeypatch) -> None:
+        """When the environment is fully default, wizard skips the extra
+        prompts entirely — preserves existing UX for the common path."""
+        monkeypatch.delenv("SOPS_AGE_KEY_FILE", raising=False)
+        prompts = iter(["2"])
+        with (
+            patch("click.prompt", side_effect=lambda *a, **kw: next(prompts)),
+            patch("click.confirm", return_value=False),
+            patch("shutil.which", return_value="/usr/local/bin/sops"),
+            patch(
+                "open_workspace_builder.wizard.setup.Path.exists",
+                return_value=False,
+            ),
+        ):
+            from open_workspace_builder.wizard.setup import _step_secrets_backend
+
+            result = _step_secrets_backend()
+        assert result.backend == "sops"
+        assert result.sops_age_identity is None
+        assert result.sops_config_file is None
+
+    def test_sops_prompts_for_config_file_when_present(self, monkeypatch, tmp_path: Path) -> None:
+        """When a .sops.yaml is present at the workspace root, wizard
+        offers to record it."""
+        monkeypatch.delenv("SOPS_AGE_KEY_FILE", raising=False)
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / ".sops.yaml").write_text("creation_rules: []\n", encoding="utf-8")
+        prompts = iter(["2"])
+        confirms = iter([True])  # confirm=y for sops_config_file
+        with (
+            patch("click.prompt", side_effect=lambda *a, **kw: next(prompts)),
+            patch("click.confirm", side_effect=lambda *a, **kw: next(confirms)),
+            patch("shutil.which", return_value="/usr/local/bin/sops"),
+        ):
+            from open_workspace_builder.wizard.setup import _step_secrets_backend
+
+            result = _step_secrets_backend()
+        assert result.backend == "sops"
+        assert result.sops_config_file == str(tmp_path / ".sops.yaml")
