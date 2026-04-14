@@ -22,7 +22,7 @@ The setup wizard (`owb init` on first run) generates `~/.owb/config.yaml` intera
 | `security` | Active pattern sets, scanner layer selection, SCA/SAST/Trivy/secrets toggles |
 | `trust` | Trust tier policy selection |
 | `marketplace` | Output format (generic, anthropic, openai) |
-| `secrets` | Secrets backend selection (env, keyring, age, bitwarden, onepassword) |
+| `secrets` | Secrets backend selection (env, sops, keychain, bitwarden); SOPS custom paths (`sops_age_identity`, `sops_config_file`) |
 | `tokens` | Token tracking: ledger path, budget threshold, auto-record |
 | `paths` | Config, data, and credentials directory paths |
 | `context_templates` | Whether to deploy personal context files |
@@ -93,7 +93,32 @@ To export token data to Google Sheets:
 3. Run the OAuth flow: `owb auth google`
 4. Export: `owb metrics export --format gsheets --sheet-id YOUR_SHEET_ID`
 
-Credentials are encrypted using the configured secrets backend (age, keyring, or env).
+Credentials are encrypted using the configured secrets backend (sops, keychain, bitwarden, or env).
+
+## SOPS Backend Configuration
+
+The SOPS backend delegates to [himitsubako](https://pypi.org/project/himitsubako/)'s SOPS integration (age recipients, encrypted-at-rest, git-friendly). Four fields under the `secrets:` block are relevant when `backend: sops`:
+
+| Field | Default | Purpose |
+|-------|---------|---------|
+| `sops_secrets_file` | `.secrets.enc.yaml` | Path to the encrypted secrets file, relative to the workspace root. |
+| `sops_age_identity` | `None` (env/default) | Absolute or `~`-expanded path to the age identity file. Propagated to sops as `SOPS_AGE_KEY_FILE`. Use when your age key lives outside `~/.config/sops/age/keys.txt`. |
+| `sops_config_file` | `None` (default discovery) | Path to a custom `.sops.yaml`. Passed to sops as `--config`. Use when you keep the sops config somewhere other than the workspace root. |
+| `sops_secrets_file` | see above | — |
+
+When `sops_age_identity` is unset, sops reads `SOPS_AGE_KEY_FILE` from the environment or falls back to the default location. Setting the field in `workspace.yaml` removes the need to export that environment variable in every shell.
+
+Example — age key stored outside the default location:
+
+```yaml
+secrets:
+  backend: sops
+  sops_secrets_file: .secrets.enc.yaml
+  sops_age_identity: ~/keys/age/owb.txt
+  sops_config_file: ~/keys/.sops.yaml
+```
+
+If a configured path points at a file that does not exist, OWB fails loudly at backend construction rather than silently falling back to the default — misconfiguration is surfaced immediately.
 
 ## Optional Dependency Groups
 

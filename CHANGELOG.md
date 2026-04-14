@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.0] - 2026-04-14
+
+### Added
+
+- `SecretsConfig.sops_age_identity` and `SecretsConfig.sops_config_file`:
+  optional path fields that plumb the new himitsubako 0.7.0 (HMB-S031)
+  `age_identity` and `sops_config_file` kwargs through OWB. Users with
+  non-default sops/age setups can now declare the paths in
+  `workspace.yaml` rather than exporting `SOPS_AGE_KEY_FILE` in every
+  shell (OWB-S132).
+- Setup wizard: when `SOPS + age` is selected and the environment
+  looks non-default (either `SOPS_AGE_KEY_FILE` is set or a
+  `.sops.yaml` is present at the workspace root), opt-in prompts
+  (default no) record the paths automatically (OWB-S132).
+- Configured SOPS paths fail loudly with `FileNotFoundError` at
+  backend construction if the path does not exist, surfacing
+  misconfiguration immediately rather than silently falling back to
+  the default (OWB-S132, EC-3).
+- New SOPS Backend Configuration section in
+  `docs/concepts/configuration.md` documents the four SOPS fields
+  with a worked example for a non-default age key layout (OWB-S132).
+
+### Fixed
+
+- CI `.github/workflows/ci.yml` now actually enforces the
+  `--cov-fail-under=80` coverage gate. Sprint 28's S127 commit
+  described adding this flag but never staged the change, so
+  v1.13.0 was tagged without enforcement. Fix-forward landed before
+  the Sprint 29 branch cut.
+- `pytest-cov>=5.0` added to `[dev]` extras. Sprint 28's S127 relied
+  on the flag without adding the dependency, leaving a silent gap
+  (OWB-S132).
+
+### Changed
+
+- `himitsubako` pin bumped from `>=0.4.0` to `>=0.7.0` in all three
+  dependency references. Additive upstream change; no breaking
+  signature modifications (OWB-S132).
+- `uv.toml` `exclude-newer` advanced to `2026-04-15` under the
+  first-party exemption (originalrgsec-published package), same
+  pattern as the v0.5.0 advance in S113 (OWB-S132).
+
 ## [1.13.0] - 2026-04-12
 
 ### Added

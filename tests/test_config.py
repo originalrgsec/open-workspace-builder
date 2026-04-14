@@ -105,3 +105,63 @@ class TestConfigImmutability:
         vault = VaultConfig()
         with pytest.raises(AttributeError):
             vault.name = "changed"  # type: ignore[misc]
+
+
+class TestSecretsConfigSopsCustomPaths:
+    """OWB-S132 AC-2, AC-5: SecretsConfig exposes age identity and sops config paths."""
+
+    def test_default_sops_age_identity_is_none(self) -> None:
+        from open_workspace_builder.config import SecretsConfig
+
+        cfg = SecretsConfig()
+        assert cfg.sops_age_identity is None
+
+    def test_default_sops_config_file_is_none(self) -> None:
+        from open_workspace_builder.config import SecretsConfig
+
+        cfg = SecretsConfig()
+        assert cfg.sops_config_file is None
+
+    def test_sops_age_identity_accepts_path_string(self) -> None:
+        from open_workspace_builder.config import SecretsConfig
+
+        cfg = SecretsConfig(
+            backend="sops",
+            sops_age_identity="~/keys/age.txt",
+        )
+        assert cfg.sops_age_identity == "~/keys/age.txt"
+
+    def test_sops_config_file_accepts_path_string(self) -> None:
+        from open_workspace_builder.config import SecretsConfig
+
+        cfg = SecretsConfig(
+            backend="sops",
+            sops_config_file="/abs/path/.sops.yaml",
+        )
+        assert cfg.sops_config_file == "/abs/path/.sops.yaml"
+
+    def test_load_config_reads_sops_paths_from_yaml(self, tmp_path: Path) -> None:
+        cfg_path = tmp_path / "workspace.yaml"
+        cfg_path.write_text(
+            "secrets:\n"
+            "  backend: sops\n"
+            "  sops_age_identity: ~/custom/age-key.txt\n"
+            "  sops_config_file: ~/custom/.sops.yaml\n",
+            encoding="utf-8",
+        )
+        config = load_config(cfg_path)
+        assert config.secrets.backend == "sops"
+        assert config.secrets.sops_age_identity == "~/custom/age-key.txt"
+        assert config.secrets.sops_config_file == "~/custom/.sops.yaml"
+
+    def test_load_config_without_custom_paths_preserves_defaults(self, tmp_path: Path) -> None:
+        cfg_path = tmp_path / "workspace.yaml"
+        cfg_path.write_text(
+            "secrets:\n  backend: sops\n",
+            encoding="utf-8",
+        )
+        config = load_config(cfg_path)
+        assert config.secrets.backend == "sops"
+        assert config.secrets.sops_age_identity is None
+        assert config.secrets.sops_config_file is None
+        assert config.secrets.sops_secrets_file == ".secrets.enc.yaml"

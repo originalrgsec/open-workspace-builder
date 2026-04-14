@@ -15,4 +15,11 @@
 # to allow himitsubako 0.5.0 (published 2026-04-11). First-party
 # package (originalrgsec), exempt from supply-chain quarantine per
 # the first-party exemption in the pre-install gate.
-exclude-newer = "2026-04-12"
+#
+# 2026-04-14 (OWB-S132): pin advanced from 2026-04-12 to 2026-04-15
+# to allow himitsubako 0.7.0 (published 2026-04-14). First-party
+# package (originalrgsec), exempt from supply-chain quarantine.
+# Sprint 7 close shipped HMB-S031 (SOPS age_identity/config_file
+# kwargs), HMB-S030 (google-oauth composite backend), HMB-S032
+# (hmb rotate OAuth plugin). Only the S031 fix is consumed by OWB.
+exclude-newer = "2026-04-15"
