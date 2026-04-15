@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.1] - 2026-04-15
+
+### Fixed
+
+- Dependency-gate hook (`vendor/ecc/hooks/dependency-gate.py`)
+  rewrote its argv parser to use `shlex.split` and a proper token
+  classifier. Previously a greedy regex captured shell operators as
+  package names — `uv pip install pkg 2>&1 | tail` would produce
+  bogus `[2]` and `[|]` "package not found" errors that blocked
+  legitimate installs. The new parser stops at shell terminators
+  (`|`, `&&`, `;`, `>`, `>>`, `2>&1`, …), skips flags, paths, URLs,
+  and command substitutions, and treats `uv sync` / `uv lock` as
+  explicitly out of scope (OWB-S133).
+- Quarantine check now respects `==X.Y.Z` exact-version pins and
+  queries PyPI for that specific release's `upload_time` rather than
+  always checking the latest. Range specifiers (`>=`, `<=`, `~=`,
+  `!=`) still fall back to the latest release (conservative default)
+  (OWB-S133, subsumes himitsubako Sprint 7 follow-up).
+- Dev dep: `pytest` bumped to `>=9.0.3` to close CVE-2025-71176
+  (medium, tmpdir handling). Clears GitHub Dependabot alert #17.
+  Dev-only — never shipped in the wheel (OWB-SEC-004).
+
+### Security
+
+- CVE-2025-71176 patched via pytest upgrade (OWB-SEC-004).
+
 ## [1.14.0] - 2026-04-14
 
 ### Added
