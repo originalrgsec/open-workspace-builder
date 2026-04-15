@@ -886,6 +886,14 @@ class ReputationLedger:
 - Tests: 1,833 passed, 4 skipped, 0 failures.
 - Post-release fix (`e755b99`, pre-Sprint-29): the ci.yml and uv.lock changes described in S127's commit were never staged, so v1.13.0 tagged without actual coverage enforcement. Landed as fix-forward before the Sprint 29 branch cut.
 
+### Sprint 30: Gate & CVE
+- Stories: OWB-SEC-004 (XS, ~0.5 pt — pytest CVE-2025-71176 bump); OWB-S133 (S, ~3 pt — dependency-gate hook argv parser rewrite)
+- Goal: Close two loose ends from v1.14.0: the dependency-gate hook's greedy regex parser (blocked `uv add` / `uv pip install pkg 2>&1 | tail` with bogus "package not found" errors for the `2` and `|` shell tokens) and the pytest CVE Dependabot alert that surfaced on push.
+- SEC-004 deliverables: `pytest>=9.0.3` in `[dev]` extras. Clears alert #17. Dev-only; no production surface change.
+- S133 deliverables: Replaced the regex-on-whole-string parser with a `shlex.split`-based tokenizer. Walks tokens matching an install verb prefix (uv pip install, uv add, pip install, pip3 install, python -m pip install, npm install, yarn add, pnpm add, cargo add, go get, brew install). Stops at shell terminators. Classifies each token: skips flags, paths (`/`, `./`, `..`), VCS/URL refs (`git+`, `https://`, `file://`), command substitution (`$(`, `` ` ``, `${`). `FLAGS_WITH_VALUE` list (`-r`, `--index-url`, etc.) consumes the following token as value not package. New `PackageSpec` dataclass with optional `pinned_version` — `==X.Y.Z` pins propagate to `check_pypi()` so the quarantine check hits the exact release rather than always "latest". Range/compat specs keep `pinned_version=None` (conservative). `uv sync` and `uv lock` intentionally absent from `INSTALL_VERBS` (lock was gated when packages were added; gating sync re-checks approved packages on every env refresh). Vendored hook synced to `~/.claude/hooks/dependency-gate.py`.
+- Version: v1.14.1 (patch).
+- Tests: 1,907 passed, 1 skipped. Coverage 85.18%. 48 new tests in `tests/hooks/test_dependency_gate_parser.py` covering every Sprint 29 regression input plus AC-1 through AC-5 and EC-1, EC-2.
+
 ### Sprint 29: Secrets Plumbing
 - Stories: OWB-S132 (S, ~2-3 pt — himitsubako 0.7.0 upgrade + SOPS custom paths plumbing)
 - Goal: Consume the himitsubako v0.7.0 (HMB-S031) SOPS fix and expose its new `age_identity` and `sops_config_file` kwargs through OWB's `SecretsConfig`, factory, and wizard so users with non-default sops/age setups can configure decryption entirely in `workspace.yaml`.

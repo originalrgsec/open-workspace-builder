@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "open-workspace-builder"
-version = "1.14.0"
+version = "1.14.1"
 description = "Scaffold, maintain, and secure AI coding workspaces"
 readme = "README.md"
 license = "MIT"
@@ -73,7 +73,10 @@ hooks = [
     "pre-commit>=3.0",
 ]
 dev = [
-    "pytest>=7.0",
+    # pytest>=9.0.3 closes CVE-2025-71176 (tmpdir handling, medium).
+    # Dependabot alert #17 surfaced on v1.14.0 push; dev-dep only,
+    # never ships in the wheel. (OWB-SEC-004)
+    "pytest>=9.0.3",
     "pytest-cov>=5.0",
     "ruff>=0.1.0",
     "build",
