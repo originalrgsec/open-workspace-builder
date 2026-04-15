@@ -35,9 +35,11 @@ from __future__ import annotations
 
 import json
 import re
+import shlex
 import sys
 import urllib.error
 import urllib.request
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 
@@ -100,72 +102,242 @@ FIRST_PARTY_OWNERS: frozenset[str] = frozenset(
     }
 )
 
-# --- Install command patterns ---
+# --- Install command parsing (OWB-S133) ---
+#
+# The parser uses shlex.split for shell-aware tokenization, then walks the
+# token stream to find install subcommand prefixes and collect package
+# tokens up to the first shell operator (|, &&, ;, >, 2>&1, etc.).
+#
+# Why not regex-on-the-whole-string? Because regex greedily captures
+# trailing shell operators and emits them as bogus package names
+# (Sprint 29 regression: `uv pip install pkg 2>&1 | tail` yielded `2`
+# and `|` as packages).
+#
+# uv sync / uv lock: explicitly out of scope. Those commands move the
+# installed set to match the existing lock; packages were already gated
+# when added. Gating sync/lock would re-check approved packages on every
+# environment refresh, which is noisy without improving safety.
 
-# Each pattern captures (package_names_string) from the command.
-# We handle multi-package commands by splitting the captured group.
-INSTALL_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
-    (
-        "python",
-        re.compile(
-            r"(?:uv\s+add|uv\s+pip\s+install|pip\s+install)\s+(.+)",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "node",
-        re.compile(
-            r"npm\s+install\s+(.+)",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "rust",
-        re.compile(
-            r"cargo\s+add\s+(.+)",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "go",
-        re.compile(
-            r"go\s+get\s+(.+)",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "brew",
-        re.compile(
-            r"brew\s+install\s+(.+)",
-            re.IGNORECASE,
-        ),
-    ),
+# (ecosystem, token_prefix) — the verb sequence that signals an install.
+INSTALL_VERBS: list[tuple[str, tuple[str, ...]]] = [
+    ("python", ("uv", "pip", "install")),
+    ("python", ("uv", "add")),
+    ("python", ("pip", "install")),
+    ("python", ("pip3", "install")),
+    ("python", ("python", "-m", "pip", "install")),
+    ("python", ("python3", "-m", "pip", "install")),
+    ("node", ("npm", "install")),
+    ("node", ("npm", "i")),
+    ("node", ("yarn", "add")),
+    ("node", ("pnpm", "add")),
+    ("rust", ("cargo", "add")),
+    ("go", ("go", "get")),
+    ("brew", ("brew", "install")),
 ]
 
-# Flags and options to strip from the package name string.
-FLAG_PATTERN = re.compile(r"(?:^|\s)--?\S+")
+# Tokens that terminate parsing — anything after these is a different
+# command or a redirection, not packages being installed.
+SHELL_TERMINATORS: frozenset[str] = frozenset(
+    {
+        "|",
+        "||",
+        "&&",
+        "&",
+        ";",
+        ">",
+        ">>",
+        "<",
+        "<<",
+        "<<<",
+        "2>",
+        "2>>",
+        "&>",
+        "&>>",
+        ">&",
+        "2>&1",
+        ">&2",
+        "1>&2",
+    }
+)
 
-# Version specifiers to strip (e.g., pkg>=1.0, pkg[extra]).
-VERSION_SPEC = re.compile(r"[>=<!~\[].+$")
+# Flags that take a value argument (the next token is the value, not a package).
+FLAGS_WITH_VALUE: frozenset[str] = frozenset(
+    {
+        "-r",
+        "--requirement",
+        "-c",
+        "--constraint",
+        "-i",
+        "--index-url",
+        "--extra-index-url",
+        "-f",
+        "--find-links",
+        "--target",
+        "-t",
+        "--prefix",
+        "--root",
+        "--python",
+        "-p",
+        "--index",
+    }
+)
+
+# Exact-pin extractor: captures the version string from `pkg==X.Y.Z`.
+# Intentionally only matches the `==` operator; range/compat specs
+# (>=, <=, ~=, !=) produce pinned_version=None per AC-3.
+_EXACT_PIN_RE = re.compile(r"^([A-Za-z0-9_.\-]+)(?:\[[^\]]+\])?==([A-Za-z0-9_.\-+]+)$")
+# Name-only extractor: first A-Za-z chunk (may contain _, ., -).
+_NAME_RE = re.compile(r"^([A-Za-z0-9_.\-]+)")
 
 
-def extract_packages(command: str) -> list[tuple[str, str]]:
-    """Return list of (ecosystem, package_name) from a command string."""
-    results: list[tuple[str, str]] = []
-    for ecosystem, pattern in INSTALL_PATTERNS:
-        match = pattern.search(command)
-        if not match:
+@dataclass(frozen=True)
+class PackageSpec:
+    """A single package referenced by an install command.
+
+    Attributes:
+        ecosystem: "python", "node", "rust", "go", or "brew".
+        name: Package name as it should be queried against the registry.
+        pinned_version: Exact version if the token used ``==X.Y.Z``, else
+            ``None``. Range specifiers (``>=``, ``<=``, ``~=``, ``!=``)
+            produce ``None`` because the installed version cannot be
+            determined from the token alone.
+    """
+
+    ecosystem: str
+    name: str
+    pinned_version: str | None = None
+
+
+def _is_shell_terminator(token: str) -> bool:
+    """True if the token ends one shell command and begins another."""
+    if token in SHELL_TERMINATORS:
+        return True
+    # Redirection tokens like `2>file`, `>out.log` — start with > or end with >.
+    if token.startswith((">", "<", "2>", "&>")):
+        return True
+    return False
+
+
+def _is_skippable(token: str) -> bool:
+    """True if the token is not a package name (flag, path, URL, etc.)."""
+    if not token:
+        return True
+    # Flags.
+    if token.startswith("-"):
+        return True
+    # Paths.
+    if token in (".", "..") or token.startswith(("/", "./", "../")):
+        return True
+    # VCS or URL refs.
+    if token.startswith(("git+", "hg+", "svn+", "bzr+", "http://", "https://", "file://")):
+        return True
+    # Command substitution — cannot parse safely.
+    if token.startswith(("$(", "${", "`")) or token.endswith("`") or token.endswith(")"):
+        return True
+    # Environment variable assignment.
+    if "=" in token and not _looks_like_requirement(token):
+        return True
+    return False
+
+
+def _looks_like_requirement(token: str) -> bool:
+    """True if the token plausibly matches PEP 508 syntax (pkg==X, pkg>=X)."""
+    # Any PEP 440 spec operator marks this as a requirement.
+    return any(op in token for op in ("==", ">=", "<=", "~=", "!=", ">", "<"))
+
+
+def _match_install_verb(tokens: list[str], start: int) -> tuple[str, int] | None:
+    """Try to match an install verb starting at ``tokens[start]``.
+
+    Returns (ecosystem, index_after_verb) on match, else None.
+    """
+    for ecosystem, verb in INSTALL_VERBS:
+        end = start + len(verb)
+        if end <= len(tokens) and tuple(tokens[start:end]) == verb:
+            return ecosystem, end
+    return None
+
+
+def _parse_requirement(token: str) -> tuple[str, str | None] | None:
+    """Parse a PEP 508-ish requirement token into (name, pinned_version).
+
+    Returns None if the token does not look like a package requirement at
+    all (e.g., it's a word like "install" that slipped through earlier
+    filters).
+    """
+    # Drop surrounding quotes if shlex left any (defensive).
+    token = token.strip().strip("'\"")
+    # Strip extras: pkg[extra1,extra2] → pkg
+    base = re.sub(r"\[[^\]]+\]", "", token)
+
+    exact = _EXACT_PIN_RE.match(token)
+    if exact:
+        return exact.group(1), exact.group(2)
+
+    # Range/compat specs: keep the name, drop the version.
+    name_match = _NAME_RE.match(base)
+    if not name_match:
+        return None
+    name = name_match.group(1)
+    # Filter out obvious non-package words that slipped through.
+    if name.lower() in {"install", "add", "get", "sync", "lock", "pip", "uv"}:
+        return None
+    return name, None
+
+
+def extract_packages(command: str) -> list[PackageSpec]:
+    """Return a list of PackageSpec parsed from a shell command string.
+
+    Parses the command using ``shlex.split`` to respect quoting, then
+    walks the token stream. For each run of tokens matching an install
+    verb prefix (e.g., ``uv pip install``), collects subsequent tokens
+    up to the next shell operator (``|``, ``&&``, ``>``, etc.),
+    filtering out flags, paths, URLs, and substitutions.
+
+    ``uv sync`` and ``uv lock`` are intentionally not listed in
+    ``INSTALL_VERBS``; they return an empty list. See module docstring.
+
+    Safe to call on any string: non-install commands return ``[]``.
+    """
+    try:
+        tokens = shlex.split(command, comments=False, posix=True)
+    except ValueError:
+        # Unbalanced quotes or other shlex failure — refuse to guess.
+        return []
+
+    results: list[PackageSpec] = []
+    i = 0
+    while i < len(tokens):
+        # Skip over leading tokens until we find an install verb.
+        matched = _match_install_verb(tokens, i)
+        if matched is None:
+            i += 1
             continue
-        raw = match.group(1)
-        # Strip flags (e.g., --dev, -e, --no-deps).
-        cleaned = FLAG_PATTERN.sub(" ", raw).strip()
-        for token in cleaned.split():
-            if not token or token.startswith("-"):
+        ecosystem, i = matched
+
+        # Collect packages until a shell terminator or end of tokens.
+        skip_next = False
+        while i < len(tokens):
+            tok = tokens[i]
+            if _is_shell_terminator(tok):
+                break
+            if skip_next:
+                skip_next = False
+                i += 1
                 continue
-            # Strip version specifiers and extras.
-            pkg_name = VERSION_SPEC.sub("", token).strip()
-            if pkg_name and not pkg_name.startswith("/"):
-                results.append((ecosystem, pkg_name))
+            if tok in FLAGS_WITH_VALUE:
+                skip_next = True
+                i += 1
+                continue
+            if _is_skippable(tok):
+                i += 1
+                continue
+            parsed = _parse_requirement(tok)
+            if parsed is not None:
+                name, pinned = parsed
+                results.append(PackageSpec(ecosystem=ecosystem, name=name, pinned_version=pinned))
+            i += 1
+        # Continue outer loop in case another install verb appears after ;
     return results
 
 
@@ -194,8 +366,18 @@ def is_first_party(pkg_name: str, ecosystem: str) -> bool:
     return False
 
 
-def check_pypi(pkg_name: str) -> dict[str, Any]:
-    """Check a Python package against PyPI for license and publication date."""
+def check_pypi(pkg_name: str, pinned_version: str | None = None) -> dict[str, Any]:
+    """Check a Python package against PyPI for license and publication date.
+
+    Args:
+        pkg_name: The package name to query.
+        pinned_version: If set (from ``pkg==X.Y.Z`` in the install
+            command), the quarantine check uses the upload_time of
+            *that* version rather than PyPI's "latest". Range specs
+            (``>=``, ``<=``, ``~=``, ``!=``) pass ``None`` — the check
+            falls back to latest and accepts a small rate of false
+            positives rather than mis-resolving the range.
+    """
     result: dict[str, Any] = {
         "package": pkg_name,
         "ecosystem": "python",
@@ -204,6 +386,7 @@ def check_pypi(pkg_name: str) -> dict[str, Any]:
         "license_conditional": False,
         "quarantine_ok": True,
         "publication_date": None,
+        "checked_version": None,
         "error": None,
     }
     try:
@@ -244,10 +427,19 @@ def check_pypi(pkg_name: str) -> dict[str, Any]:
         result["license_allowed"] = True
         result["license_conditional"] = True
 
-    # Quarantine check: find the latest release upload_time.
+    # Quarantine check: prefer the exact pinned version when provided
+    # (OWB-S133 AC-2), else fall back to the latest release on PyPI.
     releases = data.get("releases", {})
-    latest_version = info.get("version", "")
-    version_files = releases.get(latest_version, [])
+    target_version = pinned_version if pinned_version in releases else info.get("version", "")
+    if pinned_version and pinned_version not in releases:
+        # Operator asked for a version PyPI doesn't have — block loudly.
+        result["error"] = (
+            f"Package '{pkg_name}' has no release '{pinned_version}' on PyPI. "
+            "Fix the pin or wait for publication."
+        )
+        return result
+    result["checked_version"] = target_version
+    version_files = releases.get(target_version, [])
     if version_files:
         upload_time_str = version_files[0].get("upload_time_iso_8601")
         if upload_time_str:
@@ -306,7 +498,9 @@ def main() -> int:
 
     issues: list[str] = []
 
-    for ecosystem, pkg_name in packages:
+    for spec in packages:
+        ecosystem = spec.ecosystem
+        pkg_name = spec.name
         # First-party exemption.
         if ecosystem == "python" and is_first_party(pkg_name, ecosystem):
             print(
@@ -316,7 +510,7 @@ def main() -> int:
             continue
 
         if ecosystem == "python":
-            result = check_pypi(pkg_name)
+            result = check_pypi(pkg_name, pinned_version=spec.pinned_version)
 
             if result["error"]:
                 issues.append(
