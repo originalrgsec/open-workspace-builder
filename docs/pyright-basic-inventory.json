@@ -1,0 +1,1550 @@
+{
+    "version": "1.1.408",
+    "time": "1776542280971",
+    "generalDiagnostics": [
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/auth/google.py",
+            "severity": "error",
+            "message": "Import \"pyrage\" could not be resolved",
+            "range": {
+                "start": {
+                    "line": 43,
+                    "character": 13
+                },
+                "end": {
+                    "line": 43,
+                    "character": 19
+                }
+            },
+            "rule": "reportMissingImports"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/auth/google.py",
+            "severity": "error",
+            "message": "Import \"pyrage\" could not be resolved",
+            "range": {
+                "start": {
+                    "line": 100,
+                    "character": 15
+                },
+                "end": {
+                    "line": 100,
+                    "character": 21
+                }
+            },
+            "rule": "reportMissingImports"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/auth/google.py",
+            "severity": "error",
+            "message": "Import \"pyrage\" could not be resolved",
+            "range": {
+                "start": {
+                    "line": 191,
+                    "character": 9
+                },
+                "end": {
+                    "line": 191,
+                    "character": 15
+                }
+            },
+            "rule": "reportMissingImports"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/auth/google.py",
+            "severity": "error",
+            "message": "Import \"pyrage\" could not be resolved",
+            "range": {
+                "start": {
+                    "line": 201,
+                    "character": 9
+                },
+                "end": {
+                    "line": 201,
+                    "character": 15
+                }
+            },
+            "rule": "reportMissingImports"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/auth/google.py",
+            "severity": "error",
+            "message": "Import \"pyrage\" could not be resolved",
+            "range": {
+                "start": {
+                    "line": 202,
+                    "character": 9
+                },
+                "end": {
+                    "line": 202,
+                    "character": 15
+                }
+            },
+            "rule": "reportMissingImports"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/cli.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"verdict\" for class \"object\"\n  Attribute \"verdict\" is unknown",
+            "range": {
+                "start": {
+                    "line": 334,
+                    "character": 54
+                },
+                "end": {
+                    "line": 334,
+                    "character": 61
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/cli.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"verdict\" for class \"object\"\n  Attribute \"verdict\" is unknown",
+            "range": {
+                "start": {
+                    "line": 334,
+                    "character": 80
+                },
+                "end": {
+                    "line": 334,
+                    "character": 87
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/cli.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"verdict\" for class \"object\"\n  Attribute \"verdict\" is unknown",
+            "range": {
+                "start": {
+                    "line": 421,
+                    "character": 48
+                },
+                "end": {
+                    "line": 421,
+                    "character": 55
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/cli.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"verdict\" for class \"object\"\n  Attribute \"verdict\" is unknown",
+            "range": {
+                "start": {
+                    "line": 421,
+                    "character": 68
+                },
+                "end": {
+                    "line": 421,
+                    "character": 75
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/cli.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"flags\" for class \"object\"\n  Attribute \"flags\" is unknown",
+            "range": {
+                "start": {
+                    "line": 423,
+                    "character": 27
+                },
+                "end": {
+                    "line": 423,
+                    "character": 32
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/cli.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"findings\" for class \"str\"\n  Attribute \"findings\" is unknown",
+            "range": {
+                "start": {
+                    "line": 874,
+                    "character": 24
+                },
+                "end": {
+                    "line": 874,
+                    "character": 32
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/cli.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"findings\" for class \"str\"\n  Attribute \"findings\" is unknown",
+            "range": {
+                "start": {
+                    "line": 878,
+                    "character": 20
+                },
+                "end": {
+                    "line": 878,
+                    "character": 28
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/cli.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"findings\" for class \"str\"\n  Attribute \"findings\" is unknown",
+            "range": {
+                "start": {
+                    "line": 881,
+                    "character": 14
+                },
+                "end": {
+                    "line": 881,
+                    "character": 22
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/cli.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"findings\" for class \"str\"\n  Attribute \"findings\" is unknown",
+            "range": {
+                "start": {
+                    "line": 882,
+                    "character": 42
+                },
+                "end": {
+                    "line": 882,
+                    "character": 50
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/cli.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"findings\" for class \"str\"\n  Attribute \"findings\" is unknown",
+            "range": {
+                "start": {
+                    "line": 883,
+                    "character": 24
+                },
+                "end": {
+                    "line": 883,
+                    "character": 32
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/cli.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"errors\" for class \"str\"\n  Attribute \"errors\" is unknown",
+            "range": {
+                "start": {
+                    "line": 891,
+                    "character": 30
+                },
+                "end": {
+                    "line": 891,
+                    "character": 36
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/cli.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"rules_run\" for class \"str\"\n  Attribute \"rules_run\" is unknown",
+            "range": {
+                "start": {
+                    "line": 892,
+                    "character": 28
+                },
+                "end": {
+                    "line": 892,
+                    "character": 37
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/cli.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"findings\" for class \"str\"\n  Attribute \"findings\" is unknown",
+            "range": {
+                "start": {
+                    "line": 1035,
+                    "character": 36
+                },
+                "end": {
+                    "line": 1035,
+                    "character": 44
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/cli.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"errors\" for class \"str\"\n  Attribute \"errors\" is unknown",
+            "range": {
+                "start": {
+                    "line": 1037,
+                    "character": 38
+                },
+                "end": {
+                    "line": 1037,
+                    "character": 44
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/cli.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"rules_run\" for class \"str\"\n  Attribute \"rules_run\" is unknown",
+            "range": {
+                "start": {
+                    "line": 1038,
+                    "character": 36
+                },
+                "end": {
+                    "line": 1038,
+                    "character": 45
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/engine/ecc_update.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"verdict\" for class \"object\"\n  Attribute \"verdict\" is unknown",
+            "range": {
+                "start": {
+                    "line": 316,
+                    "character": 31
+                },
+                "end": {
+                    "line": 316,
+                    "character": 38
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/engine/ecc_update.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"verdict\" for class \"object\"\n  Attribute \"verdict\" is unknown",
+            "range": {
+                "start": {
+                    "line": 318,
+                    "character": 33
+                },
+                "end": {
+                    "line": 318,
+                    "character": 40
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/engine/ecc_update.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"flags\" for class \"object\"\n  Attribute \"flags\" is unknown",
+            "range": {
+                "start": {
+                    "line": 323,
+                    "character": 45
+                },
+                "end": {
+                    "line": 323,
+                    "character": 50
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/engine/migrator.py",
+            "severity": "error",
+            "message": "Object of type \"object\" is not callable\n  Attribute \"__call__\" is unknown",
+            "range": {
+                "start": {
+                    "line": 242,
+                    "character": 27
+                },
+                "end": {
+                    "line": 242,
+                    "character": 72
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/llm/backend.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"choices\" for class \"CustomStreamWrapper\"\n  Attribute \"choices\" is unknown",
+            "range": {
+                "start": {
+                    "line": 122,
+                    "character": 35
+                },
+                "end": {
+                    "line": 122,
+                    "character": 42
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/mcp_server.py",
+            "severity": "error",
+            "message": "Variable not allowed in type expression",
+            "range": {
+                "start": {
+                    "line": 124,
+                    "character": 23
+                },
+                "end": {
+                    "line": 124,
+                    "character": 30
+                }
+            },
+            "rule": "reportInvalidTypeForm"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/mcp_server.py",
+            "severity": "error",
+            "message": "Object of type \"None\" cannot be called",
+            "range": {
+                "start": {
+                    "line": 128,
+                    "character": 10
+                },
+                "end": {
+                    "line": 128,
+                    "character": 88
+                }
+            },
+            "rule": "reportOptionalCall"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "Cannot assign to attribute \"serial_number\" for class \"_JsonSerializable\"\n  Attribute \"serial_number\" is unknown",
+            "range": {
+                "start": {
+                    "line": 78,
+                    "character": 12
+                },
+                "end": {
+                    "line": 78,
+                    "character": 25
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "Cannot assign to attribute \"serial_number\" for class \"_XmlSerializable\"\n  Attribute \"serial_number\" is unknown",
+            "range": {
+                "start": {
+                    "line": 78,
+                    "character": 12
+                },
+                "end": {
+                    "line": 78,
+                    "character": 25
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"components\" for class \"_JsonSerializable\"\n  Attribute \"components\" is unknown",
+            "range": {
+                "start": {
+                    "line": 83,
+                    "character": 12
+                },
+                "end": {
+                    "line": 83,
+                    "character": 22
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"components\" for class \"_XmlSerializable\"\n  Attribute \"components\" is unknown",
+            "range": {
+                "start": {
+                    "line": 83,
+                    "character": 12
+                },
+                "end": {
+                    "line": 83,
+                    "character": 22
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"metadata\" for class \"_JsonSerializable\"\n  Attribute \"metadata\" is unknown",
+            "range": {
+                "start": {
+                    "line": 92,
+                    "character": 11
+                },
+                "end": {
+                    "line": 92,
+                    "character": 19
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"metadata\" for class \"_XmlSerializable\"\n  Attribute \"metadata\" is unknown",
+            "range": {
+                "start": {
+                    "line": 92,
+                    "character": 11
+                },
+                "end": {
+                    "line": 92,
+                    "character": 19
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"metadata\" for class \"_JsonSerializable\"\n  Attribute \"metadata\" is unknown",
+            "range": {
+                "start": {
+                    "line": 93,
+                    "character": 12
+                },
+                "end": {
+                    "line": 93,
+                    "character": 20
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"metadata\" for class \"_XmlSerializable\"\n  Attribute \"metadata\" is unknown",
+            "range": {
+                "start": {
+                    "line": 93,
+                    "character": 12
+                },
+                "end": {
+                    "line": 93,
+                    "character": 20
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"properties\" for class \"_JsonSerializable\"\n  Attribute \"properties\" is unknown",
+            "range": {
+                "start": {
+                    "line": 93,
+                    "character": 21
+                },
+                "end": {
+                    "line": 93,
+                    "character": 31
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"properties\" for class \"_XmlSerializable\"\n  Attribute \"properties\" is unknown",
+            "range": {
+                "start": {
+                    "line": 93,
+                    "character": 21
+                },
+                "end": {
+                    "line": 93,
+                    "character": 31
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 95,
+                    "character": 16
+                },
+                "end": {
+                    "line": 95,
+                    "character": 20
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 96,
+                    "character": 16
+                },
+                "end": {
+                    "line": 96,
+                    "character": 21
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 154,
+                    "character": 17
+                },
+                "end": {
+                    "line": 154,
+                    "character": 21
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 154,
+                    "character": 43
+                },
+                "end": {
+                    "line": 154,
+                    "character": 48
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 155,
+                    "character": 17
+                },
+                "end": {
+                    "line": 155,
+                    "character": 21
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 155,
+                    "character": 34
+                },
+                "end": {
+                    "line": 155,
+                    "character": 39
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 156,
+                    "character": 17
+                },
+                "end": {
+                    "line": 156,
+                    "character": 21
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 156,
+                    "character": 36
+                },
+                "end": {
+                    "line": 156,
+                    "character": 41
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 157,
+                    "character": 17
+                },
+                "end": {
+                    "line": 157,
+                    "character": 21
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 157,
+                    "character": 42
+                },
+                "end": {
+                    "line": 157,
+                    "character": 47
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 158,
+                    "character": 17
+                },
+                "end": {
+                    "line": 158,
+                    "character": 21
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 158,
+                    "character": 43
+                },
+                "end": {
+                    "line": 158,
+                    "character": 48
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 167,
+                    "character": 35
+                },
+                "end": {
+                    "line": 167,
+                    "character": 39
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 167,
+                    "character": 63
+                },
+                "end": {
+                    "line": 167,
+                    "character": 68
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"type\"",
+            "range": {
+                "start": {
+                    "line": 172,
+                    "character": 8
+                },
+                "end": {
+                    "line": 172,
+                    "character": 12
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 173,
+                    "character": 8
+                },
+                "end": {
+                    "line": 173,
+                    "character": 12
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"version\"",
+            "range": {
+                "start": {
+                    "line": 174,
+                    "character": 8
+                },
+                "end": {
+                    "line": 174,
+                    "character": 15
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"bom_ref\"",
+            "range": {
+                "start": {
+                    "line": 175,
+                    "character": 8
+                },
+                "end": {
+                    "line": 175,
+                    "character": 15
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 175,
+                    "character": 23
+                },
+                "end": {
+                    "line": 175,
+                    "character": 28
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"hashes\"",
+            "range": {
+                "start": {
+                    "line": 176,
+                    "character": 8
+                },
+                "end": {
+                    "line": 176,
+                    "character": 14
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"alg\"",
+            "range": {
+                "start": {
+                    "line": 176,
+                    "character": 25
+                },
+                "end": {
+                    "line": 176,
+                    "character": 28
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"content\"",
+            "range": {
+                "start": {
+                    "line": 176,
+                    "character": 52
+                },
+                "end": {
+                    "line": 176,
+                    "character": 59
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"properties\"",
+            "range": {
+                "start": {
+                    "line": 177,
+                    "character": 8
+                },
+                "end": {
+                    "line": 177,
+                    "character": 18
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"licenses\"",
+            "range": {
+                "start": {
+                    "line": 178,
+                    "character": 8
+                },
+                "end": {
+                    "line": 178,
+                    "character": 16
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 187,
+                    "character": 17
+                },
+                "end": {
+                    "line": 187,
+                    "character": 21
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 187,
+                    "character": 45
+                },
+                "end": {
+                    "line": 187,
+                    "character": 50
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 188,
+                    "character": 17
+                },
+                "end": {
+                    "line": 188,
+                    "character": 21
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 188,
+                    "character": 51
+                },
+                "end": {
+                    "line": 188,
+                    "character": 56
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 191,
+                    "character": 28
+                },
+                "end": {
+                    "line": 191,
+                    "character": 32
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 191,
+                    "character": 58
+                },
+                "end": {
+                    "line": 191,
+                    "character": 63
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 193,
+                    "character": 28
+                },
+                "end": {
+                    "line": 193,
+                    "character": 32
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 193,
+                    "character": 58
+                },
+                "end": {
+                    "line": 193,
+                    "character": 63
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 195,
+                    "character": 28
+                },
+                "end": {
+                    "line": 195,
+                    "character": 32
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 195,
+                    "character": 59
+                },
+                "end": {
+                    "line": 195,
+                    "character": 64
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 197,
+                    "character": 28
+                },
+                "end": {
+                    "line": 197,
+                    "character": 32
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 197,
+                    "character": 59
+                },
+                "end": {
+                    "line": 197,
+                    "character": 64
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 199,
+                    "character": 28
+                },
+                "end": {
+                    "line": 199,
+                    "character": 32
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 199,
+                    "character": 64
+                },
+                "end": {
+                    "line": 199,
+                    "character": 69
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 201,
+                    "character": 28
+                },
+                "end": {
+                    "line": 201,
+                    "character": 32
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 201,
+                    "character": 60
+                },
+                "end": {
+                    "line": 201,
+                    "character": 65
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 217,
+                    "character": 16
+                },
+                "end": {
+                    "line": 217,
+                    "character": 20
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 218,
+                    "character": 16
+                },
+                "end": {
+                    "line": 218,
+                    "character": 21
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 224,
+                    "character": 20
+                },
+                "end": {
+                    "line": 224,
+                    "character": 24
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"value\"",
+            "range": {
+                "start": {
+                    "line": 225,
+                    "character": 20
+                },
+                "end": {
+                    "line": 225,
+                    "character": 25
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "Type \"list[DisjunctiveLicense | _JsonSerializable | _XmlSerializable]\" is not assignable to return type \"list[License] | None\"",
+            "range": {
+                "start": {
+                    "line": 240,
+                    "character": 19
+                },
+                "end": {
+                    "line": 240,
+                    "character": 57
+                }
+            },
+            "rule": "reportReturnType"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"id\"",
+            "range": {
+                "start": {
+                    "line": 240,
+                    "character": 39
+                },
+                "end": {
+                    "line": 240,
+                    "character": 41
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "Type \"list[DisjunctiveLicense | _JsonSerializable | _XmlSerializable]\" is not assignable to return type \"list[License] | None\"",
+            "range": {
+                "start": {
+                    "line": 245,
+                    "character": 19
+                },
+                "end": {
+                    "line": 245,
+                    "character": 59
+                }
+            },
+            "rule": "reportReturnType"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 245,
+                    "character": 39
+                },
+                "end": {
+                    "line": 245,
+                    "character": 43
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "Type \"list[DisjunctiveLicense | _JsonSerializable | _XmlSerializable]\" is not assignable to return type \"list[License] | None\"",
+            "range": {
+                "start": {
+                    "line": 247,
+                    "character": 15
+                },
+                "end": {
+                    "line": 247,
+                    "character": 59
+                }
+            },
+            "rule": "reportReturnType"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sbom/builder.py",
+            "severity": "error",
+            "message": "No parameter named \"name\"",
+            "range": {
+                "start": {
+                    "line": 247,
+                    "character": 35
+                },
+                "end": {
+                    "line": 247,
+                    "character": 39
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/security/gate.py",
+            "severity": "error",
+            "message": "\"check_quarantine_age\" is unknown import symbol",
+            "range": {
+                "start": {
+                    "line": 191,
+                    "character": 63
+                },
+                "end": {
+                    "line": 191,
+                    "character": 83
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sources/updater.py",
+            "severity": "error",
+            "message": "Cannot access attribute \"verdict\" for class \"object\"\n  Attribute \"verdict\" is unknown",
+            "range": {
+                "start": {
+                    "line": 134,
+                    "character": 31
+                },
+                "end": {
+                    "line": 134,
+                    "character": 38
+                }
+            },
+            "rule": "reportAttributeAccessIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/sources/updater.py",
+            "severity": "error",
+            "message": "Object of type \"object\" is not callable\n  Attribute \"__call__\" is unknown",
+            "range": {
+                "start": {
+                    "line": 152,
+                    "character": 29
+                },
+                "end": {
+                    "line": 152,
+                    "character": 93
+                }
+            },
+            "rule": "reportCallIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/tokens/forecast.py",
+            "severity": "error",
+            "message": "Argument of type \"object\" cannot be assigned to parameter \"x\" of type \"ConvertibleToFloat\" in function \"__new__\"\n  Type \"object\" is not assignable to type \"ConvertibleToFloat\"\n    \"object\" is not assignable to \"str\"\n    \"object\" is incompatible with protocol \"Buffer\"\n      \"__buffer__\" is not present\n    \"object\" is incompatible with protocol \"SupportsFloat\"\n      \"__float__\" is not present\n    \"object\" is incompatible with protocol \"SupportsIndex\"\n      \"__index__\" is not present",
+            "range": {
+                "start": {
+                    "line": 71,
+                    "character": 14
+                },
+                "end": {
+                    "line": 71,
+                    "character": 30
+                }
+            },
+            "rule": "reportArgumentType"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/tokens/forecast.py",
+            "severity": "error",
+            "message": "Argument of type \"object\" cannot be assigned to parameter \"x\" of type \"ConvertibleToInt\" in function \"__new__\"\n  Type \"object\" is not assignable to type \"ConvertibleToInt\"\n    \"object\" is not assignable to \"str\"\n    \"object\" is incompatible with protocol \"Buffer\"\n      \"__buffer__\" is not present\n    \"object\" is incompatible with protocol \"SupportsInt\"\n      \"__int__\" is not present\n    \"object\" is incompatible with protocol \"SupportsIndex\"\n      \"__index__\" is not present\n  ...",
+            "range": {
+                "start": {
+                    "line": 71,
+                    "character": 38
+                },
+                "end": {
+                    "line": 71,
+                    "character": 50
+                }
+            },
+            "rule": "reportArgumentType"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/tokens/forecast.py",
+            "severity": "error",
+            "message": "Argument of type \"object\" cannot be assigned to parameter \"x\" of type \"ConvertibleToInt\" in function \"__new__\"\n  Type \"object\" is not assignable to type \"ConvertibleToInt\"\n    \"object\" is not assignable to \"str\"\n    \"object\" is incompatible with protocol \"Buffer\"\n      \"__buffer__\" is not present\n    \"object\" is incompatible with protocol \"SupportsInt\"\n      \"__int__\" is not present\n    \"object\" is incompatible with protocol \"SupportsIndex\"\n      \"__index__\" is not present",
+            "range": {
+                "start": {
+                    "line": 71,
+                    "character": 38
+                },
+                "end": {
+                    "line": 71,
+                    "character": 50
+                }
+            },
+            "rule": "reportArgumentType"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/tokens/forecast.py",
+            "severity": "error",
+            "message": "Operator \">\" not supported for types \"object\" and \"Literal[0]\"",
+            "range": {
+                "start": {
+                    "line": 73,
+                    "character": 11
+                },
+                "end": {
+                    "line": 73,
+                    "character": 34
+                }
+            },
+            "rule": "reportOperatorIssue"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/tokens/sheets_export.py",
+            "severity": "error",
+            "message": "Argument of type \"list[str | int | float]\" cannot be assigned to parameter \"object\" of type \"list[str]\" in function \"append\"\n  \"int\" is not assignable to \"str\"\n  \"int\" is not assignable to \"str\"\n  \"int\" is not assignable to \"str\"\n  \"int\" is not assignable to \"str\"\n  \"float\" is not assignable to \"str\"",
+            "range": {
+                "start": {
+                    "line": 140,
+                    "character": 20
+                },
+                "end": {
+                    "line": 147,
+                    "character": 9
+                }
+            },
+            "rule": "reportArgumentType"
+        },
+        {
+            "file": "/Users/rgraber/projects/PersonalCode/open-workspace-builder/src/open_workspace_builder/tokens/sheets_export.py",
+            "severity": "error",
+            "message": "Argument of type \"list[str | int | float]\" cannot be assigned to parameter \"object\" of type \"list[str]\" in function \"append\"\n  \"int\" is not assignable to \"str\"\n  \"int\" is not assignable to \"str\"\n  \"int\" is not assignable to \"str\"\n  \"int\" is not assignable to \"str\"\n  \"float\" is not assignable to \"str\"",
+            "range": {
+                "start": {
+                    "line": 159,
+                    "character": 20
+                },
+                "end": {
+                    "line": 166,
+                    "character": 9
+                }
+            },
+            "rule": "reportArgumentType"
+        }
+    ],
+    "summary": {
+        "filesAnalyzed": 88,
+        "errorCount": 96,
+        "warningCount": 0,
+        "informationCount": 0,
+        "timeInSec": 3.748
+    }
+}
+

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+from open_workspace_builder._llm_json import parse_json_object
 
 if TYPE_CHECKING:
     from open_workspace_builder.llm.backend import ModelBackend
@@ -57,18 +58,7 @@ def load_weight_vectors(path: Path | None = None) -> dict[str, dict[str, float]]
 
 def _parse_classification(response_text: str) -> ClassificationResult:
     """Parse classification response from LLM JSON output."""
-    try:
-        data = json.loads(response_text)
-    except json.JSONDecodeError:
-        import re
-
-        match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", response_text, re.DOTALL)
-        if match:
-            data = json.loads(match.group(1))
-        else:
-            raise ValueError(
-                f"Could not parse classification response as JSON: {response_text[:200]}"
-            )
+    data = parse_json_object(response_text, context="classification response")
 
     skill_type = data.get("skill_type", "")
     confidence = float(data.get("confidence", 0.0))

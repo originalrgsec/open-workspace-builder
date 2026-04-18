@@ -49,17 +49,6 @@ class DriftEntry:
 
 
 @dataclass(frozen=True)
-class DriftStatus:
-    """Enumeration of drift status values."""
-
-    OK: str = "ok"
-    MODIFIED: str = "modified"
-    ADDED: str = "added"
-    DELETED: str = "deleted"
-    ERROR: str = "error"
-
-
-@dataclass(frozen=True)
 class DriftReport:
     """Result of a drift check."""
 

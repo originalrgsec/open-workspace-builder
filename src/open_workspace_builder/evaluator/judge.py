@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+
+from open_workspace_builder._llm_json import parse_json_object
 
 if TYPE_CHECKING:
     from open_workspace_builder.llm.backend import ModelBackend
@@ -78,16 +79,7 @@ def _parse_judgment(response_text: str, test_case_id: str, dimension: str) -> Ju
 
     Raises ValueError if parsing fails or scores are out of range.
     """
-    try:
-        data = json.loads(response_text)
-    except json.JSONDecodeError:
-        import re
-
-        match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", response_text, re.DOTALL)
-        if match:
-            data = json.loads(match.group(1))
-        else:
-            raise ValueError(f"Could not parse judgment response as JSON: {response_text[:200]}")
+    data = parse_json_object(response_text, context="judgment response")
 
     candidate = data.get("candidate_score")
     baseline = data.get("baseline_score")

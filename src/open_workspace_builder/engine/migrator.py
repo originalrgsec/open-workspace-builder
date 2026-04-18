@@ -46,7 +46,7 @@ def _ecc_relative_path(gap_path: str) -> str | None:
     """
     ecc_prefix = ".claude/"
     if gap_path.startswith(ecc_prefix):
-        return gap_path[len(ecc_prefix):]
+        return gap_path[len(ecc_prefix) :]
     return None
 
 
@@ -60,12 +60,13 @@ def _show_preview(ref_path: Path, actual_path: Path | None, category: str) -> st
     lines: list[str] = []
     if category == "missing":
         content = ref_path.read_text(encoding="utf-8", errors="replace")
-        preview_lines = content.splitlines()[:10]
+        all_lines = content.splitlines()
+        preview_lines = all_lines[:10]
         lines.append("  Preview (first 10 lines):")
         for line in preview_lines:
             lines.append(f"    {line}")
-        if len(content.splitlines()) > 10:
-            lines.append(f"    ... ({len(content.splitlines()) - 10} more lines)")
+        if len(all_lines) > 10:
+            lines.append(f"    ... ({len(all_lines) - 10} more lines)")
     elif category in ("outdated", "modified") and actual_path is not None:
         ref_content = ref_path.read_text(encoding="utf-8", errors="replace")
         actual_content = actual_path.read_text(encoding="utf-8", errors="replace")

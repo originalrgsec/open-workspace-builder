@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import json
 from typing import TYPE_CHECKING
 
+from open_workspace_builder._llm_json import parse_json_object
 from open_workspace_builder.security.scanner import ScanFlag
 
 if TYPE_CHECKING:
@@ -144,17 +144,7 @@ def analyze_cross_file(
 
 def _parse_response(response_text: str) -> list[ScanFlag]:
     """Parse LLM's JSON response into ScanFlag list."""
-    try:
-        data = json.loads(response_text)
-    except json.JSONDecodeError:
-        # Try to extract JSON from markdown code block.
-        import re
-
-        json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", response_text, re.DOTALL)
-        if json_match:
-            data = json.loads(json_match.group(1))
-        else:
-            raise ValueError(f"Could not parse API response as JSON: {response_text[:200]}")
+    data = parse_json_object(response_text, context="API response")
 
     flags: list[ScanFlag] = []
     for f in data.get("flags", []):

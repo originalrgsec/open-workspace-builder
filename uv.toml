@@ -22,4 +22,22 @@
 # Sprint 7 close shipped HMB-S031 (SOPS age_identity/config_file
 # kwargs), HMB-S030 (google-oauth composite backend), HMB-S032
 # (hmb rotate OAuth plugin). Only the S031 fix is consumed by OWB.
-exclude-newer = "2026-04-15"
+#
+# 2026-04-18 (OWB-S134): pin advanced from 2026-04-15 to 2026-04-18
+# during Sprint 31 kickoff. Intent was to allow himitsubako 0.8.0
+# (HMB Sprint 8 close) and 0.9.0 (HMB Sprint 9 close), both tagged
+# 2026-04-18. Verified absorb: OWB's import surface
+# (`SopsBackend`, `BitwardenBackend`, `SecretsConfig`) is not
+# touched by either release — only the removed
+# `GoogleOAuthBackend.credential_name` is a public-API diff and
+# OWB does not use the Google OAuth backend. v0.9.0 changes are
+# CLI/behavior-only (`hmb init` exit code, `rotate-key --rule`
+# flag, pyright gate). Pyright (1.1.408) used by OWB-S138 spike
+# was released before this date.
+#
+# **Mechanical pin bump deferred** — PyPI still serves himitsubako
+# 0.7.0; v0.8.0/v0.9.0 release workflows are queued at the
+# `pypi-release` env gate awaiting operator approval. OWB-S141
+# filed to bump `himitsubako>=0.7.0` → `>=0.8.0` once PyPI is
+# current (non-blocking; v0.7.0 satisfies current callers).
+exclude-newer = "2026-04-18"

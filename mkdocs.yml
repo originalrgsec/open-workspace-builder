@@ -110,6 +110,7 @@ nav:
     - Lifecycle and Agents: reference/lifecycle.md
     - License Compliance: reference/license-compliance.md
     - Glossary: reference/glossary.md
+    - Public API Changes: public-api-changes.md
     - PRD: prd.md
     - ADR: adr.md
     - SDR: sdr.md

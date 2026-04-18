@@ -333,13 +333,10 @@ def _write_config_yaml(config: Config, config_path: Path) -> None:
 
     data: dict[str, Any] = {"target": config.target}
 
-    if any(getattr(config.models, f) for f in ("classify", "generate", "judge", "security_scan")):
-        data["models"] = {
-            "classify": config.models.classify,
-            "generate": config.models.generate,
-            "judge": config.models.judge,
-            "security_scan": config.models.security_scan,
-        }
+    from open_workspace_builder.llm.backend import _VALID_OPERATIONS
+
+    if any(getattr(config.models, op) for op in _VALID_OPERATIONS):
+        data["models"] = {op: getattr(config.models, op) for op in sorted(_VALID_OPERATIONS)}
 
     data["vault"] = {
         "name": config.vault.name,

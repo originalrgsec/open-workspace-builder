@@ -13,13 +13,20 @@ class ModelBackendError(Exception):
     """Raised when the model backend cannot complete a request."""
 
 
-_VALID_OPERATIONS = frozenset({"classify", "generate", "judge", "security_scan"})
-
-_RETRYABLE_EXCEPTIONS: tuple[type[Exception], ...] = ()
+_VALID_OPERATIONS = frozenset(
+    {"classify", "generate", "judge", "security_scan", "security_scan_cross_file"}
+)
 
 
 def _load_retryable_exceptions() -> tuple[type[Exception], ...]:
-    """Load retryable exception types from litellm, if available."""
+    """Load retryable exception types from litellm, if available.
+
+    Called once per retry attempt inside ``completion()``; litellm is
+    already imported earlier in the function so the exceptions import
+    is a fast no-op. Not cached because tests mock
+    ``litellm.exceptions`` via ``sys.modules`` patches and rely on a
+    fresh import each call.
+    """
     try:
         from litellm.exceptions import (  # type: ignore[import-untyped]
             RateLimitError,
@@ -48,13 +55,23 @@ class ModelBackend:
         self._api_key = api_key
 
     def _resolve_model(self, operation: str) -> str:
-        """Resolve the model string for a given operation."""
+        """Resolve the model string for a given operation.
+
+        `security_scan_cross_file` falls back to the `security_scan`
+        model if no dedicated cross-file model is configured — both
+        layers analyse workspace content with the same model class,
+        and requiring two separate config entries would break the
+        cross-file scan silently for every user who set only
+        `security_scan`.
+        """
         if operation not in _VALID_OPERATIONS:
             raise ModelBackendError(
                 f"Unknown operation '{operation}'. "
                 f"Valid operations: {', '.join(sorted(_VALID_OPERATIONS))}"
             )
         model = getattr(self._models_config, operation, "")
+        if not model and operation == "security_scan_cross_file":
+            model = getattr(self._models_config, "security_scan", "")
         if not model:
             raise ModelBackendError(
                 f"No model configured for operation '{operation}'. "

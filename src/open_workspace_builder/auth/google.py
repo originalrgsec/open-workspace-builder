@@ -51,8 +51,7 @@ def store_google_credentials(
     key_path = Path(age_key_path).expanduser()
     if not key_path.exists():
         raise FileNotFoundError(
-            f"Age key file not found: {key_path}. "
-            f"Generate one with: age-keygen -o {key_path}"
+            f"Age key file not found: {key_path}. Generate one with: age-keygen -o {key_path}"
         )
 
     # Encrypt values using the age identity.
@@ -108,9 +107,7 @@ def run_oauth_flow(config_dir: str, age_key_path: str) -> Path:
 
     secrets_file = _secrets_path(config_dir)
     if not secrets_file.exists():
-        raise FileNotFoundError(
-            "Google credentials not found. Run `owb auth google-store` first."
-        )
+        raise FileNotFoundError("Google credentials not found. Run `owb auth google-store` first.")
 
     raw = yaml.safe_load(secrets_file.read_text(encoding="utf-8"))
     if not isinstance(raw, dict) or "google_sheets" not in raw:
@@ -164,8 +161,7 @@ def load_credentials(config_dir: str) -> Any:
     token_file = _token_path(config_dir)
     if not token_file.exists():
         raise FileNotFoundError(
-            f"Google Sheets token not found at {token_file}. "
-            "Run `owb auth google` to authenticate."
+            f"Google Sheets token not found at {token_file}. Run `owb auth google` to authenticate."
         )
 
     token_data = json.loads(token_file.read_text(encoding="utf-8"))
@@ -178,15 +174,6 @@ def load_credentials(config_dir: str) -> Any:
         scopes=token_data.get("scopes", SHEETS_SCOPES),
     )
     return creds
-
-
-def _load_age_public_key(key_path: Path) -> str:
-    """Extract the public key from an age identity file."""
-    for line in key_path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if line.startswith("# public key:"):
-            return line.split(":", 1)[1].strip()
-    raise ValueError(f"No public key found in {key_path}")
 
 
 def _load_age_private_key(key_path: Path) -> str:

@@ -1,0 +1,16 @@
+{
+  "include": ["src/open_workspace_builder"],
+  "exclude": [
+    "src/open_workspace_builder/vendor",
+    "src/open_workspace_builder/content/skills/*/scripts",
+    "**/__pycache__",
+    "**/.venv"
+  ],
+  "venvPath": ".",
+  "venv": ".venv",
+  "typeCheckingMode": "basic",
+  "reportMissingTypeStubs": "none",
+  "reportUnknownMemberType": "none",
+  "reportUnknownParameterType": "none",
+  "reportUnknownVariableType": "none"
+}

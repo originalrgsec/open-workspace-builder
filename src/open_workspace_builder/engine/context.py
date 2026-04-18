@@ -19,6 +19,10 @@ _TODO_PATTERNS = re.compile(
     r"|\(One-sentence description"
 )
 
+# Matches markdown ## and ### heading lines. Module-level compile avoids
+# re-compiling on every _extract_sections() call.
+_HEADING_RE = re.compile(r"^#{2,3}\s+")
+
 
 def _load_context_template(content_root: Path, filename: str) -> str:
     """Load a context template file from content/context/."""
@@ -36,7 +40,7 @@ def has_todo_markers(path: Path) -> bool:
 
 def _extract_sections(content: str) -> list[str]:
     """Return list of markdown heading lines (## and ### level)."""
-    return [line.strip() for line in content.splitlines() if re.match(r"^#{2,3}\s+", line)]
+    return [line.strip() for line in content.splitlines() if _HEADING_RE.match(line)]
 
 
 def _merge_sections(existing: str, template: str, missing_headings: list[str]) -> str:
@@ -109,9 +113,7 @@ def _policy_compliance_preamble(content_root: Path) -> str:
     policies_dir = content_root / "content" / "policies"
     if not policies_dir.is_dir():
         return ""
-    has_policies = any(
-        f.is_file() and f.suffix == ".md" for f in policies_dir.iterdir()
-    )
+    has_policies = any(f.is_file() and f.suffix == ".md" for f in policies_dir.iterdir())
     return _POLICY_COMPLIANCE_PREAMBLE if has_policies else ""
 
 
@@ -151,10 +153,7 @@ class ContextDeployer:
             dest = context_dir / deployed_name
 
             if dest.exists():
-                print(
-                    f"  [exists] {dest} — skipping"
-                    " (use 'owb context migrate' to reformat)"
-                )
+                print(f"  [exists] {dest} — skipping (use 'owb context migrate' to reformat)")
                 continue
 
             content = _load_context_template(self._content_root, filename)
@@ -236,9 +235,7 @@ class ContextMigrator:
 
             _show_diff(existing_content, proposed, deployed_name)
 
-            if accept_all or click.confirm(
-                f"  Apply reformatted {deployed_name}?", default=False
-            ):
+            if accept_all or click.confirm(f"  Apply reformatted {deployed_name}?", default=False):
                 existing_path.write_text(proposed, encoding="utf-8")
                 print(f"  [updated] {deployed_name}")
                 self.updated_files.append(existing_path)
