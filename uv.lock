@@ -7,7 +7,7 @@ resolution-markers = [
 ]
 
 [options]
-exclude-newer = "2026-04-16T06:00:00Z"
+exclude-newer = "2026-04-19T06:00:00Z"
 
 [[package]]
 name = "aiohappyeyeballs"
