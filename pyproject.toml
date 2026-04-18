@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "open-workspace-builder"
-version = "1.15.0"
+version = "1.16.0"
 description = "Scaffold, maintain, and secure AI coding workspaces"
 readme = "README.md"
 license = "MIT"
@@ -83,6 +83,10 @@ dev = [
     "pip-audit>=2.7.0",
     "semgrep>=1.50.0",
     "pre-commit>=3.0",
+    # pyright pin matches himitsubako DRN-077 for org-wide tooling
+    # consistency (OWB-S139, DRN-078). Budget = 96 frozen errors;
+    # enforced via scripts/pyright-gate.py.
+    "pyright>=1.1,<2.0",
 ]
 
 [project.urls]

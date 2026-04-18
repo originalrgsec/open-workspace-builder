@@ -225,3 +225,36 @@ class TestSourcesConfigLoading:
         config = load_config(config_file, cli_name="owb")
         assert len(config.sources.entries) == 2
         assert config.sources.entries["custom"].discovery_method == "custom"
+
+    def test_allowed_schemes_default_https_only(self) -> None:
+        """OWB-SEC-005 AC-1: default scheme allowlist is https only."""
+        from open_workspace_builder.config import Config
+
+        config = Config()
+        assert config.sources.allowed_schemes == ("https",)
+        assert config.sources.allowed_hosts == ()
+
+    def test_allowed_schemes_opt_in(self, tmp_path: Path) -> None:
+        """OWB-SEC-005 AC-2: sources.allowed_schemes expands the allowlist."""
+        from open_workspace_builder.config import load_config
+
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            "sources:\n"
+            "  allowed_schemes:\n"
+            "    - https\n"
+            "    - ssh\n"
+            "  allowed_hosts:\n"
+            "    - github.com\n"
+            "  ecc:\n"
+            '    repo_url: "https://github.com/example/ecc"\n'
+            '    pin: "abc"\n',
+            encoding="utf-8",
+        )
+        config = load_config(config_file, cli_name="owb")
+        assert set(config.sources.allowed_schemes) == {"https", "ssh"}
+        assert config.sources.allowed_hosts == ("github.com",)
+        assert "ecc" in config.sources.entries
+        # Reserved keys must not become source entries.
+        assert "allowed_schemes" not in config.sources.entries
+        assert "allowed_hosts" not in config.sources.entries

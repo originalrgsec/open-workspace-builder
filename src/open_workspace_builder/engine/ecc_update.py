@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+from open_workspace_builder.sources.url_validator import validate_repo_url
+
 
 _TRACKED_DIRS = ("agents", "commands", "rules")
 
@@ -70,11 +72,21 @@ def _append_jsonl(path: Path, record: dict) -> None:
 
 
 def fetch_upstream(vendor_dir: Path, target_dir: Path) -> str:
-    """Clone or fetch the upstream repo into target_dir. Returns HEAD commit hash."""
+    """Clone or fetch the upstream repo into target_dir. Returns HEAD commit hash.
+
+    OWB-SEC-005: the ``repo_url`` field in ``.upstream-meta.json`` is
+    disk-persisted state an attacker with filesystem access can rewrite,
+    so it runs through the same validator as live config. Defaults
+    apply (https only, any host) because ``fetch_upstream`` has no
+    Config reference — this is the hardening bar; if a user needs a
+    wider scheme set for ECC updates they must raise it explicitly
+    via the sources updater path.
+    """
     meta = _load_json(vendor_dir / ".upstream-meta.json")
     repo_url = meta.get("repo_url", "")
     if not repo_url:
         raise ValueError("No repo_url found in .upstream-meta.json")
+    validate_repo_url(repo_url)
 
     if (target_dir / ".git").is_dir():
         subprocess.run(
@@ -211,11 +223,7 @@ def build_update_log_entry(
         "files_rejected": [r.relative_path for r in results if r.action == "rejected"],
         "files_blocked": [r.relative_path for r in results if r.action == "blocked"],
         "files_warned": [r.relative_path for r in results if r.warnings],
-        "flag_details": {
-            r.relative_path: r.flag_details
-            for r in results
-            if r.flag_details
-        },
+        "flag_details": {r.relative_path: r.flag_details for r in results if r.flag_details},
     }
 
 
@@ -282,9 +290,7 @@ def run_update(
         for d in diffs:
             if d.category in ("new", "changed"):
                 upstream_file = upstream_dir / d.relative_path
-                verdict = scan_file_for_update(
-                    upstream_file, scanner=effective_scanner
-                )
+                verdict = scan_file_for_update(upstream_file, scanner=effective_scanner)
                 reviews.append(FileReview(diff=d, verdict=verdict))
             else:
                 reviews.append(FileReview(diff=d, verdict=None))
@@ -320,8 +326,7 @@ def run_update(
                         is_flagged = True
                     if hasattr(verdict, "flags"):
                         scan_details = [
-                            f"[{f.severity}] {f.category}: {f.description}"
-                            for f in verdict.flags
+                            f"[{f.severity}] {f.category}: {f.description}" for f in verdict.flags
                         ]
 
             if is_malicious:

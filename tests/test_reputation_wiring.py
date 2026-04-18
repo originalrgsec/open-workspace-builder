@@ -36,8 +36,12 @@ def source_config() -> SourceConfig:
 
 
 @pytest.fixture
-def mock_config() -> MagicMock:
-    return MagicMock()
+def mock_config():
+    """Real Config with defaults; updater needs `sources.allowed_schemes`
+    for OWB-SEC-005 URL validation, so a bare MagicMock no longer works."""
+    from open_workspace_builder.config import Config
+
+    return Config()
 
 
 @pytest.fixture

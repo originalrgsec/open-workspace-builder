@@ -20,12 +20,14 @@ from open_workspace_builder.engine.ecc_update import (
     apply_accepted_file,
     build_update_log_entry,
     diff_trees,
+    fetch_upstream,
     get_status,
     run_update,
     scan_file_for_update,
     update_upstream_meta,
 )
 from open_workspace_builder.security.scanner import ScanFlag, ScanVerdict
+from open_workspace_builder.sources.url_validator import UrlValidationError
 
 
 # ---------------------------------------------------------------------------
@@ -175,6 +177,39 @@ def flagged_scanner() -> MagicMock:
 # ---------------------------------------------------------------------------
 
 
+class TestFetchUpstreamUrlValidation:
+    """OWB-SEC-005 AC-6: `.upstream-meta.json` repo_url shares the
+    URL validation used by the live sources pipeline. An attacker
+    who can rewrite the metadata file must not be able to bypass
+    the default scheme allowlist.
+    """
+
+    def _write_meta(self, vendor_dir: Path, repo_url: str) -> None:
+        vendor_dir.mkdir(parents=True, exist_ok=True)
+        (vendor_dir / ".upstream-meta.json").write_text(
+            json.dumps({"repo_url": repo_url}),
+            encoding="utf-8",
+        )
+
+    def test_file_scheme_rejected(self, tmp_path: Path) -> None:
+        vendor_dir = tmp_path / "vendor"
+        self._write_meta(vendor_dir, "file:///etc/passwd")
+        with pytest.raises(UrlValidationError, match="scheme"):
+            fetch_upstream(vendor_dir, tmp_path / "target")
+
+    def test_ssh_scheme_rejected_by_default(self, tmp_path: Path) -> None:
+        vendor_dir = tmp_path / "vendor"
+        self._write_meta(vendor_dir, "ssh://attacker.internal/repo")
+        with pytest.raises(UrlValidationError, match="scheme"):
+            fetch_upstream(vendor_dir, tmp_path / "target")
+
+    def test_argument_injection_rejected(self, tmp_path: Path) -> None:
+        vendor_dir = tmp_path / "vendor"
+        self._write_meta(vendor_dir, "--upload-pack=evil")
+        with pytest.raises(UrlValidationError):
+            fetch_upstream(vendor_dir, tmp_path / "target")
+
+
 class TestHelpers:
     def test_sha256(self, tmp_path: Path) -> None:
         f = tmp_path / "test.txt"
@@ -268,9 +303,7 @@ class TestSecurityScan:
         )
         assert verdict.verdict == "clean"
 
-    def test_malicious_file_blocked(
-        self, upstream_dir: Path, mixed_scanner: MagicMock
-    ) -> None:
+    def test_malicious_file_blocked(self, upstream_dir: Path, mixed_scanner: MagicMock) -> None:
         verdict = scan_file_for_update(
             upstream_dir / "agents" / "malicious-agent.md",
             scanner=mixed_scanner,
@@ -290,36 +323,24 @@ class TestSecurityScan:
 
 
 class TestAcceptFlow:
-    def test_accepted_file_copies(
-        self, upstream_dir: Path, vendor_dir: Path
-    ) -> None:
+    def test_accepted_file_copies(self, upstream_dir: Path, vendor_dir: Path) -> None:
         hashes: dict[str, str] = {}
-        new_hashes = apply_accepted_file(
-            upstream_dir, vendor_dir, "agents/new-agent.md", hashes
-        )
+        new_hashes = apply_accepted_file(upstream_dir, vendor_dir, "agents/new-agent.md", hashes)
         dst = vendor_dir / "agents" / "new-agent.md"
         assert dst.exists()
         assert "agents/new-agent.md" in new_hashes
         assert len(new_hashes["agents/new-agent.md"]) == 64
 
-    def test_accept_preserves_existing_hashes(
-        self, upstream_dir: Path, vendor_dir: Path
-    ) -> None:
+    def test_accept_preserves_existing_hashes(self, upstream_dir: Path, vendor_dir: Path) -> None:
         hashes = {"agents/architect.md": "oldhash"}
-        new_hashes = apply_accepted_file(
-            upstream_dir, vendor_dir, "agents/new-agent.md", hashes
-        )
+        new_hashes = apply_accepted_file(upstream_dir, vendor_dir, "agents/new-agent.md", hashes)
         # Original key preserved (immutable update)
         assert new_hashes["agents/architect.md"] == "oldhash"
         assert "agents/new-agent.md" in new_hashes
 
-    def test_accept_overwrites_changed(
-        self, upstream_dir: Path, vendor_dir: Path
-    ) -> None:
+    def test_accept_overwrites_changed(self, upstream_dir: Path, vendor_dir: Path) -> None:
         old_content = (vendor_dir / "agents" / "planner.md").read_text()
-        apply_accepted_file(
-            upstream_dir, vendor_dir, "agents/planner.md", {}
-        )
+        apply_accepted_file(upstream_dir, vendor_dir, "agents/planner.md", {})
         new_content = (vendor_dir / "agents" / "planner.md").read_text()
         assert new_content != old_content
         assert "multi-phase" in new_content
@@ -783,9 +804,7 @@ class TestTrustedSourceExemption:
             results = run_update(
                 vendor_dir,
                 accept_all=True,
-                trusted_upstream_urls=(
-                    "https://github.com/affaan-m/everything-claude-code",
-                ),
+                trusted_upstream_urls=("https://github.com/affaan-m/everything-claude-code",),
             )
 
         blocked = [r for r in results if r.action == "blocked"]
@@ -846,9 +865,7 @@ class TestTrustedSourceExemption:
             results = run_update(
                 vendor_dir,
                 accept_all=True,
-                trusted_upstream_urls=(
-                    "https://github.com/affaan-m/everything-claude-code",
-                ),
+                trusted_upstream_urls=("https://github.com/affaan-m/everything-claude-code",),
             )
 
         by_path = {r.relative_path: r for r in results}
@@ -882,9 +899,7 @@ class TestTrustedSourceExemption:
                 vendor_dir,
                 accept_all=True,
                 scanner=flagged_scanner,  # explicit scanner — should be used
-                trusted_upstream_urls=(
-                    "https://github.com/affaan-m/everything-claude-code",
-                ),
+                trusted_upstream_urls=("https://github.com/affaan-m/everything-claude-code",),
             )
 
         blocked = [r for r in results if r.action == "blocked"]

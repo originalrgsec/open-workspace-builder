@@ -14,6 +14,15 @@ if TYPE_CHECKING:
 
 _DEFAULT_PATTERNS_PATH = Path(__file__).parent / "data" / "patterns.yaml"
 
+# OWB-SEC-006: ReDoS defenses. Both caps are ceilings, not targets:
+# normal skill / agent / command content is well under both limits.
+# Files or lines over the cap emit a `scan_limit` warning flag rather
+# than feeding attacker-controlled content into potentially pathological
+# regex patterns. The caps are sized to accept every file currently in
+# content/skills/ and vendor/ecc/ with a comfortable margin.
+MAX_FILE_BYTES: int = 1024 * 1024  # 1 MiB
+MAX_LINE_CHARS: int = 16 * 1024  # 16 KiB
+
 
 @dataclass(frozen=True)
 class PatternRule:
@@ -98,8 +107,43 @@ def load_patterns(
 
 
 def check_patterns(path: Path, patterns: list[PatternRule]) -> list[ScanFlag]:
-    """Match file content line-by-line against all patterns, return flags."""
+    """Match file content line-by-line against all patterns, return flags.
+
+    OWB-SEC-006: two ReDoS defenses apply before any regex runs.
+
+    1. ``MAX_FILE_BYTES`` — files larger than the cap short-circuit
+       to a ``scan_limit`` warning. This defuses whole-file
+       catastrophic-backtracking attacks regardless of pattern
+       quality.
+    2. ``MAX_LINE_CHARS`` — any individual line longer than the cap
+       is replaced in-flight by a ``scan_limit`` warning. Keeps
+       single-giant-line attacks (which bypass the line-by-line
+       cadence) bounded.
+
+    Both shapes produce a flag rather than silent truncation so the
+    operator knows the scanner did not see full content.
+    """
     flags: list[ScanFlag] = []
+    try:
+        size = path.stat().st_size
+    except OSError:
+        return flags
+
+    if size > MAX_FILE_BYTES:
+        flags.append(
+            ScanFlag(
+                category="scan_limit",
+                severity="warning",
+                evidence=f"file size {size} bytes exceeds cap {MAX_FILE_BYTES}",
+                description=(
+                    "File size exceeds scanner cap; pattern layer skipped "
+                    "to prevent ReDoS. Split the file or lower content size."
+                ),
+                layer=2,
+            )
+        )
+        return flags
+
     try:
         content = path.read_text(encoding="utf-8", errors="replace")
     except OSError:
@@ -114,6 +158,24 @@ def check_patterns(path: Path, patterns: list[PatternRule]) -> list[ScanFlag]:
             continue  # Skip invalid patterns.
 
     for line_num, line in enumerate(lines, start=1):
+        if len(line) > MAX_LINE_CHARS:
+            flags.append(
+                ScanFlag(
+                    category="scan_limit",
+                    severity="warning",
+                    evidence=(
+                        f"Line {line_num}: length {len(line)} chars exceeds cap "
+                        f"{MAX_LINE_CHARS}; pattern match skipped"
+                    ),
+                    description=(
+                        "Line length exceeds scanner cap; pattern match skipped "
+                        "to prevent ReDoS catastrophic backtracking."
+                    ),
+                    line_number=line_num,
+                    layer=2,
+                )
+            )
+            continue
         for rule, regex in compiled:
             match = regex.search(line)
             if match:
