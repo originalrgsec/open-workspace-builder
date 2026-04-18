@@ -170,9 +170,19 @@ class SourceEntryConfig:
 
 @dataclass(frozen=True)
 class SourcesConfig:
-    """Mapping of source names to their configurations."""
+    """Mapping of source names to their configurations.
+
+    OWB-SEC-005 URL validation (``allowed_schemes`` / ``allowed_hosts``)
+    applies uniformly across all entries. Default scheme allowlist is
+    ``("https",)`` — ``sources/url_validator.validate_repo_url`` rejects
+    ``file://``, ``ssh://``, ``git://``, and other dangerous schemes
+    unless a user explicitly opts in. Empty host allowlist means any
+    host is accepted.
+    """
 
     entries: dict[str, SourceEntryConfig] = field(default_factory=dict)
+    allowed_schemes: tuple[str, ...] = ("https",)
+    allowed_hosts: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -409,12 +419,35 @@ def _build_config_from_dict(defaults: Config, raw: dict[str, Any]) -> Config:
     )
 
 
+_SOURCES_RESERVED_KEYS = frozenset({"allowed_schemes", "allowed_hosts"})
+
+
 def _build_sources_config(raw_sources: dict[str, Any]) -> SourcesConfig:
-    """Build SourcesConfig from raw YAML dict of source entries."""
+    """Build SourcesConfig from raw YAML dict of source entries.
+
+    Reserved top-level keys (``allowed_schemes``, ``allowed_hosts``)
+    set the OWB-SEC-005 URL validation allowlists; every other key is
+    a named source entry. Reserved keys accept lists or tuples of
+    strings; malformed values fall back to the SourcesConfig defaults.
+    """
     entries: dict[str, SourceEntryConfig] = {}
+    allowed_schemes: tuple[str, ...] = ("https",)
+    allowed_hosts: tuple[str, ...] = ()
     for name, entry_raw in raw_sources.items():
+        if name in _SOURCES_RESERVED_KEYS:
+            if isinstance(entry_raw, (list, tuple)):
+                values = tuple(str(v) for v in entry_raw)
+                if name == "allowed_schemes":
+                    allowed_schemes = values
+                elif name == "allowed_hosts":
+                    allowed_hosts = values
+            continue
         if not isinstance(entry_raw, dict):
             continue
         defaults = SourceEntryConfig()
         entries[name] = _merge_dataclass(SourceEntryConfig, defaults, entry_raw)
-    return SourcesConfig(entries=entries)
+    return SourcesConfig(
+        entries=entries,
+        allowed_schemes=allowed_schemes,
+        allowed_hosts=allowed_hosts,
+    )

@@ -120,6 +120,51 @@ secrets:
 
 If a configured path points at a file that does not exist, OWB fails loudly at backend construction rather than silently falling back to the default — misconfiguration is surfaced immediately.
 
+## Sources Configuration
+
+The `sources:` section maps upstream content sources (ECC forks, custom
+registries) to their `repo_url` / `pin` / discovery settings. Two
+reserved keys control OWB-SEC-005 URL validation applied to every
+clone:
+
+| Reserved key | Default | Purpose |
+|---|---|---|
+| `allowed_schemes` | `[https]` | URL schemes permitted for `git clone`. Rejects `file://`, `ssh://`, `git://`, `http://`, and other dangerous schemes. |
+| `allowed_hosts` | `[]` (any) | Optional hostname allowlist. Empty means any host is accepted; non-empty restricts clones to the listed hosts (case-insensitive, trailing-dot normalised). |
+
+Validation runs at every call site that dispatches `git clone` — both
+the multi-source updater (`owb sources update`) and the ECC upstream
+sync path (`owb ecc update`). An attacker with write access to
+`vendor/ecc/.upstream-meta.json` cannot bypass the default scheme
+allowlist by setting `repo_url` to `file:///etc/passwd` or
+`--upload-pack=evil`; the validator rejects the metadata load before
+the subprocess fires.
+
+Example — lock down to GitHub over https:
+
+```yaml
+sources:
+  allowed_schemes:
+    - https
+  allowed_hosts:
+    - github.com
+  ecc:
+    repo_url: https://github.com/originalrgsec/everything-claude-code
+    pin: v1.0.0
+```
+
+Example — opt in to `ssh://` for a private mirror:
+
+```yaml
+sources:
+  allowed_schemes:
+    - https
+    - ssh
+  internal:
+    repo_url: ssh://git@internal.example.com/content
+    pin: main
+```
+
 ## Optional Dependency Groups
 
 | Extra | Provides | Install |

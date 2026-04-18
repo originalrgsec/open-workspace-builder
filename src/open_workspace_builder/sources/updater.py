@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from open_workspace_builder.sources.url_validator import validate_repo_url
+
 if TYPE_CHECKING:
     from open_workspace_builder.config import Config
     from open_workspace_builder.security.reputation import ReputationLedger
@@ -88,6 +90,16 @@ class SourceUpdater:
             )
 
         source_config = self._discovery.get_config(source_name)
+
+        # OWB-SEC-005: validate repo_url against the project-wide scheme
+        # and host allowlists before dispatching to git. Raises
+        # UrlValidationError (ValueError) on any violation; bubbles up
+        # to the caller as a hard fail — do not silently fall back.
+        validate_repo_url(
+            source_config.repo_url,
+            allowed_schemes=frozenset(self._config.sources.allowed_schemes),
+            allowed_hosts=self._config.sources.allowed_hosts,
+        )
 
         with tempfile.TemporaryDirectory() as tmp:
             repo_dir = Path(tmp) / "repo"

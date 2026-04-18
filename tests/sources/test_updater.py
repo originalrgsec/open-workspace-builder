@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -16,6 +17,9 @@ from open_workspace_builder.sources.audit import (
 from open_workspace_builder.sources.discovery import DiscoveredFile, SourceConfig, SourceDiscovery
 from open_workspace_builder.sources.updater import UpdateSummary, SourceUpdater
 
+if TYPE_CHECKING:
+    from open_workspace_builder.config import Config
+
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -23,8 +27,12 @@ from open_workspace_builder.sources.updater import UpdateSummary, SourceUpdater
 
 
 @pytest.fixture
-def mock_config() -> MagicMock:
-    return MagicMock()
+def mock_config() -> "Config":
+    """Real Config with defaults; updater needs `sources.allowed_schemes`
+    for OWB-SEC-005 URL validation, so a bare MagicMock no longer works."""
+    from open_workspace_builder.config import Config
+
+    return Config()
 
 
 @pytest.fixture
@@ -177,7 +185,7 @@ class TestSourceUpdater:
     def test_non_interactive_accept_all(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         clean_scanner: MagicMock,
         mock_discovery: MagicMock,
         pass_auditor: MagicMock,
@@ -196,7 +204,7 @@ class TestSourceUpdater:
     def test_block_audit_halts(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         clean_scanner: MagicMock,
         mock_discovery: MagicMock,
         block_auditor: MagicMock,
@@ -211,7 +219,7 @@ class TestSourceUpdater:
     def test_warn_excludes_files(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         clean_scanner: MagicMock,
         mock_discovery: MagicMock,
         warn_auditor: MagicMock,
@@ -230,7 +238,7 @@ class TestSourceUpdater:
     def test_flagged_files_blocked(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         flagging_scanner: MagicMock,
         mock_discovery: MagicMock,
         pass_auditor: MagicMock,
@@ -247,7 +255,7 @@ class TestSourceUpdater:
     def test_interactive_reject(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         clean_scanner: MagicMock,
         mock_discovery: MagicMock,
         pass_auditor: MagicMock,
@@ -261,7 +269,7 @@ class TestSourceUpdater:
     def test_interactive_quit(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         clean_scanner: MagicMock,
         mock_discovery: MagicMock,
         pass_auditor: MagicMock,
@@ -281,7 +289,7 @@ class TestSourceUpdater:
     def test_interactive_accept(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         clean_scanner: MagicMock,
         mock_discovery: MagicMock,
         pass_auditor: MagicMock,
@@ -299,7 +307,7 @@ class TestSourceUpdater:
     def test_dry_run_no_files_written(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         clean_scanner: MagicMock,
         mock_discovery: MagicMock,
         pass_auditor: MagicMock,
@@ -316,7 +324,7 @@ class TestSourceUpdater:
     def test_files_copied_to_vendor(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         clean_scanner: MagicMock,
         mock_discovery: MagicMock,
         pass_auditor: MagicMock,
@@ -333,7 +341,7 @@ class TestSourceUpdater:
     def test_update_log_written(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         clean_scanner: MagicMock,
         mock_discovery: MagicMock,
         pass_auditor: MagicMock,
@@ -353,7 +361,7 @@ class TestSourceUpdater:
     def test_source_name_in_summary(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         clean_scanner: MagicMock,
         mock_discovery: MagicMock,
         pass_auditor: MagicMock,
@@ -366,7 +374,7 @@ class TestSourceUpdater:
     def test_scanner_called_per_file(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         clean_scanner: MagicMock,
         mock_discovery: MagicMock,
         pass_auditor: MagicMock,
@@ -379,7 +387,7 @@ class TestSourceUpdater:
     def test_auditor_called(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         clean_scanner: MagicMock,
         mock_discovery: MagicMock,
         pass_auditor: MagicMock,
@@ -392,7 +400,7 @@ class TestSourceUpdater:
     def test_block_no_log_written(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         clean_scanner: MagicMock,
         mock_discovery: MagicMock,
         block_auditor: MagicMock,
@@ -409,7 +417,7 @@ class TestSourceUpdater:
     def test_mixed_accept_reject(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         clean_scanner: MagicMock,
         mock_discovery: MagicMock,
         pass_auditor: MagicMock,
@@ -435,7 +443,7 @@ class TestSourceUpdater:
     def test_warn_and_flagged_combined(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         flagging_scanner: MagicMock,
         mock_discovery: MagicMock,
         warn_auditor: MagicMock,
@@ -454,7 +462,7 @@ class TestSourceUpdater:
     def test_empty_discovery(
         self,
         mock_clone: MagicMock,
-        mock_config: MagicMock,
+        mock_config: "Config",
         clean_scanner: MagicMock,
         pass_auditor: MagicMock,
         source_config: SourceConfig,
