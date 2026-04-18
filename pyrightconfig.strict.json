@@ -1,0 +1,11 @@
+{
+  "include": ["src/open_workspace_builder"],
+  "exclude": [
+    "src/open_workspace_builder/vendor",
+    "**/__pycache__",
+    "**/.venv"
+  ],
+  "venvPath": ".",
+  "venv": ".venv",
+  "strict": ["src/open_workspace_builder/**/*.py"]
+}
