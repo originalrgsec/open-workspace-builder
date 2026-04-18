@@ -5,6 +5,112 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.0] - 2026-04-18
+
+Sprint 31 — **Code Quality Scrub (post-himitsubako absorb)**. Ran the
+four-tool scrub (`/simplify`, `/code-review`, `/refactor-clean`,
+pyright spike) that himitsubako Sprint 8 established as the reference.
+Absorbed himitsubako v0.8.0 + v0.9.0 public API (verified no-op for
+OWB's import surface) and the HMB-S038 scrub-skills SDLC policy. No
+user-visible feature work; this release is quality investment only.
+
+### Added
+
+- `open_workspace_builder.config.ModelsConfig.security_scan_cross_file`
+  (field, default `""`): optional dedicated model string for the
+  semantic scanner's cross-file correlation layer. Falls back to the
+  `security_scan` model if unset (OWB-S136 HIGH-1 fix).
+- `open_workspace_builder._llm_json` (internal module): shared JSON
+  parsing helper (`parse_json_object`, `parse_json_array`) with
+  markdown-fence fallback. Consolidates a pattern previously
+  duplicated across five modules (OWB-S135).
+- `docs/public-api-changes.md`: canonical record of public-API
+  changes per release, following the himitsubako v0.8.0 format.
+  Downstream consumers read this file to absorb breaking changes
+  (OWB-S137).
+- `pyrightconfig.json` and `pyrightconfig.strict.json`: basic-mode
+  config per DRN-073 plus a strict-mode config used only for the
+  OWB-S138 spike comparison. Basic-mode error budget at v1.15.0 =
+  96; Sprint 32 (OWB-S139) will install the pre-commit hook to
+  freeze that budget (DRN-078).
+
+### Fixed
+
+- **Security — cross-file scan layer silently disabled.**
+  `security.semantic.analyze_cross_file` dispatches through
+  `ModelBackend.completion(operation="security_scan_cross_file")`,
+  but that operation was missing from `_VALID_OPERATIONS`. Every
+  cross-file scan raised `ModelBackendError("Unknown operation...")`
+  at runtime, silently disabling the split-chain injection
+  detection layer. Added the operation to `_VALID_OPERATIONS`,
+  added the matching `ModelsConfig` field with a `security_scan`
+  fallback (CWE-392, OWB-S136 HIGH-1).
+- **Security — ReDoS hardening in LLM JSON parsers.** The
+  markdown-fence regex applied to LLM responses used lazy `.*?`
+  with `re.DOTALL` on attacker-influenceable input (scanner paths
+  echo user-provided workspace content back through the model).
+  Added a 128 KiB input cap to bound regex backtracking. Same cap
+  applied to the bracket fallback in
+  `evaluator.generator._parse_test_cases`. Legitimate LLM
+  responses are well under the bound; pathological inputs fail
+  fast with a clean `ValueError` (CWE-1333, OWB-S136 HIGH-3).
+
+### Removed (internal only — no public-API impact)
+
+- `auth/google.py`: `_load_age_public_key` (private, zero callers).
+- `metrics/baseline.py`: `_is_test_path` (private, zero callers).
+- `security/trivy.py`: `SAFE_COMMIT_SHA` module constant (unused).
+- `security/drift.py`: `DriftStatus` dataclass (drift logic uses
+  string literals directly).
+- `security/quarantine.py`: `CveAuditFinding` dataclass,
+  `parse_pip_audit_json`, `collect_cve_exemptions` (CVE exemption
+  flow moved to the dependency-gate hook in Sprint 29).
+
+### Changed (behaviour, no API impact)
+
+- LLM JSON parse error messages are now consistent across
+  classifier, judge, org_layer, scorer, and semantic-scan paths
+  (OWB-S135).
+- `ManagerImpl._resolve_weight_vector` default weight-vector keys
+  are now deterministic (sorted over `REQUIRED_DIMENSIONS`, which
+  is a `frozenset`). No change in weight values (OWB-S135).
+- `engine/context.py`: the markdown heading regex is now compiled
+  once at module level rather than per-line (OWB-S135).
+- `engine/migrator.py:_show_preview`: single `splitlines()` call
+  instead of three on the same content (OWB-S135).
+- Dependency pin: `exclude-newer` in `uv.toml` advanced from
+  2026-04-15 to 2026-04-18 to allow pyright 1.1.408 (installed
+  only in dev). The `himitsubako>=0.7.0` pyproject pin is unchanged
+  this release; PyPI still serves v0.7.0 (v0.8.0/v0.9.0 queued at
+  the release env gate). Pin bump tracked as OWB-S141 (OWB-S134).
+
+### Security
+
+- OWB-S136 HIGH-1 (`security_scan_cross_file` dispatch fix, CWE-392)
+  shipped.
+- OWB-S136 HIGH-3 (LLM JSON ReDoS caps, CWE-1333) shipped.
+- OWB-SEC-005 filed (P1): SSRF hardening in
+  `sources/updater.py` — validate `repo_url` scheme before git
+  clone (CWE-918/CWE-78). Not shipped in this release.
+- OWB-SEC-006 filed (P2): broader scanner pattern ReDoS audit
+  across the full pattern registry with per-pattern timeouts.
+  Not shipped in this release.
+- OWB-S142 filed (P2): dependency gate fail-closed on pip-audit /
+  guarddog errors. Not shipped in this release.
+- OWB-S143 filed (P3): cap HTTP response size in
+  `_fetch_pypi_json` and `suppression_monitor`. Not shipped in
+  this release.
+
+### Quality gates
+
+- 1921 tests passing, 1 skipped (up from 1907 / 1 at v1.14.1; +14
+  new `_llm_json` unit tests).
+- Ruff check, ruff format, mypy, pytest, gitleaks, trivy, semgrep
+  all green.
+- Pyright basic: 96 errors recorded
+  (`docs/pyright-basic-inventory.json`); gate install deferred to
+  Sprint 32 (OWB-S139 budget freeze).
+
 ## [1.14.1] - 2026-04-15
 
 ### Fixed
