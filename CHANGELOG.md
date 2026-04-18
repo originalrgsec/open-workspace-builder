@@ -5,6 +5,73 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.16.0] - 2026-04-18
+
+Sprint 32 — **Security Follow-Through & Hook Install**. Closes both
+HIGH security findings spawned by Sprint 31's `/code-review` pass
+(OWB-SEC-005 SSRF in sources updater, OWB-SEC-006 scanner pattern
+ReDoS) and installs the pyright pre-commit + CI gate authorized by
+DRN-078 (OWB-S139). Scope deliberately split from the original 10-pt
+proposal — remainder lands in Sprint 33.
+
+### Security
+
+- **OWB-SEC-005** (HIGH, CWE-918/78/20): `sources/updater.
+  _clone_or_fetch` and `engine/ecc_update.fetch_upstream` now validate
+  `repo_url` before dispatching to `git clone`. New module
+  `sources/url_validator` enforces a scheme allowlist (default
+  `{https}`), optional hostname allowlist, rejection of control
+  characters and leading `-` (CVE-2017-1000117 class). Config adds
+  `sources.allowed_schemes` and `sources.allowed_hosts` reserved keys
+  (backwards-compatible defaults).
+- **OWB-SEC-006** (HIGH, CWE-1333): `security/patterns.check_patterns`
+  enforces `MAX_FILE_BYTES = 1 MiB` and `MAX_LINE_CHARS = 16 KiB`
+  caps. Content over either cap produces a `scan_limit` warning flag
+  rather than feeding attacker-controlled input into regex. Audit
+  shipped as `docs/scanner-redos-audit.md`: 58 patterns classified
+  (0 exponential, 9 quadratic, 49 linear); all quadratic patterns
+  bounded by the per-line cap — no rewrites needed.
+
+### Added
+
+- **Pyright gate** (OWB-S139): `scripts/pyright-gate.py` runs
+  `uv run pyright`, parses the summary line, and fails the hook when
+  observed errors exceed the DRN-078 frozen budget (96). Same script
+  runs locally via `.pre-commit-config.yaml` and in CI via
+  `.github/workflows/ci.yml` so environments cannot drift. Budget
+  raise requires a new DRN and explicit script edit.
+- `pyright>=1.1,<2.0` pinned in `[dev]` extras, matching himitsubako
+  DRN-077 for org-wide tooling consistency.
+- `open_workspace_builder.sources.url_validator` module exposing
+  `UrlValidationError` and `validate_repo_url`.
+- `SourcesConfig.allowed_schemes` (default `("https",)`) and
+  `SourcesConfig.allowed_hosts` (default `()`) dataclass fields.
+- `open_workspace_builder.security.patterns.MAX_FILE_BYTES` and
+  `MAX_LINE_CHARS` module-level constants for scanner caps.
+- `docs/scanner-redos-audit.md` — pattern-registry ReDoS audit.
+- `docs/concepts/configuration.md` — new "Sources Configuration"
+  section for `allowed_schemes` / `allowed_hosts`.
+- `CONTRIBUTING.md` — new "Quality Gates" section naming all
+  enforced gates and `uv run pre-commit install` onboarding step.
+
+### Changed
+
+- `check_patterns` now produces `scan_limit` warning flags when a
+  file exceeds `MAX_FILE_BYTES` or a line exceeds `MAX_LINE_CHARS`.
+  Downstream verdict logic treats these as warnings (flagged, not
+  malicious). Callers asserting zero flags on oversized inputs will
+  now see one warning flag per offending line; typical content is
+  unaffected (caps are 10x normal size).
+- CI runs `uv sync --all-extras --dev` so pyright installs in the
+  CI venv.
+
+### Deferred
+
+- **OWB-S141** — himitsubako pin bump. Blocked on PyPI publish;
+  opportunistic.
+- **OWB-S142, S143, S144** — Sprint 33 "Hook Hardening & SBOM
+  Refactor".
+
 ## [1.15.0] - 2026-04-18
 
 Sprint 31 — **Code Quality Scrub (post-himitsubako absorb)**. Ran the
