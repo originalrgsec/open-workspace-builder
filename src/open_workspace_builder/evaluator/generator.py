@@ -9,7 +9,13 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
+from open_workspace_builder._llm_json import parse_json_array
 from open_workspace_builder.evaluator.classifier import ClassificationResult
+
+# Bracket-fallback input cap: see note in _llm_json._MAX_FENCE_INPUT.
+# Same rationale: bounds regex backtracking cost when LLM responses
+# contain unterminated or pathological array-like content.
+_MAX_BRACKET_INPUT = 131_072
 
 if TYPE_CHECKING:
     from open_workspace_builder.llm.backend import ModelBackend
@@ -181,25 +187,31 @@ class TestSuiteGenerator:
 def _parse_test_cases(response: str) -> list[TestCase]:
     """Parse model response into list of TestCase objects.
 
-    Handles raw JSON arrays and JSON wrapped in code fences.
+    Handles raw JSON arrays and JSON wrapped in code fences via the
+    shared `_llm_json.parse_json_array` helper. Falls back to a
+    length-capped bracket-scan for LLM responses that embed an array
+    inside surrounding prose without a fence.
+
     Raises ValueError if the response cannot be parsed.
     """
     text = response.strip()
-    parsed = _try_parse_json_array(text)
+    try:
+        parsed = parse_json_array(text, context="test cases response")
+    except ValueError:
+        parsed = None
     if parsed is not None:
-        return _convert_to_test_cases(parsed)
+        # Parsed successfully via helper; parse_json_array already
+        # narrowed to list at runtime.
+        return _convert_to_test_cases([item for item in parsed if isinstance(item, dict)])
 
-    fence_match = re.search(r"```(?:json)?\s*(\[.*?\])\s*```", text, re.DOTALL)
-    if fence_match:
-        parsed = _try_parse_json_array(fence_match.group(1))
-        if parsed is not None:
-            return _convert_to_test_cases(parsed)
-
-    bracket_match = re.search(r"\[.*\]", text, re.DOTALL)
+    # Bracket fallback for prose-wrapped arrays. Cap the input before
+    # regex to bound backtracking on pathological payloads.
+    capped = text[:_MAX_BRACKET_INPUT]
+    bracket_match = re.search(r"\[.*\]", capped, re.DOTALL)
     if bracket_match:
-        parsed = _try_parse_json_array(bracket_match.group(0))
-        if parsed is not None:
-            return _convert_to_test_cases(parsed)
+        maybe = _try_parse_json_array(bracket_match.group(0))
+        if maybe is not None:
+            return _convert_to_test_cases(maybe)
 
     raise ValueError(f"Could not parse test cases from response: {text[:200]}")
 

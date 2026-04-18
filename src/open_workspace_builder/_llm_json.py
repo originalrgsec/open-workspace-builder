@@ -17,8 +17,24 @@ import json
 import re
 from typing import Any
 
+# Hard cap on input size for fence extraction. LLM responses in OWB are
+# bounded by max_tokens (default 1024, capped at ~4096), but the inputs
+# to those LLMs include workspace content that may be attacker-
+# controlled (security_scan, security_scan_cross_file). A malformed
+# fenced block with no closing marker forces the lazy `.*?` into O(n)
+# backtracking per attempt. Capping at 128 KB is well above the
+# legitimate LLM-output size and bounds the worst case. See OWB-SEC-006.
+_MAX_FENCE_INPUT = 131_072
+
 _FENCE_OBJECT_RE = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
 _FENCE_ARRAY_RE = re.compile(r"```(?:json)?\s*(\[.*?\])\s*```", re.DOTALL)
+
+
+def _capped(response_text: str) -> str:
+    """Cap fence-search input to bound regex backtracking cost."""
+    if len(response_text) > _MAX_FENCE_INPUT:
+        return response_text[:_MAX_FENCE_INPUT]
+    return response_text
 
 
 def parse_json_object(response_text: str, *, context: str = "LLM response") -> dict[str, Any]:
@@ -43,7 +59,7 @@ def parse_json_object(response_text: str, *, context: str = "LLM response") -> d
     try:
         data = json.loads(response_text)
     except json.JSONDecodeError:
-        match = _FENCE_OBJECT_RE.search(response_text)
+        match = _FENCE_OBJECT_RE.search(_capped(response_text))
         if match is None:
             raise ValueError(f"Could not parse {context} as JSON: {response_text[:200]}")
         data = json.loads(match.group(1))
@@ -63,7 +79,7 @@ def parse_json_array(response_text: str, *, context: str = "LLM response") -> li
     try:
         data = json.loads(response_text)
     except json.JSONDecodeError:
-        match = _FENCE_ARRAY_RE.search(response_text)
+        match = _FENCE_ARRAY_RE.search(_capped(response_text))
         if match is None:
             raise ValueError(f"Could not parse {context} as JSON: {response_text[:200]}")
         data = json.loads(match.group(1))

@@ -126,6 +126,7 @@ class ModelsConfig:
     generate: str = ""
     judge: str = ""
     security_scan: str = ""
+    security_scan_cross_file: str = ""
 
 
 @dataclass(frozen=True)

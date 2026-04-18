@@ -350,12 +350,15 @@ class EvaluationManager:
         """Resolve weight vector for a classification, falling back to 'general'."""
         wv = self._weight_vectors.get(classification.skill_type)
         if wv is None:
-            # Uniform default across all required dimensions. Keeps default
-            # weights in sync with REQUIRED_DIMENSIONS automatically.
+            # Uniform default across all required dimensions. Sorted so
+            # key order is deterministic (REQUIRED_DIMENSIONS is a
+            # frozenset with undefined iteration order); downstream
+            # consumers that serialize or hash the weight vector get
+            # stable output.
             equal_weight = 1.0 / len(REQUIRED_DIMENSIONS)
             wv = self._weight_vectors.get(
                 "general",
-                {dim: equal_weight for dim in REQUIRED_DIMENSIONS},
+                {dim: equal_weight for dim in sorted(REQUIRED_DIMENSIONS)},
             )
         return wv
 
