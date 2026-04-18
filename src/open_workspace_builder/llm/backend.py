@@ -15,11 +15,15 @@ class ModelBackendError(Exception):
 
 _VALID_OPERATIONS = frozenset({"classify", "generate", "judge", "security_scan"})
 
-_RETRYABLE_EXCEPTIONS: tuple[type[Exception], ...] = ()
-
 
 def _load_retryable_exceptions() -> tuple[type[Exception], ...]:
-    """Load retryable exception types from litellm, if available."""
+    """Load retryable exception types from litellm, if available.
+
+    Called once per ``completion()``; litellm is already imported earlier
+    in the function so the exceptions import is a fast no-op. Not cached
+    because tests mock ``litellm.exceptions`` via ``sys.modules`` patches
+    and rely on a fresh import each call.
+    """
     try:
         from litellm.exceptions import (  # type: ignore[import-untyped]
             RateLimitError,
