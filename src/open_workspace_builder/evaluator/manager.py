@@ -16,7 +16,7 @@ from open_workspace_builder.evaluator.classifier import (
 from open_workspace_builder.evaluator.generator import TestSuiteGenerator
 from open_workspace_builder.evaluator.judge import QualityJudge
 from open_workspace_builder.evaluator.persistence import TestSuitePersistence
-from open_workspace_builder.evaluator.scorer import ScoringResult, SkillScorer
+from open_workspace_builder.evaluator.scorer import REQUIRED_DIMENSIONS, ScoringResult, SkillScorer
 from open_workspace_builder.evaluator.types import TestExecutionResult
 
 if TYPE_CHECKING:
@@ -350,14 +350,12 @@ class EvaluationManager:
         """Resolve weight vector for a classification, falling back to 'general'."""
         wv = self._weight_vectors.get(classification.skill_type)
         if wv is None:
+            # Uniform default across all required dimensions. Keeps default
+            # weights in sync with REQUIRED_DIMENSIONS automatically.
+            equal_weight = 1.0 / len(REQUIRED_DIMENSIONS)
             wv = self._weight_vectors.get(
                 "general",
-                {
-                    "novelty": 0.25,
-                    "efficiency": 0.25,
-                    "precision": 0.25,
-                    "defect_rate": 0.25,
-                },
+                {dim: equal_weight for dim in REQUIRED_DIMENSIONS},
             )
         return wv
 
