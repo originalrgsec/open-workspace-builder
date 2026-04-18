@@ -42,6 +42,32 @@ All tests must pass before opening a PR.
 - **Line length:** 100 characters
 - **Formatting:** Run `ruff check --fix` and `ruff format` before committing
 
+## Quality Gates
+
+Every PR runs the same gates locally (pre-commit) and in CI (cannot
+drift by construction):
+
+- **Ruff** — lint + format check (`uv run ruff check src tests` +
+  `uv run ruff format --check src tests`)
+- **Pyright** — basic mode, error budget = 96 per
+  [DRN-078](https://github.com/originalrgsec/open-workspace-builder)
+  (vault: `decisions/DRN-078-owb-pyright-basic-mode.md`). Enforced
+  via `scripts/pyright-gate.py`; any increase above 96 fails the
+  gate. Pin is `pyright>=1.1,<2.0`; matches himitsubako DRN-077 for
+  org-wide tooling consistency.
+- **Tests** — `uv run pytest` with coverage gate at 80%
+- **Gitleaks, Trivy, Semgrep** — via `pre-commit run --all-files`
+
+To install the hooks locally:
+
+```bash
+uv run pre-commit install
+```
+
+Once installed, each `git commit` runs ruff, gitleaks, trivy,
+semgrep, and pyright; `git commit` is blocked by the conventional-
+commit validator on `commit-msg`.
+
 ## Branch Naming
 
 Use prefixed branch names:
