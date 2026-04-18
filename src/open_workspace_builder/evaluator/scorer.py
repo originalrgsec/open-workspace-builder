@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
+from open_workspace_builder._llm_json import parse_json_object
 from open_workspace_builder.evaluator.types import TestExecutionResult
 
 if TYPE_CHECKING:
@@ -102,16 +102,7 @@ def _parse_scores(response_text: str) -> dict[str, float]:
 
     Raises ValueError if parsing fails or scores are out of range.
     """
-    try:
-        data = json.loads(response_text)
-    except json.JSONDecodeError:
-        import re
-
-        match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", response_text, re.DOTALL)
-        if match:
-            data = json.loads(match.group(1))
-        else:
-            raise ValueError(f"Could not parse scoring response as JSON: {response_text[:200]}")
+    data = parse_json_object(response_text, context="scoring response")
 
     scores = data.get("scores")
     if not isinstance(scores, dict):

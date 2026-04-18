@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+from open_workspace_builder._llm_json import parse_json_object
 
 if TYPE_CHECKING:
     from open_workspace_builder.llm.backend import ModelBackend
@@ -79,16 +80,7 @@ class OrgLayerResult:
 
 def _parse_layer_response(response_text: str) -> OrgLayerResult:
     """Parse org layer classification from LLM JSON response."""
-    try:
-        data = json.loads(response_text)
-    except json.JSONDecodeError:
-        import re
-
-        match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", response_text, re.DOTALL)
-        if match:
-            data = json.loads(match.group(1))
-        else:
-            raise ValueError(f"Could not parse layer response as JSON: {response_text[:200]}")
+    data = parse_json_object(response_text, context="layer response")
 
     layer = int(data.get("layer", -1))
     if layer not in (0, 1, 2, 3):
