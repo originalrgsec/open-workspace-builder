@@ -121,11 +121,6 @@ def _discover_modules(src_dir: Path) -> tuple[ModuleMetric, ...]:
     return tuple(modules)
 
 
-def _is_test_path(path: Path) -> bool:
-    """Return True if *path* is inside a tests/ directory."""
-    return "tests" in path.parts or "test" in path.parts
-
-
 # ── Public API ───────────────────────────────────────────────────────────
 
 

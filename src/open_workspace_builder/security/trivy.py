@@ -17,7 +17,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 SAFE_VERSION = "0.69.3"
-SAFE_COMMIT_SHA = "6fb20c8edd70745d6b34bff0387b53b03c8a760a"
 COMPROMISED_VERSIONS = ("0.69.4", "0.69.5", "0.69.6")
 
 _VERSION_PATTERN = re.compile(r"(\d+\.\d+\.\d+)")
@@ -101,9 +100,7 @@ def scan_filesystem(
         If the installed version is compromised or the scan fails.
     """
     if not is_available():
-        raise ImportError(
-            "Trivy is not installed. Install it with: brew install trivy"
-        )
+        raise ImportError("Trivy is not installed. Install it with: brew install trivy")
 
     version = get_version()
     if version is None:
