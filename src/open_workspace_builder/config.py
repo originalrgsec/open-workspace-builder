@@ -131,7 +131,25 @@ class ModelsConfig:
 
 @dataclass(frozen=True)
 class SecurityConfig:
-    """Security scanner configuration."""
+    """Security scanner configuration.
+
+    OWB-S142 — ``fail_closed`` (default ``True``): when a dependency-gate
+    tool (pip-audit, guarddog, license audit, quarantine) raises an
+    unexpected exception, the gate returns ``passed=False`` with a
+    ``"errored: ..."`` detail instead of silently returning
+    ``passed=True, "skipped"``. Distinguishes tool-crashed (a security
+    signal) from tool-not-installed (not a signal, expected on
+    minimally-provisioned systems). Set to ``False`` only if a flaky
+    CI environment makes hard failures untenable; even then, the
+    errored path is logged with an ``errored:`` marker so failures
+    stay visible.
+
+    OWB-S143 — ``http_max_bytes`` (default 1 MiB): cap on HTTP
+    response bodies read by ``security/quarantine._fetch_pypi_json``
+    and ``security/suppression_monitor._query_osv``. Prevents a
+    compromised or spoofed endpoint from exhausting memory by
+    returning a multi-megabyte payload.
+    """
 
     active_patterns: tuple[str, ...] = ("owb-default",)
     scanner_layers: tuple[int, ...] = (1, 2, 3)
@@ -141,6 +159,8 @@ class SecurityConfig:
     secrets_scanner: str = "gitleaks"
     secrets_enabled: bool = False
     trusted_upstream_urls: tuple[str, ...] = ("https://github.com/affaan-m/everything-claude-code",)
+    fail_closed: bool = True
+    http_max_bytes: int = 1_048_576
 
 
 @dataclass(frozen=True)
