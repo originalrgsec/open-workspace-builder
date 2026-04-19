@@ -4,6 +4,15 @@ on:
   push:
     tags:
       - "v*"
+  # Manual replay: re-run the full pipeline (idempotently) for an
+  # existing tag. Use when a downstream step — notify_slack, in
+  # particular — failed on the original tag-push invocation. Dispatch
+  # with `gh workflow run release.yml --ref v1.17.0`; the workflow
+  # checks out the tag ref and every job short-circuits cleanly on
+  # "already done" (PyPI skip-existing, idempotent release create,
+  # etc.). Do NOT race this workflow by running `gh release create`
+  # manually — the workflow owns the GitHub Release object.
+  workflow_dispatch: {}
 
 permissions:
   id-token: write
@@ -78,6 +87,12 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # Idempotent replay: `gh workflow run release.yml --ref vX`
+          # hits this step with files PyPI already serves. Skip rather
+          # than fail so downstream jobs (github_release, notify_slack)
+          # can still run.
+          skip-existing: true
 
   github_release:
     # AD-17: GitHub Releases as canonical release distribution surface.
@@ -155,21 +170,41 @@ jobs:
             --output "dist/open-workspace-builder-${{ steps.version.outputs.version }}.cdx.json"
           ls -la dist/
 
-      - name: Create GitHub Release
+      - name: Create or update GitHub Release
+        # Idempotent. On first tag-push: `gh release create` with full
+        # notes and assets. On workflow_dispatch replay (or any retry
+        # after a manual `gh release create`): detect the existing
+        # release, upload any missing assets with --clobber, and
+        # continue. Previously this step failed with "a release with
+        # the same tag name already exists" when the sprint-close flow
+        # had raced by creating the release manually (OWB-POST-S33).
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+          PRERELEASE: ${{ steps.version.outputs.prerelease }}
         run: |
-          PRERELEASE_FLAG=""
-          if [[ "${{ steps.version.outputs.prerelease }}" == "true" ]]; then
-            PRERELEASE_FLAG="--prerelease"
+          SBOM="dist/open-workspace-builder-${VERSION}.cdx.json"
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            echo "::notice::Release ${TAG} already exists; uploading any missing assets with --clobber"
+            gh release upload "${TAG}" \
+              dist/*.whl \
+              dist/*.tar.gz \
+              "${SBOM}" \
+              --clobber
+          else
+            PRERELEASE_FLAG=""
+            if [[ "${PRERELEASE}" == "true" ]]; then
+              PRERELEASE_FLAG="--prerelease"
+            fi
+            gh release create "${TAG}" \
+              --title "${TAG}" \
+              --notes-file release-body.md \
+              ${PRERELEASE_FLAG} \
+              dist/*.whl \
+              dist/*.tar.gz \
+              "${SBOM}"
           fi
-          gh release create "${{ steps.version.outputs.tag }}" \
-            --title "${{ steps.version.outputs.tag }}" \
-            --notes-file release-body.md \
-            ${PRERELEASE_FLAG} \
-            dist/*.whl \
-            dist/*.tar.gz \
-            "dist/open-workspace-builder-${{ steps.version.outputs.version }}.cdx.json"
 
   notify_slack:
     # OWB-S119: Post a Block Kit notification to #owb-releases after a
@@ -177,10 +212,16 @@ jobs:
     # because events created by GITHUB_TOKEN do not trigger other
     # workflows — a standalone release-event workflow never fires.
     #
-    # Failure here does NOT affect PyPI publish or GitHub Release.
+    # Gate on publish (PyPI) rather than github_release: PyPI is the
+    # source of truth per AD-17, and a benign "release already exists"
+    # collision in github_release should not silence the Slack post
+    # (OWB-POST-S33 — v1.17.0 race lost its Slack notification this
+    # way). If github_release still fails for a real reason, the
+    # Slack message still goes out and the operator can follow the
+    # "GitHub Release" link to see it is missing and re-dispatch.
     runs-on: ubuntu-latest
-    needs: github_release
-    if: always() && needs.github_release.result == 'success'
+    needs: [publish, github_release]
+    if: always() && needs.publish.result == 'success'
     steps:
       - name: Derive release metadata
         id: meta
