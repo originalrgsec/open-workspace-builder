@@ -884,7 +884,7 @@ wheels = [
 
 [[package]]
 name = "himitsubako"
-version = "0.7.0"
+version = "0.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -893,9 +893,9 @@ dependencies = [
     { name = "rich" },
     { name = "structlog" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5d/30/ac449d3f3f72648c609f3c697d40b72157180cbaaae2668edf7df0da19ee/himitsubako-0.7.0.tar.gz", hash = "sha256:528cb33c540b4bf9397687233bb45477c0518f2f20eaedfd9aac16bf542b03a5", size = 242794, upload-time = "2026-04-14T12:33:18.517Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/98/1d/daaef9a01874a0e3f09ab2e58fcdd345be32650dd75e0ddb6c6c8ce72b7d/himitsubako-0.9.0.tar.gz", hash = "sha256:13ad5cfbf2d24619347485342d615c6350c34e96507c88b33c95552b070f1f1f", size = 284556, upload-time = "2026-04-19T00:19:31.465Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b4/e4/14696dbc4a4ca90cd9269d1b1d73b37f8692debc9bce9c31b0903b5613db/himitsubako-0.7.0-py3-none-any.whl", hash = "sha256:e63700b3269b18a6e080090bef2ef96ae535ac64858171de74a0dde87714e233", size = 50668, upload-time = "2026-04-14T12:33:17.32Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/82/8d14306b294eecebc6e5d16c00cf0d80acc9ac089b0c90274cca50ab3f49/himitsubako-0.9.0-py3-none-any.whl", hash = "sha256:32f18a9ee2aa3e0f1303df73105440de0e567c0d24c6385828112fc1c8d5aacc", size = 55532, upload-time = "2026-04-19T00:19:29.076Z" },
 ]
 
 [package.optional-dependencies]
@@ -1555,9 +1555,9 @@ requires-dist = [
     { name = "cyclonedx-python-lib", marker = "extra == 'sbom'", specifier = ">=9.0,<11" },
     { name = "google-api-python-client", marker = "extra == 'sheets'", specifier = ">=2.0" },
     { name = "google-auth-oauthlib", marker = "extra == 'sheets'", specifier = ">=1.0" },
-    { name = "himitsubako", specifier = ">=0.7.0" },
-    { name = "himitsubako", extras = ["keychain"], marker = "extra == 'keyring'", specifier = ">=0.7.0" },
-    { name = "himitsubako", extras = ["keychain"], marker = "extra == 'secrets'", specifier = ">=0.7.0" },
+    { name = "himitsubako", specifier = ">=0.9.0" },
+    { name = "himitsubako", extras = ["keychain"], marker = "extra == 'keyring'", specifier = ">=0.9.0" },
+    { name = "himitsubako", extras = ["keychain"], marker = "extra == 'secrets'", specifier = ">=0.9.0" },
     { name = "litellm", marker = "extra == 'llm'", specifier = ">=1.40.0,<=1.83.0" },
     { name = "litellm", marker = "extra == 'security'", specifier = ">=1.40.0,<=1.83.0" },
     { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.0.0" },
