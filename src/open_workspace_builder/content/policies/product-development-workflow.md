@@ -2,7 +2,7 @@
 type: policy
 scope: all-projects
 created: 2026-03-23
-updated: 2026-03-25
+updated: 2026-04-19
 tags: [policy, process, workflow, lifecycle]
 ---
 
@@ -93,6 +93,7 @@ QA is layered:
 7. **Supply chain verification** — Enforce 7-day package quarantine via `uv exclude-newer`, run `owb audit deps` and `owb audit package` before adopting dependencies, verify lockfile integrity. See [[code/supply-chain-protection]].
 8. **Supply chain gate** — Run `owb audit pins` to verify all dependencies pass the quarantine window. Run `owb audit gate --all` to verify all direct dependencies pass the full scan battery (CVEs, malware indicators, advisory flags).
 9. **Pre-commit hooks** — Every project must have pre-commit hooks installed (`owb security hooks install`). The default set runs gitleaks (secrets), ruff (lint + format), trivy (dependency vulnerabilities), and semgrep (SAST) on every commit. These are commit-time gates that catch issues before code enters the repository.
+10. **Scrub skills** — Mid-sprint quality pass run via Claude Code built-in skills: `/simplify` → `/code-review` → `/refactor-clean` (strict order, non-destructive before destructive). See [[code/development-process#Scrub Skills]] for full definitions, blocking status per severity, and sprint-close record-keeping.
 
 ### Phase 6: Retrospective
 

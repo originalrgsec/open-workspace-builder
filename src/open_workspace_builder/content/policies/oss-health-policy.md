@@ -1,13 +1,33 @@
 ---
 type: policy
 created: 2026-03-13
-updated: 2026-03-25
+updated: 2026-04-19
 tags: [policy, open-source, dependencies, risk]
 applies-to: all-projects
 related: "allowed-licenses"
 ---
 
 # Open Source Project Health Evaluation Policy
+
+## Pre-Install Gate (MANDATORY)
+
+**Before running any package install command** — `uv pip install`, `uv add`, `pip install`, `npm install`, `cargo add`, `go get`, `brew install`, or equivalents — verify the target package's license against `allowed-licenses.md`. Bits on disk is the point of no return; once a package is installed, tests are running against it, and code is being written to import it, removing it becomes a sunk-cost argument rather than a clean decision.
+
+**The rule, stated positively:** No new dependency enters the venv, `node_modules`, `Cargo.lock`, `go.sum`, or any other dependency manifest until all four checks below have passed.
+
+**The sequencing:**
+
+1. **License check first.** Fetch the package's `LICENSE` file (or read the PyPI / npm / crates.io license field — but prefer the real `LICENSE` file because registry metadata is sometimes wrong or coarse). Compare against `allowed-licenses.md`.
+   - If the license is in the Allowed (Permissive) table → proceed to health check.
+   - If the license is Allowed with Conditions → verify the condition does not apply to the use case, then proceed.
+   - If the license is Disallowed, or the file reports "Other/Proprietary License," or the license is custom and not in the policy tables → **STOP**. Do not install. Escalate for a policy exception ADR or find an alternative. A PyPI / npm classifier of "Other/Proprietary License" is always a stop-the-line signal, not a follow-up.
+2. **Health check second.** Only if the license check passes. Run the `oss-health-check` skill (or the project's equivalent script). Record the overall rating, date, and any flags in the project's `oss-health-policy-scores.md`. Apply the scoring rules from this document.
+3. **Supply-chain post-release window check.** Verify the package version's publication date is older than the quarantine threshold in `supply-chain-protection.md` (currently 7 days).
+4. **Only then** run the install command and write code.
+
+**"License check owed" is an anti-pattern.** If you have written "license check still required" or "license check owed as follow-up" anywhere in a score entry, ADR, CHANGELOG, or session log, that is a stop-the-line signal. The dependency must not remain in the codebase — committed or not — until the check completes. There is no legitimate "implemented, license TBD" state.
+
+**Retroactive scoring is a process smell.** If you find yourself writing an oss-health score entry for a dependency that has already been installed, committed, and pushed, something went wrong earlier in the workflow. Record the score anyway, but also file a retrospective note identifying the sequencing failure and propose a process fix. Retroactive scores should be rare and individually explained, not routine.
 
 ## Purpose
 
@@ -114,10 +134,10 @@ The `oss-health-check` skill automates quantitative signal collection from GitHu
 
 Every architectural decision that selects an open source dependency must include a license check and health check before the decision is accepted. The ADR template (`_templates/adr.md`) includes fields for both. The required workflow is:
 
-1. **License check first.** Verify the project's license against allowed-licenses. If the license is Disallowed, stop — do not proceed to the health check. Find an alternative or document a policy exception per the exception process above.
+1. **License check first.** Verify the project's license against `allowed-licenses.md`. If the license is Disallowed, stop — do not proceed to the health check. Find an alternative or document a policy exception per the exception process above.
 2. **Health check second.** Run the `oss-health-check` skill (or the health check script directly). Record the overall rating, date, and any flags in the AD entry. Apply the scoring rules from this document.
 3. **Record results in the ADR.** Each AD entry must show the license name, allowed/disallowed status, health rating, and any action items.
-4. **Flag blockers in decisions index.** If a license or health finding requires a follow-up decision, add it to decisions/_index under Pending Decisions so it is visible across sessions.
+4. **Flag blockers in decisions index.** If a license or health finding requires a follow-up decision, add it to `decisions/_index.md` under Pending Decisions so it is visible across sessions.
 
 ## Review Schedule
 
