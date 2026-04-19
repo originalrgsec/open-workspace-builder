@@ -6,13 +6,20 @@ on:
       - "v*"
   # Manual replay: re-run the full pipeline (idempotently) for an
   # existing tag. Use when a downstream step — notify_slack, in
-  # particular — failed on the original tag-push invocation. Dispatch
-  # with `gh workflow run release.yml --ref v1.17.0`; the workflow
-  # checks out the tag ref and every job short-circuits cleanly on
-  # "already done" (PyPI skip-existing, idempotent release create,
-  # etc.). Do NOT race this workflow by running `gh release create`
-  # manually — the workflow owns the GitHub Release object.
-  workflow_dispatch: {}
+  # particular — failed on the original tag-push invocation.
+  # Dispatch with:
+  #   gh workflow run release.yml --ref main -f tag=v1.17.0
+  # The workflow checks out the tag (not main) and every job
+  # short-circuits cleanly on "already done" (PyPI skip-existing,
+  # idempotent release create, etc.). Do NOT race this workflow by
+  # running `gh release create` manually — the workflow owns the
+  # GitHub Release object.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to replay (e.g. v1.17.0). Required on dispatch."
+        required: true
+        type: string
 
 permissions:
   id-token: write
@@ -23,6 +30,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # On tag-push this is empty and checkout defaults to the
+          # pushed tag ref. On workflow_dispatch the input names the
+          # tag to replay; without this, dispatch would check out the
+          # branch the operator dispatched from (usually main) and
+          # build a wheel from main's code, not the tag.
+          ref: ${{ inputs.tag || github.ref_name }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -107,6 +121,8 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -121,8 +137,19 @@ jobs:
 
       - name: Derive version from tag
         id: version
+        env:
+          DISPATCH_TAG: ${{ inputs.tag }}
         run: |
-          TAG="${GITHUB_REF_NAME}"
+          # On tag-push: inputs.tag is empty and GITHUB_REF_NAME is the
+          # tag itself. On workflow_dispatch (replay): inputs.tag is
+          # required, GITHUB_REF_NAME is the branch the operator
+          # dispatched from (typically main), so we must prefer the
+          # input.
+          if [[ -n "${DISPATCH_TAG}" ]]; then
+            TAG="${DISPATCH_TAG}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
           VERSION="${TAG#v}"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
@@ -226,9 +253,16 @@ jobs:
       - name: Derive release metadata
         id: meta
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          DISPATCH_TAG: ${{ inputs.tag }}
+          PUSH_REF: ${{ github.ref_name }}
         run: |
+          if [[ -n "${DISPATCH_TAG}" ]]; then
+            RELEASE_TAG="${DISPATCH_TAG}"
+          else
+            RELEASE_TAG="${PUSH_REF}"
+          fi
           VERSION="${RELEASE_TAG#v}"
+          echo "tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
           # PEP 440 pre-release detection (matches release.yml logic)
@@ -246,8 +280,9 @@ jobs:
         id: body
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
         run: |
-          gh api "repos/${{ github.repository }}/releases/tags/${{ github.ref_name }}" \
+          gh api "repos/${{ github.repository }}/releases/tags/${RELEASE_TAG}" \
             --jq '.body' > /tmp/release-body.txt
 
           # Truncate at 2800 chars for Slack's 4000-char block limit
