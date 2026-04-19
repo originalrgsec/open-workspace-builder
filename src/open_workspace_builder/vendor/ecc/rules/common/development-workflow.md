@@ -6,6 +6,8 @@ The Feature Implementation Workflow describes the development pipeline: research
 
 ## Feature Implementation Workflow
 
+> **Sprint execution shortcut:** When implementing a story inside a confirmed sprint and the story file already contains acceptance criteria and an implementation approach, skip steps 0 and 1. The research and planning were done during sprint planning. Jump straight to step 2 (TDD). Run steps 0–1 only for stories explicitly tagged as research spikes or stories with no implementation section.
+
 0. **Research & Reuse** _(mandatory before any new implementation)_
    - **GitHub code search first:** Run `gh search repos` and `gh search code` to find existing implementations, templates, and patterns before writing anything new.
    - **Exa MCP for research:** Use `exa-web-search` MCP during the planning phase for broader research, data ingestion, and discovering prior art.
