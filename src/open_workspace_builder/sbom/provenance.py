@@ -25,7 +25,7 @@ import json
 import re
 import subprocess
 from dataclasses import dataclass, replace
-from datetime import datetime, timezone
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Mapping
@@ -321,10 +321,16 @@ def _detect_added_at(component_path: Path, workspace: Path) -> str | None:
                 if len(date_str) >= 10:
                     return date_str[:10]
 
-    # Fallback: file mtime.
+    # Fallback: file mtime, rendered in the local timezone so it stays
+    # consistent with `check_quarantine`'s `date.today()` (also local).
+    # Rendering in UTC introduced a late-day skew: a file created just
+    # before local midnight would emit tomorrow's UTC date and get
+    # skipped by the quarantine check as "future-dated" (OWB Sprint 33
+    # hotfix, 2026-04-18). `datetime.fromtimestamp(ts)` with no tz
+    # returns the local civil date, matching `date.today()`.
     try:
         ts = component_path.stat().st_mtime
-        return datetime.fromtimestamp(ts, tz=timezone.utc).date().isoformat()
+        return datetime.fromtimestamp(ts).date().isoformat()
     except OSError:
         return None
 

@@ -303,6 +303,29 @@ class TestPriorityOrdering:
         )
         assert prov.added_at is None
 
+    def test_added_at_uses_local_tz_not_utc(self, tmp_path: Path) -> None:
+        """Sprint 33 regression: mtime must render in local tz, not UTC.
+
+        Before the fix, `datetime.fromtimestamp(ts, tz=timezone.utc)`
+        produced tomorrow's UTC date in late-evening US timezones,
+        and `check_quarantine` (which compares against
+        `date.today()` in local tz) skipped the component as
+        "future-dated". The two sides must agree on tz.
+        """
+        from datetime import date
+
+        skill = tmp_path / "SKILL.md"
+        skill.write_text("---\nname: demo\n---\nbody\n")
+        prov = detect_provenance(
+            component_path=skill,
+            workspace=tmp_path,
+            frontmatter={},
+        )
+        assert prov.added_at is not None
+        # A just-created file's added_at must equal local today.
+        # It must NOT be tomorrow (UTC rollover) or yesterday (UTC lag).
+        assert prov.added_at == date.today().isoformat()
+
     def test_install_record_beats_git(self, git_repo_with_skill: tuple[Path, Path]) -> None:
         repo, skill = git_repo_with_skill
         _git(repo, "remote", "add", "origin", "https://github.com/example/test.git")
