@@ -312,6 +312,76 @@ class TestDataclassImmutability:
         with pytest.raises(AttributeError):
             config.quarantine_days = 14  # type: ignore[misc]
 
+    def test_pypi_fetch_truncates_oversize(self) -> None:
+        """OWB-S143. A compromised or spoofed PyPI endpoint cannot
+        exhaust memory: _fetch_pypi_json reads at most max_bytes and
+        returns None when the response exceeds the cap (logged as a
+        FetchError-shaped short-circuit, consistent with the existing
+        'any error returns None' contract)."""
+        from open_workspace_builder.security.quarantine import (
+            MAX_PYPI_BYTES,
+            _fetch_pypi_json,
+        )
+
+        oversize = b"{" + (b"x" * (MAX_PYPI_BYTES + 10)) + b"}"
+
+        mock_resp = MagicMock()
+        mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        # Emulate streaming: read(n) returns min(n, len(oversize)).
+        mock_resp.read.side_effect = lambda n=-1: (oversize if n == -1 else oversize[:n])
+
+        with patch(
+            "open_workspace_builder.security.quarantine.urlopen",
+            return_value=mock_resp,
+        ):
+            result = _fetch_pypi_json("click", "8.1.7")
+
+        assert result is None
+        # Assert we never read the full payload — the cap clamped us.
+        # At least one read should have requested <= MAX_PYPI_BYTES+1 bytes.
+        sizes = [c.args[0] for c in mock_resp.read.call_args_list if c.args]
+        assert sizes, "expected read() called with a size argument"
+        assert max(sizes) <= MAX_PYPI_BYTES + 1
+
+    def test_pypi_fetch_accepts_small_payload(self) -> None:
+        """Normal-sized PyPI payloads still parse correctly."""
+        from open_workspace_builder.security.quarantine import _fetch_pypi_json
+
+        payload = b'{"info": {"name": "click"}, "urls": []}'
+        mock_resp = MagicMock()
+        mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        mock_resp.read.return_value = payload
+
+        with patch(
+            "open_workspace_builder.security.quarantine.urlopen",
+            return_value=mock_resp,
+        ):
+            result = _fetch_pypi_json("click", "8.1.7")
+
+        assert result is not None
+        assert result["info"]["name"] == "click"
+
+    def test_pypi_fetch_honours_custom_cap(self) -> None:
+        """Callers can override the default cap via max_bytes kwarg."""
+        from open_workspace_builder.security.quarantine import _fetch_pypi_json
+
+        payload = b'{"too":"big"}' + b"." * 500
+        mock_resp = MagicMock()
+        mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        mock_resp.read.side_effect = lambda n=-1: payload if n == -1 else payload[:n]
+
+        with patch(
+            "open_workspace_builder.security.quarantine.urlopen",
+            return_value=mock_resp,
+        ):
+            # Cap of 50 bytes — payload is larger → None.
+            result = _fetch_pypi_json("x", None, max_bytes=50)
+
+        assert result is None
+
     def test_pin_status_is_frozen(self) -> None:
         status = PinStatus(
             package="click",

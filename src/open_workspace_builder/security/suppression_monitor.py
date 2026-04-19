@@ -2,13 +2,20 @@
 
 Checks whether upstream fixes have landed for suppressed CVEs so the
 suppression can be lifted and the dependency upgraded.
+
+OWB-S143 — OSV responses are bounded by ``MAX_OSV_BYTES`` (default
+1 MiB). Real OSV vulnerability records are 2–30 KB; 1 MiB leaves
+ample headroom. A compromised or spoofed endpoint cannot exhaust
+memory via an oversized payload. ``_query_osv`` raises
+:class:`FetchError` on cap breach so callers can distinguish it from
+a plain network failure (``URLError``).
 """
 
 from __future__ import annotations
 
 import json
-import urllib.request
 import urllib.error
+import urllib.request
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -17,6 +24,18 @@ from open_workspace_builder.security.suppressions_schema import (
     Suppression,
     load_suppressions,
 )
+
+# OWB-S143 defensive read cap for OSV JSON responses.
+MAX_OSV_BYTES = 1_048_576
+
+
+class FetchError(RuntimeError):
+    """Raised when the OSV response exceeds the configured size cap.
+
+    Distinct from ``urllib.error.URLError`` (network failure) and
+    ``json.JSONDecodeError`` (malformed body); signals an oversized
+    response that should not be parsed.
+    """
 
 
 @dataclass(frozen=True)
@@ -41,8 +60,10 @@ def _get_current_version(package: str) -> str | None:
         return None
 
 
-def _query_osv(cve: str) -> dict:
+def _query_osv(cve: str, *, max_bytes: int = MAX_OSV_BYTES) -> dict:
     """Query the OSV API for a specific vulnerability.
+
+    Reads at most ``max_bytes`` from the response body (OWB-S143).
 
     Raises
     ------
@@ -50,11 +71,16 @@ def _query_osv(cve: str) -> dict:
         On network failure.
     json.JSONDecodeError
         On malformed response.
+    FetchError
+        When the response exceeds ``max_bytes``.
     """
     url = f"https://api.osv.dev/v1/vulns/{cve}"
-    req = urllib.request.Request(url, headers={"Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})  # noqa: S310 — https-only
+    with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310 — https-only
+        body = resp.read(max_bytes + 1)
+        if len(body) > max_bytes:
+            raise FetchError(f"OSV response for {cve} exceeded {max_bytes} byte cap (url={url})")
+        return json.loads(body.decode("utf-8"))
 
 
 def _find_fix_version(osv_data: dict, package: str) -> str | None:
@@ -109,7 +135,7 @@ def check_suppression(suppression: Suppression) -> SuppressionStatus:
             days_suppressed=days,
             error=f"HTTP {exc.code}: {exc.reason}",
         )
-    except (urllib.error.URLError, json.JSONDecodeError, OSError) as exc:
+    except (urllib.error.URLError, json.JSONDecodeError, OSError, FetchError) as exc:
         return SuppressionStatus(
             suppression=suppression,
             fix_available=False,
