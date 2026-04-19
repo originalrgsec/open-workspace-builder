@@ -40,4 +40,13 @@
 # `pypi-release` env gate awaiting operator approval. OWB-S141
 # filed to bump `himitsubako>=0.7.0` → `>=0.8.0` once PyPI is
 # current (non-blocking; v0.7.0 satisfies current callers).
-exclude-newer = "2026-04-18"
+#
+# 2026-04-19 (OWB-S141, Sprint 33): pin advanced from 2026-04-18 to
+# 2026-04-19 after himitsubako v0.8.0 and v0.9.0 landed on PyPI
+# earlier the same day via `pypi-release` env-gate approval.
+# First-party package (originalrgsec), exempt from the 7-day
+# quarantine per supply-chain-protection.md. Required so CI can
+# resolve `himitsubako>=0.9.0`; local resolved cleanly because the
+# uv cache had already seen the PyPI publish before CI's clean
+# clone did.
+exclude-newer = "2026-04-19"
