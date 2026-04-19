@@ -64,22 +64,39 @@ def _make_components() -> tuple[Component, ...]:
 
 class TestBomShape:
     def test_builds_valid_bom_object(self) -> None:
-        bom = build_bom(_make_components())
-        assert bom is not None
+        wrapped = build_bom(_make_components())
+        assert wrapped is not None
+        assert wrapped.bom is not None
 
     def test_bom_contains_all_components(self) -> None:
         components = _make_components()
-        bom = build_bom(components)
-        assert len(bom.components) == len(components)
+        wrapped = build_bom(components)
+        assert len(wrapped.bom.components) == len(components)
 
     def test_deterministic_options_override_timestamp(self) -> None:
         opts = BomOptions(serial=FIXED_SERIAL, timestamp=FIXED_TS)
-        bom = build_bom(_make_components(), options=opts)
+        wrapped = build_bom(_make_components(), options=opts)
         # Serial and timestamp are fed through serialization; see JSON tests.
-        json_str = serialize_bom(bom)
+        json_str = serialize_bom(wrapped)
         data = json.loads(json_str)
         assert data["serialNumber"] == FIXED_SERIAL
         assert data["metadata"]["timestamp"] == FIXED_TS
+
+    def test_wrapper_exposes_options_and_count(self) -> None:
+        """OWB-S144. The wrapper surfaces options and non_allowed_count
+        directly, replacing the previous _owb_options / _owb_non_allowed_count
+        attributes stashed on the underlying Bom via # type: ignore."""
+        opts = BomOptions(serial=FIXED_SERIAL, timestamp=FIXED_TS)
+        wrapped = build_bom(_make_components(), options=opts)
+        assert wrapped.options is opts
+        assert wrapped.non_allowed_count == 0
+
+    def test_underlying_bom_has_no_owb_attributes(self) -> None:
+        """OWB-S144. Guard against re-introduction of monkey-patching.
+        No _owb_* attributes on the vendored CycloneDX Bom."""
+        wrapped = build_bom(_make_components())
+        assert not hasattr(wrapped.bom, "_owb_options")
+        assert not hasattr(wrapped.bom, "_owb_non_allowed_count")
 
 
 class TestJsonSerialization:

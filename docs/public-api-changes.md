@@ -5,6 +5,91 @@ consecutive open-workspace-builder releases. Downstream consumers
 (claude-workspace-builder and any future packages depending on OWB)
 read this file to absorb breaking changes in their next sprint.
 
+## v1.16.0 → v1.17.0
+
+### Signature Changed — `sbom.builder.build_bom`
+
+- **Before:** `build_bom(components, *, options=None) -> cyclonedx.model.bom.Bom`
+- **After:** `build_bom(components, *, options=None) -> BomWithMetadata`
+
+**Why:** OWB-S144. The previous implementation stashed OWB metadata
+(`_owb_options`, `_owb_non_allowed_count`) on the vendored
+`cyclonedx.model.bom.Bom` instance via `# type: ignore[attr-defined]`.
+That leaked abstraction (upgrading CycloneDX could break OWB) and
+dominated the pyright basic-mode error count. The new
+`BomWithMetadata` dataclass (in `sbom._bom_metadata`) holds
+`(bom, options, non_allowed_count)` adjacent to the underlying Bom
+without touching it.
+
+**Consumer impact:** direct callers of `build_bom` must read the
+underlying Bom via `wrapped.bom` explicitly. `serialize_bom` and
+`count_non_allowed_licenses` already accept the wrapper; other code
+paths that previously treated the return as a bare `Bom` (for access
+to `.components`, `.metadata`, etc.) need `wrapped.bom.components`.
+No public OWB CLI command changes — the wrapper is internal plumbing.
+
+**How to migrate:**
+
+```python
+# Old
+bom = build_bom(components)
+for c in bom.components:        # AttributeError after upgrade
+    ...
+
+# New
+wrapped = build_bom(components)
+for c in wrapped.bom.components:
+    ...
+```
+
+### Changed Default — `SecurityConfig.fail_closed`
+
+- **New field, default `True`** (`SecurityConfig.fail_closed: bool = True`).
+- **Behaviour change:** when a wrapped dependency-gate tool (pip-audit,
+  guarddog, license audit, quarantine, skill-quarantine) raises an
+  unexpected exception, the gate now returns `passed=False` with a
+  `"errored: ..."` detail instead of the previous `passed=True,
+  "skipped — ... error: ..."`. Tool-not-installed is unchanged (still
+  `passed=True, "skipped"`).
+
+**Why:** OWB-S142. The previous shape was indistinguishable from
+tool-missing, so an attacker who could induce a tool crash got a free
+pass through the gate. Fail-closed is the correct default for a
+security control.
+
+**Consumer impact:** CI pipelines that legitimately want skip-on-error
+semantics (e.g. flaky networks) can set `security.fail_closed: false`
+in their OWB config. The errored path then labels the detail
+`"errored (fail_closed=false): ..."` and the gate logs a WARNING so
+the event stays visible.
+
+### Added — `SecurityConfig.http_max_bytes`
+
+- **New field, default `1_048_576`** (1 MiB).
+- Documents the size-cap knob read by `security.quarantine._fetch_pypi_json`
+  and `security.suppression_monitor._query_osv`.
+
+**Why:** OWB-S143. Defensive-in-depth against a compromised or spoofed
+PyPI/OSV endpoint returning a multi-megabyte payload. See CHANGELOG.
+
+### Added — `sbom._bom_metadata.BomWithMetadata`
+
+New internal dataclass. Exported through `sbom.builder` for type
+annotations on direct callers, but the module is named with a leading
+underscore to signal internal intent.
+
+### Removed
+
+- `bom._owb_options` attribute on `cyclonedx.model.bom.Bom` instances
+  (was monkey-patched via `# type: ignore[attr-defined]`; replaced by
+  `BomWithMetadata.options`).
+- `bom._owb_non_allowed_count` attribute (same — replaced by
+  `BomWithMetadata.non_allowed_count`).
+
+Both removals are effectively internal; no consumer was expected to
+read these attributes, and new regression tests assert the wrapped
+`Bom` carries neither attribute going forward.
+
 ## v1.14.1 → v1.15.0
 
 ### Added

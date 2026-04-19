@@ -16,7 +16,7 @@ Usage as a pre-commit hook (repo-local):
     - repo: local
       hooks:
         - id: pyright
-          name: pyright (basic per DRN-078, budget=96)
+          name: pyright (basic per DRN-078, budget=40)
           entry: python3 scripts/pyright-gate.py
           language: system
           pass_filenames: false
@@ -31,10 +31,14 @@ import re
 import subprocess
 import sys
 
-# Frozen per DRN-078 (accepted 2026-04-18, Sprint 31 close).
-# Raising this ceiling requires a new DRN or an explicit sprint
-# decision; lowering is encouraged (OWB-S144 drops it to ~36).
-PYRIGHT_BUDGET = 96
+# Baseline 96 per DRN-078 (accepted 2026-04-18, Sprint 31 close).
+# Lowered to 40 in Sprint 33 OWB-S144 after the SBOM builder
+# BomWithMetadata wrapper landed and a module-level pyright pragma
+# on `sbom/builder.py` silenced the CycloneDX stub-gap noise
+# (reportAttributeAccessIssue, reportCallIssue only). Raising this
+# ceiling requires a new DRN or explicit sprint decision; lowering
+# is always welcome.
+PYRIGHT_BUDGET = 40
 
 _SUMMARY_RE = re.compile(r"(?P<errors>\d+)\s+errors?,\s+\d+\s+warnings?,\s+\d+\s+informations?")
 
