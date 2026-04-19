@@ -200,6 +200,7 @@ class TestCheckSuppressionErrors:
     ) -> None:
         mock_ver.return_value = "2.19.2"
         import urllib.error
+
         mock_osv.side_effect = urllib.error.URLError("timed out")
         status = check_suppression(sample_suppression)
         assert status.fix_available is False
@@ -213,8 +214,13 @@ class TestCheckSuppressionErrors:
     ) -> None:
         mock_ver.return_value = "2.19.2"
         import urllib.error
+
         mock_osv.side_effect = urllib.error.HTTPError(
-            url="", code=404, msg="Not Found", hdrs=None, fp=None  # type: ignore[arg-type]
+            url="",
+            code=404,
+            msg="Not Found",
+            hdrs=None,
+            fp=None,  # type: ignore[arg-type]
         )
         status = check_suppression(sample_suppression)
         assert status.fix_available is False
@@ -290,9 +296,7 @@ class TestDaysSince:
 
 class TestCLICheckSuppressions:
     @patch("open_workspace_builder.security.suppression_monitor.check_all_suppressions")
-    def test_text_output_no_fix(
-        self, mock_check: MagicMock, runner: CliRunner
-    ) -> None:
+    def test_text_output_no_fix(self, mock_check: MagicMock, runner: CliRunner) -> None:
         mock_check.return_value = [
             SuppressionStatus(
                 suppression=Suppression(
@@ -315,9 +319,7 @@ class TestCLICheckSuppressions:
         assert "1 suppression(s), 0 fix(es)" in result.output
 
     @patch("open_workspace_builder.security.suppression_monitor.check_all_suppressions")
-    def test_text_output_fix_available(
-        self, mock_check: MagicMock, runner: CliRunner
-    ) -> None:
+    def test_text_output_fix_available(self, mock_check: MagicMock, runner: CliRunner) -> None:
         mock_check.return_value = [
             SuppressionStatus(
                 suppression=Suppression(
@@ -369,3 +371,70 @@ class TestCLICheckSuppressions:
             ["audit", "check-suppressions", "--registry", str(tmp_path / "nope.yaml")],
         )
         assert result.exit_code != 0
+
+
+# ── S143 HTTP read size cap ─────────────────────────────────────────────
+
+
+class TestOsvQueryHttpCap:
+    """OWB-S143. _query_osv must cap response reads so a compromised
+    or spoofed OSV endpoint cannot exhaust memory."""
+
+    def test_oversize_raises_fetch_error(self) -> None:
+        from open_workspace_builder.security.suppression_monitor import (
+            MAX_OSV_BYTES,
+            FetchError,
+            _query_osv,
+        )
+
+        oversize = b"{" + (b"x" * (MAX_OSV_BYTES + 10)) + b"}"
+        mock_resp = MagicMock()
+        mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        mock_resp.read.side_effect = lambda n=-1: oversize if n == -1 else oversize[:n]
+
+        with patch(
+            "open_workspace_builder.security.suppression_monitor.urllib.request.urlopen",
+            return_value=mock_resp,
+        ):
+            with pytest.raises(FetchError) as excinfo:
+                _query_osv("CVE-2024-0001")
+
+        assert "1048576" in str(excinfo.value) or str(MAX_OSV_BYTES) in str(excinfo.value)
+        assert "CVE-2024-0001" in str(excinfo.value) or "osv.dev" in str(excinfo.value)
+
+    def test_small_payload_parses(self) -> None:
+        from open_workspace_builder.security.suppression_monitor import _query_osv
+
+        payload = json.dumps({"id": "CVE-2024-0001", "affected": []}).encode()
+        mock_resp = MagicMock()
+        mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        mock_resp.read.return_value = payload
+
+        with patch(
+            "open_workspace_builder.security.suppression_monitor.urllib.request.urlopen",
+            return_value=mock_resp,
+        ):
+            result = _query_osv("CVE-2024-0001")
+
+        assert result["id"] == "CVE-2024-0001"
+
+    def test_custom_cap_honoured(self) -> None:
+        from open_workspace_builder.security.suppression_monitor import (
+            FetchError,
+            _query_osv,
+        )
+
+        payload = json.dumps({"id": "X", "junk": "x" * 200}).encode()
+        mock_resp = MagicMock()
+        mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        mock_resp.read.side_effect = lambda n=-1: payload if n == -1 else payload[:n]
+
+        with patch(
+            "open_workspace_builder.security.suppression_monitor.urllib.request.urlopen",
+            return_value=mock_resp,
+        ):
+            with pytest.raises(FetchError):
+                _query_osv("X", max_bytes=50)

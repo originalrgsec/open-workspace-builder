@@ -5,6 +5,93 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.0] - 2026-04-18
+
+Sprint 33 — **Hook Hardening & SBOM Refactor**. Closes the four
+Sprint 31 spawns that did not make it into the Sprint 32 cut: two
+security-MEDIUMs, one leaky-abstraction refactor that drops the
+pyright basic budget 96 → 40, and one mechanical pin bump unblocked
+earlier the same day by the himitsubako v0.8.0 + v0.9.0 PyPI
+publish.
+
+### Security
+
+- **OWB-S142** (MEDIUM): dependency gate fails closed on wrapped
+  tool errors. Previously `_check_pip_audit`, `_check_guarddog`,
+  `_check_license`, `_check_quarantine`, and `_check_skill_quarantine`
+  caught any unexpected exception and returned `passed=True` with a
+  `"skipped — ... error: ..."` detail — indistinguishable from
+  tool-not-installed and a free pass for any attacker who could
+  induce a crash. Now the errored path returns `passed=False,
+  "errored: <exc-type>: <msg>"` by default. New
+  `SecurityConfig.fail_closed: bool = True` knob; `fail_closed=false`
+  restores the legacy pass-through but labels the detail
+  `"errored (fail_closed=false): ..."` and logs a WARNING so the
+  event stays visible. **Behaviour change — flagged for CI operators
+  who legitimately want skip-on-error.**
+- **OWB-S143** (MEDIUM, CWE-770): `security.quarantine._fetch_pypi_json`
+  and `security.suppression_monitor._query_osv` cap HTTP reads at
+  1 MiB (`MAX_PYPI_BYTES` / `MAX_OSV_BYTES`) and raise a scoped
+  `FetchError` on truncation. Defence-in-depth against a compromised
+  or spoofed endpoint returning a multi-megabyte payload. Configurable
+  via `max_bytes` kwarg; `SecurityConfig.http_max_bytes: int =
+  1_048_576` documents the knob.
+
+### Added
+
+- `open_workspace_builder.sbom._bom_metadata.BomWithMetadata`
+  (internal): frozen dataclass holding `(bom, options,
+  non_allowed_count)`. Replaces the previous pattern of
+  monkey-patching `_owb_options` / `_owb_non_allowed_count` onto
+  the vendored CycloneDX `Bom` (OWB-S144).
+- `open_workspace_builder.config.SecurityConfig.fail_closed: bool`
+  (default `True`) and `http_max_bytes: int` (default
+  `1_048_576`). See migration notes in `docs/public-api-changes.md`.
+- `open_workspace_builder.security.quarantine.FetchError` and
+  `open_workspace_builder.security.suppression_monitor.FetchError`:
+  scoped exceptions distinct from URLError / OSError so callers can
+  recognize a size-cap breach.
+- `MAX_PYPI_BYTES` / `MAX_OSV_BYTES` module-level constants.
+
+### Changed
+
+- **Signature change — `sbom.builder.build_bom`** now returns
+  `BomWithMetadata` instead of `cyclonedx.model.bom.Bom`. Direct
+  callers must read the underlying `Bom` via `wrapped.bom`
+  explicitly. `serialize_bom` and `count_non_allowed_licenses`
+  already accept the wrapper. See `docs/public-api-changes.md`.
+- `himitsubako>=0.7.0` → `>=0.9.0` in all three `pyproject.toml`
+  occurrences (OWB-S141). Mechanical follow-up to the S134
+  absorb — no code changes required.
+- **Pyright budget 96 → 40.** S144 + a scoped module-level pragma
+  on `sbom/builder.py` (CycloneDX stub gaps only —
+  `reportAttributeAccessIssue` + `reportCallIssue`) drops the
+  observed count from 96 to 39. `scripts/pyright-gate.py`,
+  `.pre-commit-config.yaml`, and `.github/workflows/ci.yml` all
+  updated to budget=40. Lowering does not require a DRN
+  (tightening is always welcome per the gate-script docstring);
+  raising still does.
+
+### Fixed
+
+- **SBOM mtime provenance — local tz, not UTC.** Six SBOM tests
+  (`test_quarantine`, `test_cli`) began failing around 20:00 local
+  on 2026-04-18 when the UTC date rolled forward before local did.
+  `sbom/provenance._detect_added_at` emitted UTC date for file
+  mtime while `sbom/quarantine.check_quarantine` compared against
+  `date.today()` in local tz. Freshly-created components landed as
+  "future-dated" and got skipped. Fixed to drop `tz=timezone.utc`
+  from the mtime-fallback path so both sides use local tz.
+  Regression test added.
+
+### Removed
+
+- `_owb_options` and `_owb_non_allowed_count` attributes
+  monkey-patched onto `cyclonedx.model.bom.Bom` instances (S144).
+  Effectively internal; replaced by `BomWithMetadata.options` /
+  `.non_allowed_count`. New regression test asserts the wrapped
+  Bom carries neither attribute.
+
 ## [1.16.0] - 2026-04-18
 
 Sprint 32 — **Security Follow-Through & Hook Install**. Closes both

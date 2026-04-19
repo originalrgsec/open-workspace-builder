@@ -29,8 +29,8 @@ def regenerate_example_sbom() -> str:
     """Produce the byte-stable example SBOM JSON string."""
     components = discover_components(FIXTURE_WORKSPACE)
     options = BomOptions(serial=EXAMPLE_SERIAL, timestamp=EXAMPLE_TIMESTAMP)
-    bom = build_bom(components, options=options)
-    return serialize_bom(bom) + "\n"
+    wrapped = build_bom(components, options=options)
+    return serialize_bom(wrapped) + "\n"
 
 
 def write_example_sbom() -> Path:

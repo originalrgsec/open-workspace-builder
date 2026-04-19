@@ -148,8 +148,8 @@ def check_workspace_quarantine(
         raise FileNotFoundError(f"Workspace not found: {workspace}")
 
     components = discover_components(workspace)
-    bom_obj = build_bom(components)
-    bom_json = serialize_bom(bom_obj)
+    wrapped = build_bom(components)
+    bom_json = serialize_bom(wrapped)
     bom = json.loads(bom_json)
     return check_quarantine(bom, days=days, today=today)
 

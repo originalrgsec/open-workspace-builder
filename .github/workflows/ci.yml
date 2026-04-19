@@ -32,7 +32,7 @@ jobs:
       - name: Lint
         run: uv run ruff check src/ tests/
 
-      - name: Pyright (basic per DRN-078, budget=96)
+      - name: Pyright (basic per DRN-078, budget=40)
         # OWB-S139 AC-4: same script runs locally via pre-commit and in CI
         # so the two environments cannot drift. Budget enforcement lives in
         # scripts/pyright-gate.py; bump requires a new DRN.

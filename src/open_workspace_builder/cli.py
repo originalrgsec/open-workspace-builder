@@ -772,8 +772,8 @@ def scan(
 
         if target.is_dir():
             components = discover_components(target)
-            bom = build_bom(components)
-            Path(emit_sbom).write_text(serialize_bom(bom) + "\n", encoding="utf-8")
+            wrapped = build_bom(components)
+            Path(emit_sbom).write_text(serialize_bom(wrapped) + "\n", encoding="utf-8")
             click.echo(f"SBOM written to {emit_sbom}")
         else:
             click.echo(
@@ -3162,11 +3162,11 @@ def sbom_generate(workspace: str, output_file: str | None, fmt: str) -> None:
     workspace_path = Path(workspace)
     try:
         components = discover_components(workspace_path)
-        bom = build_bom(components)
+        wrapped = build_bom(components)
         if fmt.lower() == "spdx":
             output_str = serialize_spdx(components)
         else:
-            output_str = serialize_bom(bom)
+            output_str = serialize_bom(wrapped)
     except Exception as exc:  # pragma: no cover - defensive
         click.echo(f"Error generating SBOM: {exc}", err=True)
         sys.exit(1)
@@ -3177,7 +3177,7 @@ def sbom_generate(workspace: str, output_file: str | None, fmt: str) -> None:
     else:
         click.echo(output_str)
 
-    non_allowed = count_non_allowed_licenses(bom)
+    non_allowed = count_non_allowed_licenses(wrapped)
     if non_allowed > 0:
         click.echo(
             f"WARNING: {non_allowed} component(s) have a non-allowed or "

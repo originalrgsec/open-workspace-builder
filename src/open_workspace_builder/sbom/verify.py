@@ -70,8 +70,8 @@ def verify_workspace(
     canonical_bom = load_bom(canonical_path)
 
     components = discover_components(workspace)
-    bom_obj = build_bom(components)
-    regenerated_json = serialize_bom(bom_obj)
+    wrapped = build_bom(components)
+    regenerated_json = serialize_bom(wrapped)
     regenerated_bom = json.loads(regenerated_json)
 
     diff = diff_boms(canonical_bom, regenerated_bom)

@@ -32,7 +32,7 @@ repos:
         always_run: true
 
       - id: pyright
-        name: pyright (basic per DRN-078, budget=96)
+        name: pyright (basic per DRN-078, budget=40)
         entry: python3 scripts/pyright-gate.py
         language: system
         types: [python]

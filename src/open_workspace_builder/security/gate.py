@@ -8,15 +8,27 @@ Runs a 5-check security battery against a package before installation:
 5. Quarantine (publish-date freshness)
 
 Each check wraps an existing OWB module. Missing tools are marked as
-"skipped" rather than "failed" to avoid false negatives on machines
+``passed=True, "skipped — ..."`` to avoid false negatives on machines
 without optional tooling.
+
+OWB-S142 — tool errors distinguished from tool-missing. An unexpected
+exception from a wrapped tool (network blip, malformed output,
+version mismatch) is a signal, not noise: an attacker who can induce
+a crash would otherwise get a free pass. When ``fail_closed=True``
+(default), the errored path returns ``passed=False`` with a
+``"errored: <reason>"`` detail. When ``fail_closed=False``, the path
+returns ``passed=True`` but still labels the detail as ``"errored
+(fail_closed=false): ..."`` so the event stays visible to log grep.
 """
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
+
+_LOG = logging.getLogger(__name__)
 
 
 # ── Dataclasses ─────────────────────────────────────────────────────────
@@ -44,8 +56,45 @@ class GateResult:
 # ── Individual checks ───────────────────────────────────────────────────
 
 
-def _check_pip_audit(package: str, version: str | None) -> GateCheck:
-    """Check for known vulnerabilities via pip-audit."""
+def _errored_check(name: str, exc: BaseException, fail_closed: bool) -> GateCheck:
+    """Shape a GateCheck result for the tool-errored path.
+
+    OWB-S142 policy: unexpected exceptions from a wrapped tool are
+    distinct from tool-not-installed. fail_closed=True (default)
+    turns the error into a hard fail; fail_closed=False preserves
+    the legacy pass-through but labels the detail with "errored" so
+    log-grep still surfaces it.
+    """
+    reason = f"{type(exc).__name__}: {exc}"
+    if fail_closed:
+        return GateCheck(
+            name=name,
+            passed=False,
+            details=f"errored: {reason}",
+        )
+    _LOG.warning(
+        "security gate %s errored but fail_closed=false; passing through: %s",
+        name,
+        reason,
+    )
+    return GateCheck(
+        name=name,
+        passed=True,
+        details=f"errored (fail_closed=false): {reason}",
+    )
+
+
+def _check_pip_audit(
+    package: str,
+    version: str | None,
+    *,
+    fail_closed: bool = True,
+) -> GateCheck:
+    """Check for known vulnerabilities via pip-audit.
+
+    ImportError → skipped (tool not installed; not a security signal).
+    Any other exception → respects ``fail_closed``.
+    """
     try:
         from open_workspace_builder.security.dep_audit import _audit_single_vuln
     except ImportError:
@@ -58,11 +107,7 @@ def _check_pip_audit(package: str, version: str | None) -> GateCheck:
     try:
         report = _audit_single_vuln(package, version)
     except Exception as exc:  # noqa: BLE001
-        return GateCheck(
-            name="pip-audit",
-            passed=True,
-            details=f"skipped — pip-audit error: {exc}",
-        )
+        return _errored_check("pip-audit", exc, fail_closed)
 
     if report.findings:
         vuln_ids = ", ".join(f.vuln_id for f in report.findings)
@@ -79,8 +124,14 @@ def _check_pip_audit(package: str, version: str | None) -> GateCheck:
     )
 
 
-def _check_guarddog(package: str) -> GateCheck:
-    """Check for malicious code patterns via guarddog."""
+def _check_guarddog(package: str, *, fail_closed: bool = True) -> GateCheck:
+    """Check for malicious code patterns via guarddog.
+
+    ImportError / FileNotFoundError / RuntimeError → skipped
+    (the dep_audit module treats these as "tool not installed" signals
+    emitted when the guarddog binary is absent).
+    Any other exception → respects ``fail_closed``.
+    """
     try:
         from open_workspace_builder.security.dep_audit import audit_malicious_code
     except ImportError:
@@ -98,6 +149,8 @@ def _check_guarddog(package: str) -> GateCheck:
             passed=True,
             details="skipped — guarddog not installed",
         )
+    except Exception as exc:  # noqa: BLE001
+        return _errored_check("guarddog", exc, fail_closed)
 
     if report.flagged:
         rules = ", ".join(f.rule_name for f in report.flagged)
@@ -128,8 +181,18 @@ def _check_oss_health(package: str) -> GateCheck:
     )
 
 
-def _check_license(package: str, version: str | None) -> GateCheck:
-    """Check package license against the allowed-licenses policy."""
+def _check_license(
+    package: str,
+    version: str | None,
+    *,
+    fail_closed: bool = True,
+) -> GateCheck:
+    """Check package license against the allowed-licenses policy.
+
+    Missing module / missing policy file → skipped (legitimate
+    unconfigured states). Audit exceptions (malformed policy,
+    parse failure) → respects ``fail_closed``.
+    """
     try:
         from open_workspace_builder.security.license_audit import (
             audit_licenses,
@@ -161,11 +224,7 @@ def _check_license(package: str, version: str | None) -> GateCheck:
     try:
         report = audit_licenses(policy_path, dep_data=dep_data)
     except (ValueError, RuntimeError) as exc:
-        return GateCheck(
-            name="license",
-            passed=True,
-            details=f"skipped — license audit error: {exc}",
-        )
+        return _errored_check("license", exc, fail_closed)
 
     failures = [f for f in report.findings if f.status in ("fail", "unknown")]
     if failures:
@@ -183,18 +242,25 @@ def _check_license(package: str, version: str | None) -> GateCheck:
     )
 
 
-def _check_quarantine(package: str, version: str | None, days: int) -> GateCheck:
+def _check_quarantine(
+    package: str,
+    version: str | None,
+    days: int,
+    *,
+    fail_closed: bool = True,
+) -> GateCheck:
     """Check if the package version was published within the quarantine window.
 
-    Uses the quarantine module from S089 when available, otherwise stubs.
+    Uses the quarantine module from S089 when available.
+    Module absent → skipped. Runtime exception (e.g. PyPI JSON
+    unreachable) → respects ``fail_closed``.
     """
     try:
         from open_workspace_builder.security.quarantine import check_quarantine_age
     except (ImportError, AttributeError):
         # S089 quarantine module not yet merged, or `check_quarantine_age`
         # symbol absent under a future refactor — degrade to a "skipped"
-        # rather than swallowing the failure later inside the broad
-        # `except Exception` below.
+        # rather than swallowing a real runtime failure below.
         return GateCheck(
             name="quarantine",
             passed=True,
@@ -203,29 +269,31 @@ def _check_quarantine(package: str, version: str | None, days: int) -> GateCheck
 
     try:
         result = check_quarantine_age(package, version, quarantine_days=days)
-        if result.get("quarantined", False):
-            return GateCheck(
-                name="quarantine",
-                passed=False,
-                details=f"Package published within {days}-day quarantine window",
-            )
-        return GateCheck(
-            name="quarantine",
-            passed=True,
-            details=f"Published outside {days}-day quarantine window",
-        )
     except Exception as exc:  # noqa: BLE001
+        return _errored_check("quarantine", exc, fail_closed)
+
+    if result.get("quarantined", False):
         return GateCheck(
             name="quarantine",
-            passed=True,
-            details=f"skipped — quarantine check error: {exc}",
+            passed=False,
+            details=f"Package published within {days}-day quarantine window",
         )
+    return GateCheck(
+        name="quarantine",
+        passed=True,
+        details=f"Published outside {days}-day quarantine window",
+    )
 
 
 # ── Skill quarantine (S107c) ────────────────────────────────────────────
 
 
-def _check_skill_quarantine(workspace: Path, days: int = 7) -> GateCheck:
+def _check_skill_quarantine(
+    workspace: Path,
+    days: int = 7,
+    *,
+    fail_closed: bool = True,
+) -> GateCheck:
     """Flag AI extensions added inside the last *days* days.
 
     OWB-S107c. Consults the SBOM ``added_at`` provenance field for every
@@ -233,8 +301,10 @@ def _check_skill_quarantine(workspace: Path, days: int = 7) -> GateCheck:
     the scanner pipeline behind ``--skill-quarantine`` (default off).
 
     Returns ``passed=True`` with a "skipped" detail when the workspace is
-    not a directory or when the quarantine module is unavailable, so a
-    misconfigured workspace cannot turn the gate into a hard failure.
+    not a directory or when the quarantine module is unavailable
+    (legitimate unconfigured states — a misconfigured workspace should
+    not turn the gate into a hard failure). Runtime exceptions during
+    the check respect ``fail_closed``.
     """
     if not workspace.is_dir():
         return GateCheck(
@@ -255,11 +325,7 @@ def _check_skill_quarantine(workspace: Path, days: int = 7) -> GateCheck:
     try:
         report = check_workspace_quarantine(workspace=workspace, days=days)
     except Exception as exc:  # noqa: BLE001
-        return GateCheck(
-            name="skill-quarantine",
-            passed=True,
-            details=f"skipped — quarantine check error: {exc}",
-        )
+        return _errored_check("skill-quarantine", exc, fail_closed)
 
     if report.has_quarantined:
         names = ", ".join(q.name for q in report.quarantined[:5])
@@ -388,6 +454,8 @@ def run_gate(
     version: str | None = None,
     quarantine_days: int = 7,
     ledger_path: Path | None = None,
+    *,
+    fail_closed: bool = True,
 ) -> GateResult:
     """Run the full pre-install scan battery against a package.
 
@@ -401,13 +469,20 @@ def run_gate(
         Number of days for the quarantine window (default 7).
     ledger_path:
         Optional path for the reputation ledger (for testing).
+    fail_closed:
+        OWB-S142. When True (default), an unexpected exception raised
+        by a wrapped tool (pip-audit, guarddog, license audit,
+        quarantine) produces a hard fail. When False, the errored
+        path still passes but the detail string is labelled
+        ``"errored (fail_closed=false): ..."``. Threaded from
+        :class:`SecurityConfig.fail_closed` at the CLI layer.
     """
     checks = (
-        _check_pip_audit(package, version),
-        _check_guarddog(package),
+        _check_pip_audit(package, version, fail_closed=fail_closed),
+        _check_guarddog(package, fail_closed=fail_closed),
         _check_oss_health(package),
-        _check_license(package, version),
-        _check_quarantine(package, version, quarantine_days),
+        _check_license(package, version, fail_closed=fail_closed),
+        _check_quarantine(package, version, quarantine_days, fail_closed=fail_closed),
     )
 
     all_passed = all(c.passed for c in checks)
@@ -425,6 +500,10 @@ def run_gate(
     return result
 
 
-def run_gate_batch(packages: list[str]) -> list[GateResult]:
+def run_gate_batch(
+    packages: list[str],
+    *,
+    fail_closed: bool = True,
+) -> list[GateResult]:
     """Run gate checks for all packages in the list."""
-    return [run_gate(pkg) for pkg in packages]
+    return [run_gate(pkg, fail_closed=fail_closed) for pkg in packages]

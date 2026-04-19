@@ -1,3 +1,4 @@
+# pyright: reportAttributeAccessIssue=false, reportCallIssue=false
 """OWB-S107a / S107b — Build and serialize CycloneDX 1.6 SBOMs from Components.
 
 The standard ``hashes`` field carries the raw SHA-256 hex of the normalized
@@ -16,6 +17,22 @@ licenses on each component:
 - spec-native ``licenses`` field plus ``owb:license:warning`` for
   non-allowed licenses; the top-level metadata aggregates a
   ``owb:license:non-allowed-count`` property.
+
+OWB-S144 pyright note:
+``cyclonedx-python-lib`` 9.x exports its concrete ``Bom``, ``Property``,
+and ``CdxComponent`` classes through intermediate serializer bases
+(``_JsonSerializable``, ``_XmlSerializable``) whose stubs omit the
+runtime attributes (``Bom.metadata``, ``Bom.components``,
+``Bom.serial_number``) and constructor parameters (``Property(name=...,
+value=...)``) that this module relies on. These are stub gaps, not
+code bugs — the runtime API is stable and used by every CycloneDX 1.6
+consumer. Rather than scatter ``# pyright: ignore`` lines across every
+access point (~58 sites), the whole module is scoped to suppress
+``reportAttributeAccessIssue`` and ``reportCallIssue``. Any new code
+here should still type-check cleanly against non-CycloneDX symbols
+because other categories (argument types, return types, unresolved
+imports) are left enabled. When the CycloneDX stubs are fixed
+upstream or the library is upgraded past 11.x, remove the pragma.
 """
 
 from __future__ import annotations
@@ -31,11 +48,20 @@ from cyclonedx.model.component import ComponentType
 from cyclonedx.model.license import DisjunctiveLicense, License
 from cyclonedx.output.json import JsonV1Dot6
 
+from open_workspace_builder.sbom._bom_metadata import BomWithMetadata
 from open_workspace_builder.sbom.capability import Capability
 from open_workspace_builder.sbom.discover import Component, ComponentKind
 from open_workspace_builder.sbom.license import LicenseEntry
 from open_workspace_builder.sbom.normalize import NORM_VERSION
 from open_workspace_builder.sbom.provenance import Provenance
+
+__all__ = [
+    "BomOptions",
+    "BomWithMetadata",
+    "build_bom",
+    "serialize_bom",
+    "count_non_allowed_licenses",
+]
 
 _KIND_TO_CDX_TYPE: dict[ComponentKind, ComponentType] = {
     ComponentKind.SKILL: ComponentType.LIBRARY,
@@ -63,7 +89,7 @@ def build_bom(
     components: Iterable[Component],
     *,
     options: BomOptions | None = None,
-) -> Bom:
+) -> BomWithMetadata:
     """Build a CycloneDX Bom object from our internal Component records.
 
     Args:
@@ -71,8 +97,17 @@ def build_bom(
         options: Optional deterministic overrides for serial and timestamp.
 
     Returns:
-        A :class:`cyclonedx.model.bom.Bom` populated with one CdxComponent
-        per input component. Use :func:`serialize_bom` to render to JSON.
+        A :class:`BomWithMetadata` holding the underlying
+        :class:`cyclonedx.model.bom.Bom` plus OWB build-time metadata
+        (deterministic options, non-allowed license count). Use
+        :func:`serialize_bom` to render to JSON and
+        :func:`count_non_allowed_licenses` to pull the count.
+
+        OWB-S144 signature change: previously this function returned a
+        bare ``Bom`` with ``_owb_options`` and ``_owb_non_allowed_count``
+        stashed on it via ``# type: ignore[attr-defined]``. Callers that
+        need the underlying ``Bom`` should read ``result.bom``
+        explicitly.
     """
     bom = Bom()
     if options is not None and options.serial is not None:
@@ -98,38 +133,34 @@ def build_bom(
             )
         )
 
-    # Stash deterministic overrides on the bom object for serialize_bom to pick
-    # up. We do this because the CycloneDX library generates the timestamp at
-    # serialization time, not at Bom() construction time.
-    if options is not None:
-        bom._owb_options = options  # type: ignore[attr-defined]
-
-    bom._owb_non_allowed_count = non_allowed_count  # type: ignore[attr-defined]
-
-    return bom
+    return BomWithMetadata(
+        bom=bom,
+        options=options,
+        non_allowed_count=non_allowed_count,
+    )
 
 
-def count_non_allowed_licenses(bom: Bom) -> int:
+def count_non_allowed_licenses(wrapped: BomWithMetadata) -> int:
     """Return the number of components with non-allowed (or custom) licenses.
 
     Used by the CLI to choose exit code 2 (warnings) vs 0 (clean).
     """
-    return int(getattr(bom, "_owb_non_allowed_count", 0))
+    return wrapped.non_allowed_count
 
 
-def serialize_bom(bom: Bom) -> str:
+def serialize_bom(wrapped: BomWithMetadata) -> str:
     """Serialize a Bom to a CycloneDX 1.6 JSON string.
 
-    If the Bom was built with :class:`BomOptions` containing a fixed
-    timestamp, the output JSON has ``metadata.timestamp`` patched to that
-    value so downstream diffs are byte-stable.
+    If the wrapped Bom was built with :class:`BomOptions` containing a
+    fixed timestamp, the output JSON has ``metadata.timestamp`` patched
+    to that value so downstream diffs are byte-stable.
     """
     import json as _json
 
-    output = JsonV1Dot6(bom)
+    output = JsonV1Dot6(wrapped.bom)
     json_str = output.output_as_string(indent=2)
 
-    opts: BomOptions | None = getattr(bom, "_owb_options", None)
+    opts = wrapped.options
     if opts is None or opts.timestamp is None:
         return json_str
 

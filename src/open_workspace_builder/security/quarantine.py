@@ -3,6 +3,14 @@
 Implements a 7-day quarantine window for newly published packages via uv's
 ``exclude-newer`` directive. Provides tools to check pinned dependency versions
 against PyPI publish dates and identify safe advancement candidates.
+
+OWB-S143 — PyPI JSON fetches are bounded by ``MAX_PYPI_BYTES`` (default
+1 MiB). A compromised or spoofed endpoint cannot exhaust memory with a
+multi-megabyte response. Real PyPI JSON bodies for a single package are
+typically 10–200 KB; 1 MiB leaves headroom for the largest legitimate
+packages (tensorflow, torch with many versions). Override via the
+``max_bytes`` kwarg, sourced from
+``SecurityConfig.http_max_bytes`` at the CLI layer.
 """
 
 from __future__ import annotations
@@ -15,6 +23,20 @@ from pathlib import Path
 from typing import Any
 from urllib.error import URLError
 from urllib.request import Request, urlopen
+
+# OWB-S143 defensive read cap for PyPI JSON responses.
+MAX_PYPI_BYTES = 1_048_576
+
+
+class FetchError(RuntimeError):
+    """Raised when an HTTP response exceeds the configured size cap.
+
+    Distinct from ``URLError`` / ``OSError`` (network failure) and
+    ``JSONDecodeError`` (malformed payload); signals that the endpoint
+    sent more bytes than the caller trusts. ``_fetch_pypi_json`` treats
+    it as a silent None-return (preserving the existing "any error
+    returns None" contract); other callers may let it propagate.
+    """
 
 
 @dataclass(frozen=True)
@@ -103,10 +125,16 @@ def _parse_lock(lock_text: str) -> list[_LockEntry]:
 # ── PyPI queries ─────────────────────────────────────────────────────────
 
 
-def _fetch_pypi_json(package: str, version: str | None = None) -> dict[str, Any] | None:
+def _fetch_pypi_json(
+    package: str,
+    version: str | None = None,
+    *,
+    max_bytes: int = MAX_PYPI_BYTES,
+) -> dict[str, Any] | None:
     """Fetch package metadata from PyPI JSON API.
 
-    Returns None on any network or parse error.
+    Reads at most ``max_bytes`` from the response body. Returns None
+    on any network error, parse error, or size-cap breach (OWB-S143).
     """
     if version:
         url = f"https://pypi.org/pypi/{package}/{version}/json"
@@ -114,11 +142,18 @@ def _fetch_pypi_json(package: str, version: str | None = None) -> dict[str, Any]
         url = f"https://pypi.org/pypi/{package}/json"
 
     try:
-        req = Request(url, headers={"Accept": "application/json"})
-        with urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read())
+        req = Request(url, headers={"Accept": "application/json"})  # noqa: S310 — https-only
+        with urlopen(req, timeout=10) as resp:  # noqa: S310 — https-only
+            # Read one extra byte so we can tell whether the server
+            # intended to send more than the cap.
+            body = resp.read(max_bytes + 1)
+            if len(body) > max_bytes:
+                raise FetchError(
+                    f"PyPI JSON for {package} exceeded {max_bytes} byte cap (url={url})"
+                )
+            data = json.loads(body)
         return data
-    except (URLError, json.JSONDecodeError, OSError):
+    except (URLError, json.JSONDecodeError, OSError, FetchError):
         return None
 
 
