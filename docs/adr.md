@@ -543,6 +543,38 @@ The builder is a stateless CLI tool. If it fails mid-build, the user re-runs it.
 
 **Status:** Accepted (Sprint 20).
 
+## AD-19: Bundle security-writetime and sprint-close-reminder as Default PreToolUse Hooks (S151)
+
+**Status:** Accepted
+
+**Context:**
+Two lightweight PreToolUse hooks have run in personal use across multiple projects for more than a sprint without false-positive churn:
+
+1. `security-writetime.py` — scans `Edit`, `Write`, and `MultiEdit` tool calls for nine hazardous regex patterns (GitHub Actions workflow injection, `subprocess(shell=True)`, `yaml.load()` without SafeLoader, HTTP clients with `verify=False`, `Flask(debug=True)`, bare `eval`/`exec`, `pickle.loads`, `0.0.0.0` bindings in config files, hardcoded private keys). Warns to stderr; exits 0. Suppressed per-line by a `# noqa: security` marker.
+2. `sprint-close-reminder.sh` — inspects `Bash` tool calls; when a `git commit` command's message contains a version-like pattern (`vX.Y.Z`) or a release keyword, prints a reminder to invoke the sprint-close skill before proceeding. Never blocks.
+
+Both fit OWB's "opinionated, secure-by-default AI workspace bootstrap" posture and the same distribution channel already used by `dependency-gate.py` (bundled under `vendor/ecc/hooks/`, installed via operator action rather than `owb init` wiring).
+
+**Decision:**
+Bundle both hooks under `src/open_workspace_builder/vendor/ecc/hooks/` with byte-near-identical logic to their shakedown-period versions. Document the install-time wiring (PreToolUse entry in `.claude/settings.json`) in the hook's own module docstring and in the OWB docs. Rules in `security-writetime.py` stay as a `@dataclass(frozen=True)` tuple for this release — they are not refactored into a declarative YAML/TOML loader in this sprint.
+
+Warn-only semantics are non-negotiable for this release: exit 0 in every code path, route all messages to stderr, and leave blocking mode out of scope. Review-time tooling (`code-reviewer` agent, `security-review` skill, `security.md` rule) handles remediation.
+
+**Consequences:**
+- Fresh OWB installs ship with nine defensive regex rules available to any operator who wires the hook into their `.claude/settings.json`. Configuration is operator-controlled — installing the hook is opt-in, not automatic during `owb init` (preserves operator authority over Claude Code hook registration).
+- Suppression is per-line via a comment marker, which keeps escape hatches auditable in `git blame` and does not require a side-channel allowlist.
+- The rule inventory is Python-literal today. Adding or removing a rule requires a Python edit. A follow-up story (TD-005 §2 equivalent) can migrate rules to a YAML/TOML file with Pydantic schema validation once the schema design is settled (severity levels, rule kinds, user-extension surface, backwards compatibility). That design is not in scope for S151.
+- The hooks are Python-plus-bash. The Python hook depends only on the standard library; the bash hook prefers `jq` with a grep fallback. No new runtime dependencies.
+- Language scope is Python + GitHub Actions + infrastructure config in the default ruleset. JavaScript / TypeScript / Go additions are explicitly deferred.
+
+**Alternatives considered:**
+- *Official `security-guidance` Claude Code plugin.* Rejected: six of nine rules are JavaScript/TypeScript oriented; `pickle` and `os.system` matches are substring-based and noisy; warning messages reference Claude Code's own source tree.
+- *`hookify` plugin as a baseline mechanism.* Rejected: rule definitions load from `./.claude/` relative to the current working directory, so it cannot provide the cross-project default enforcement OWB distributes.
+- *Declarative YAML rule loader shipped in this sprint (TD-005 §2 in the full form).* Rejected for S151: schema design (severity levels, rule kinds, extension hooks) is its own design exercise and doubles the sprint's working set. Deferred to a follow-up story.
+- *Blocking mode on any rule.* Rejected for this release. `hardcoded-private-key` is the strongest candidate and can be re-evaluated once the declarative loader lands.
+
+**Related:** TD-005 (absorbed into OWB-S151); bundled `dependency-gate.py` precedent (S124 / S133).
+
 ## Open Questions
 
 1. Should `owb init` generate a `.gitignore` that excludes populated context files by default?
