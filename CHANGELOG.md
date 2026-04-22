@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.0] - 2026-04-22
+
+Sprint 34 — **Distribution Content Refresh**. First bundled-content refresh since v1.14.1 (Sprint 30). Ports eight sprints of vault-policy, global-rule, hook, and skill drift into `src/open_workspace_builder/content/` and `src/open_workspace_builder/vendor/`, with a genericize pass on every artifact (operator-specific paths, account names, project identifiers, and incident citations stripped).
+
+### Added
+
+- **New bundled policies** (`src/open_workspace_builder/content/policies/`):
+  - `scrub-skills-quick-reference.md` — one-page summary of the mid-sprint `/simplify` → `/code-review` → `/refactor-clean` order.
+  - `cli-standards.md` — shared Click-based CLI conventions (config loading, auth group, exit codes, output conventions, async bridge, contract testing).
+  - `pii-handling-policy.md` — PII and secrets encryption policy with three-way storage-backend choice (himitsubako / direct age / explicit refuse-plaintext) and two-level profile location.
+- **New bundled skill** (`src/open_workspace_builder/content/skills/vault-pii-audit/`):
+  - `SKILL.md` — prose skill with first-run interview covering PII element survey, exclusions, storage backend selection, himitsubako install detection, age-key path, and profile write. Refuse-fallback clause if operator declines both encrypted-store backends.
+  - `scripts/scan.py` — config-driven scanner. 18 detection patterns (11 secrets, 7 PII) gated by the profile's `categories:` list. Pre-seeded exclusions minimal (`noreply@anthropic.com` only); operator-specific exclusions load from `<vault_root>/.owb/pii-profile.yaml`.
+- **New bundled PreToolUse hooks** (`src/open_workspace_builder/vendor/ecc/hooks/`):
+  - `security-writetime.py` — scans `Edit` / `Write` / `MultiEdit` payloads against nine regex rules (GHA workflow injection, `subprocess(shell=True)`, `yaml.load()` without SafeLoader, HTTP clients with `verify=False`, `Flask(debug=True)`, `eval`/`exec`, `pickle.loads`, `0.0.0.0` bind in config, hardcoded private keys). Warn-only, `# noqa: security` suppression.
+  - `sprint-close-reminder.sh` — warns on `git commit` commands whose message contains a version pattern or release keyword.
+- **New ADR:** `AD-19` — documents the decision to bundle the two hooks byte-near-identically with Python-literal rule tuples, warn-only semantics, operator-controlled install, and the explicit deferral of TD-005 §2 (declarative YAML/TOML rule loader).
+- **New tests** (`tests/hooks/`):
+  - `test_security_writetime.py` — 17 tests covering one positive per rule, path-filter boundaries, `noqa` suppression, `main()` tool-name gating.
+  - `test_sprint_close_reminder.py` — 8 tests covering version-pattern detection and plain-commit silence.
+
+### Changed
+
+- **`content/policies/development-process.md`:** added Scrub Skills section, new item 3a "GitHub Release — Verify, Don't Create", Post-Deploy Verification item 5, Scrub Skills Record item 6, Quality-Metrics Report item 7 with gate table; renumbered to 10-item checklist.
+- **`content/policies/oss-health-policy.md`:** added Pre-Install Gate (MANDATORY) section with four-step license-first sequencing.
+- **`content/policies/allowed-licenses.md`:** retroactive de-branding pass — `applies-to` generalized, 12 prose instances of operator branding removed, `Beancount` CLI exemption row removed.
+- **`content/policies/product-development-workflow.md`:** Phase 5 QA list gains item 10 pointing at Scrub Skills.
+- **`vendor/ecc/rules/common/sprint-workflow.md`:** +50 lines — Autonomous End-to-End Contract, clarifying-questions-in-planning-only clause, enumerated 10-item Sprint Completion Checklist, Git Ops Ownership section.
+- **`vendor/ecc/rules/common/git-workflow.md`:** +37 lines — Autonomous Git Operations + Gated Ops split.
+- **`vendor/ecc/rules/common/development-workflow.md`:** +6 lines — sprint-execution shortcut at top of Feature Implementation Workflow.
+- **`vendor/ecc/rules/common/security.md`:** small clarity tweak for tooling-generic framing.
+- **`vendor/ecc/agents/code-reviewer.md`, `planner.md`, `tdd-guide.md`:** policy-consultation sections pointing at bundled policy filenames.
+
+### Deferred
+
+- Declarative YAML/TOML rule loader for `security-writetime.py` (TD-005 §2). Rules stay as a `@dataclass(frozen=True)` tuple in this release.
+- JavaScript / TypeScript / Go rules for `security-writetime.py`.
+- Blocking mode for any `security-writetime.py` rule.
+- Scanner unit tests for `vault-pii-audit/scripts/scan.py`.
+- `owb init` auto-scaffold of `.owb/pii-profile.yaml` (the skill's first-run interview generates the file on demand).
+
+### Migration
+
+No breaking changes, no Python API signature changes, no CLI command signature changes. Operators running `owb migrate` on an existing workspace pick up the new and updated files alongside the existing tree. First invocation of the new `vault-pii-audit` skill triggers the one-time interview.
+
 ## [1.17.0] - 2026-04-18
 
 Sprint 33 — **Hook Hardening & SBOM Refactor**. Closes the four
