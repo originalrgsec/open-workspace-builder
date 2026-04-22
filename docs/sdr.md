@@ -902,6 +902,28 @@ class ReputationLedger:
 - Tests: 1,859 passed, 1 skipped. Coverage 86.32% (up from 85.45%). 26 new tests (6 config, 11 factory, 9 wizard).
 - Follow-up: OWB-S133 (dependency-gate hook argv parsing bug, blocks `uv add` and related install commands; subsumes the himitsubako Sprint 7 follow-up on `==` pin respect). Added to backlog.
 
+### Sprint 31: Code Quality Scrub
+- Stories: OWB-S134 (XS — himitsubako v0.8.0 absorb), OWB-S140 (XS — scrub-skills SDLC policy absorb), OWB-S135 / S136 / S137 (`/simplify`, `/code-review`, `/refactor-clean` runs), OWB-S138 (pyright strict triage spike).
+- Goal: First full mid-sprint scrub-skills pass against the OWB codebase following the HMB-S038 policy. Pair it with a pyright-mode decision (DRN-078 basic mode, budget 96).
+- Version: v1.15.0. 1,921 tests, 85% coverage.
+- Follow-ups spawned: OWB-S141 (himitsubako pin bump), OWB-S142 (gate fail-closed), OWB-S143 (HTTP read cap), OWB-S144 (SBOM BomWithMetadata refactor), OWB-SEC-005 (sources/url_validator SSRF), OWB-SEC-006 (scanner pattern ReDoS audit).
+
+### Sprint 32: Security Follow-Through & Hook Install
+- Stories: OWB-S139 (pyright pre-commit hook install), OWB-SEC-005 (url_validator SSRF HIGH fix), OWB-SEC-006 (scanner ReDoS caps).
+- Version: v1.16.0. 1,971 tests, 85.36% coverage. Pyright enforced at budget 96 via `scripts/pyright-gate.py`.
+
+### Sprint 33: Hook Hardening & SBOM Refactor
+- Stories: OWB-S141 (himitsubako pin >=0.9.0), OWB-S142 (dependency gate fail-closed on tool error), OWB-S143 (HTTP read size cap, CWE-770), OWB-S144 (BomWithMetadata dataclass replaces monkey-patched CycloneDX Bom).
+- Goal: Close the four Sprint 31 spawns that did not make it into Sprint 32.
+- Version: v1.17.0. 1,989 tests, 85.36% coverage. Pyright budget 96 → 40 after the SBOM refactor.
+- Hotfix landed inline: SBOM provenance mtime UTC-vs-local timezone skew.
+
+### Sprint 34: Distribution Content Refresh
+- Stories: OWB-S147 (policy batch 1 — 4 updated), OWB-S148 (policy batch 2 — 3 new including PII handling), OWB-S149 (4 ECC rules — autonomous SDLC + git ops split), OWB-S150 (3 agents — policy consultation), OWB-S151 (bundle security-writetime + sprint-close-reminder hooks, absorbs TD-005, new AD-19), OWB-S152 (new vault-pii-audit skill with first-run himitsubako interview), OWB-S153 (release plumbing).
+- Goal: First bundled-content refresh since v1.14.1 (Sprint 30). Ship eight sprints of drift with a genericize pass on every artifact. Pre-commit operator review gate on every step.
+- Version: v1.18.0. 2,014 tests passed (+25), 1 skipped. Coverage ≥ 85.36%, pyright 39/40, all gates clean.
+- Deferred follow-ups: TD-005 §2 (declarative YAML rule loader for security-writetime), JS/TS/Go rules for security-writetime, blocking mode for security-writetime, scanner unit tests for vault-pii-audit, `owb init` auto-scaffold of `.owb/pii-profile.yaml`.
+
 ## Open Questions
 
 1. Should the CLI use `click` or `argparse`? Click provides a cleaner subcommand model but adds a dependency. Argparse is stdlib but verbose for this many subcommands. Recommendation: click.
