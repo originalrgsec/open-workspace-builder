@@ -66,11 +66,79 @@ No release age filter. Mitigate by:
 
 Add these checks to every CI pipeline:
 - **`trivy fs . --severity CRITICAL,HIGH --exit-code 1`** as a required check on every PR. Trivy covers npm, pip, Cargo, Go, and more in a single scan. Apache 2.0 license. GitHub Action: `aquasecurity/trivy-action` with `scan-type: fs`.
+  - **The `--exit-code 1` flag is mandatory.** Workflows that ship Trivy as `--exit-code 0` (informational only) silently downgrade the gate. New repos must adopt `--exit-code 1` from day one. Repos with a dirty baseline must file CVE-cleanup follow-ups before adopting the gate, not relax it. (Pre-commit hooks that run Trivy already exit non-zero on findings; the rule only applies to direct `trivy fs` workflow calls.)
 - **`npm audit --audit-level=high`** as an additional npm-specific check (built-in, free).
 - **`pip-audit`** for Python projects without uv (or as a complement to Trivy).
 - **Lockfile integrity:** fail if lockfile changed without a corresponding dependency update PR.
 - **Renovate** (self-hosted, free) for automated, reviewable dependency update PRs. Configure `minimumReleaseAge: "7 days"` to enforce quarantine on automated updates. Never auto-merge.
 - **osv-scanner** (optional, Apache 2.0) as a second opinion alongside Trivy.
+
+#### 6.1 Binary integrity in CI
+
+CI workflows that download release-tarball binaries (`curl | tar`,
+GitHub release assets, etc.) **must** verify SHA256 before extraction.
+Two acceptable patterns:
+
+1. **Upstream `_checksums.txt` manifest** (preferred). Most projects
+   that publish release tarballs also publish a checksums manifest
+   alongside them (e.g., `trivy_<VERSION>_checksums.txt`,
+   `gitleaks_<VERSION>_checksums.txt`,
+   `sops-v<VERSION>.checksums.txt`). Pattern:
+
+   ```bash
+   curl -fsSL "${binary_url}" -o /tmp/binary.tar.gz
+   curl -fsSL "${checksums_url}" -o /tmp/checksums.txt
+   ( cd /tmp && grep " ${expected_artifact}\$" checksums.txt | sha256sum --check - )
+   tar -xz -C "$HOME/.local/bin" -f /tmp/binary.tar.gz "${binary_name}"
+   ```
+
+2. **Hardcoded SHA256 in workflow env** (fallback). Some projects
+   publish only Sigstore `.proof` attestations rather than a
+   `_checksums.txt` manifest (notably `FiloSottile/age`). For those,
+   compute the SHA256 once against the pinned release version and
+   pin the value in workflow `env:`. Pattern:
+
+   ```yaml
+   env:
+     AGE_VERSION: "1.3.1"
+     AGE_LINUX_AMD64_SHA256: "bdc69c09cbdd6cf8b1f333d372a1f58247b3a33146406333e30c0f26e8f51377"
+   ```
+
+   ```bash
+   curl -fsSL "${age_url}" -o /tmp/age.tar.gz
+   echo "${AGE_LINUX_AMD64_SHA256}  /tmp/age.tar.gz" | sha256sum --check -
+   ```
+
+   Bumping the pinned version requires recomputing the hash against
+   the new release. Record the computation date in a comment.
+
+The unsigned `curl ... | tar -xz` pattern is **prohibited** in CI.
+A network man-in-the-middle (or a compromised release asset that
+hasn't been yanked yet) bypasses every other supply-chain control if
+the binary itself isn't verified.
+
+#### 6.2 Reusable-workflow SHA pinning
+
+GitHub Actions reusable workflows referenced via `uses:` must pin to
+a commit SHA, not a branch:
+
+- **Wrong:** `uses: org/repo/.github/workflows/foo.yml@main`
+- **Right:** `uses: org/repo/.github/workflows/foo.yml@<40-char-sha>  # source PR / date`
+
+Combined with `secrets: inherit`, an unpinned reusable workflow
+makes every consuming repo vulnerable to a single-point compromise
+of the source repo. SHA-pinning constrains the blast radius to the
+specific commit you reviewed at pin time.
+
+The same rule applies to third-party Action `uses:` references
+(`actions/checkout`, `astral-sh/setup-uv`, etc.) — pin to a 40-char
+commit SHA with the tag name in a trailing comment for readability.
+
+**Bumping a pin** is a multi-repo PR set whenever the source
+workflow changes. Walk the consumer set, pick a known-good SHA on
+the source repo's main branch, and update each consumer's pin in
+its own PR. Add a comment naming the source PR or branch the SHA
+was on at pin time so the audit trail stays intact across rotations.
 
 ### 7. CLAUDE.md / Project Instructions
 
