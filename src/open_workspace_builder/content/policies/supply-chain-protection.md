@@ -185,6 +185,24 @@ For non-CVE situations where you genuinely need a package released in the last 7
 - Document the bypass in the commit message with justification
 - This should be rare (once or twice a year at most)
 
+### ADR override procedure for `dependency-gate` PreToolUse hook blocks
+
+The bundled `dependency-gate.py` PreToolUse hook (shipped at `vendor/ecc/hooks/dependency-gate.py` and registered at `~/.claude/hooks/dependency-gate.py` after `owb init`) blocks dependency-install commands when a finding violates project policy: license not on the allow-list, package inside the 7-day quarantine window, or unknown-package state. When the operator has independently judged a finding acceptable for a specific install, the sanctioned override path is:
+
+1. **File an ADR exception** in the project's decisions index under `decisions/ADR-NNN-<package>-gate-exception.md` with:
+   - The package name + version being exempted.
+   - The finding category (license, quarantine, unknown).
+   - The reason the operator judges the finding acceptable.
+   - The expiry condition (e.g., "until upstream allow-list adds license X" or "until quarantine clock elapses on YYYY-MM-DD").
+   - The blast radius (which workspace, which repo, which downstream consumers depend on the exempted package).
+2. **One-time override commit** referencing the ADR. Two valid mechanisms:
+   - For a one-shot package: pin its version exact in the manifest with an inline comment naming the ADR and the expiry condition (preferred — leaves an audit trail in the manifest itself).
+   - For a class of first-party findings: add the package prefix to the hook's `--first-party-prefix` argument list. Only add prefixes for packages the operator owns or builds in-tree.
+3. **Do NOT disable the hook globally.** Removing the hook from `settings.json` or flipping it to a permanent allow-everything configuration is not an ADR exception; it is a reversal of the policy that installed the gate. Reversal needs its own story.
+4. **Review the ADR exception at sprint close.** If the expiry condition is met, remove the manifest pin (or the prefix entry) in the same sprint. If not, record the carryover in the next sprint's plan.
+
+This procedure is the only sanctioned path for working around `dependency-gate` hook blocks. Filing the ADR before the override commit is a hard requirement; the commit message must reference the ADR ID.
+
 ### FOSS Tool Reference
 
 | Tool | License | What it does | Install |
