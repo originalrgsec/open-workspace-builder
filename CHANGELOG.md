@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.1] - 2026-05-01
+
+Sprint 35 — **Supply-Chain Policy Patch**. Single-story patch release that genericizes a +18 line addition to the bundled `supply-chain-protection.md` policy. The addition cited a deployment-layer CI Action concept, an external (non-OWB) story ID, and operator-account-specific framing that violated the v1.18.0 distribution-genericize gate. Section reframed around the artifact OWB actually ships — the bundled `dependency-gate.py` PreToolUse hook installed at `~/.claude/hooks/dependency-gate.py` after `owb init`. Two prior commits to `main` past the v1.18.0 tag (`c114f53` binary-integrity / reusable-workflow SHA pinning; `543ad69` SDR sprint-plan backfill) ride along into v1.18.1.
+
+### Changed
+
+- `src/open_workspace_builder/content/policies/supply-chain-protection.md` — ADR-override section reframed away from the "GitHub Action enforce-mode" framing toward the bundled PreToolUse hook the consumer actually runs locally. Four-step procedure (file ADR exception → one-time override commit → do not disable globally → review at sprint close) preserved with each step adapted to local-hook semantics: ADR location is the project's own `decisions/` index (not an external "deployment vault"); override mechanisms are the manifest pin (preserved) and the hook's `--first-party-prefix` argument list (replaces the per-Action invocation flag); "do not disable the hook globally" replaces "do not flip to permanent report-only mode". The closing-paragraph contract — only sanctioned override path, ADR before the override commit, commit message references ADR ID — is preserved verbatim.
+- Carried over from `c114f53` (already on `main` past v1.18.0 tag): two new sections in the same policy file (§6.1 Binary integrity in CI with `_checksums.txt` manifest verification or hardcoded SHA256 fallback; §6.2 Reusable-workflow SHA pinning to 40-char commit SHAs). The `--exit-code 1` flag for direct `trivy fs` workflow calls is now documented as mandatory (previously implicit). Repos with a dirty CVE baseline must file cleanup follow-ups before adopting the gate, not relax it.
+- Carried over from `543ad69`: SDR sprint-plan section gained backfilled entries for Sprints 31–34.
+
+### Stats
+
+- 2,014 tests passing, 1 skipped (Sprint 34 baseline held; no test changes in this docs-only patch).
+- Coverage ≥ 85.36% (held).
+- Pyright basic mode: 39 errors observed against budget of 40 (held; DRN-078).
+- Ruff / format / Trivy / Semgrep / Gitleaks / pyright-gate: clean.
+- Sprint 35: one story (OWB-S154), ~1 point.
+
 ## [1.18.0] - 2026-04-22
 
 Sprint 34 — **Distribution Content Refresh**. First bundled-content refresh since v1.14.1 (Sprint 30). Ports eight sprints of vault-policy, global-rule, hook, and skill drift into `src/open_workspace_builder/content/` and `src/open_workspace_builder/vendor/`, with a genericize pass on every artifact (operator-specific paths, account names, project identifiers, and incident citations stripped).

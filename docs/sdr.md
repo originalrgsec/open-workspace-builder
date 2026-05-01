@@ -924,6 +924,12 @@ class ReputationLedger:
 - Version: v1.18.0. 2,014 tests passed (+25), 1 skipped. Coverage ≥ 85.36%, pyright 39/40, all gates clean.
 - Deferred follow-ups: TD-005 §2 (declarative YAML rule loader for security-writetime), JS/TS/Go rules for security-writetime, blocking mode for security-writetime, scanner unit tests for vault-pii-audit, `owb init` auto-scaffold of `.owb/pii-profile.yaml`.
 
+### Sprint 35: Supply-Chain Policy Patch
+- Stories: OWB-S154 (genericize ADR-override section in `supply-chain-protection.md`).
+- Goal: Close a single distribution-genericize gate slip. A +18 line addition to the bundled supply-chain policy had landed (uncommitted on `main`) carrying cross-project framing — a CI Action concept, an external story ID, and operator-account-specific repo framing — that did not match the artifact OWB actually ships. Section reframed around the bundled `dependency-gate.py` PreToolUse hook installed via `owb init`.
+- Version: v1.18.1. Patch release. 2,014 tests, 1 skipped (held). Coverage ≥ 85.36% (held). Pyright 39/40 (held). All gates clean.
+- Two intervening commits past the v1.18.0 tag rode along: `c114f53` (binary-integrity sections + `--exit-code 1` mandatory for direct `trivy fs` workflow calls + reusable-workflow SHA pinning) and `543ad69` (this section's Sprints 31–34 backfill).
+
 ## Open Questions
 
 1. Should the CLI use `click` or `argparse`? Click provides a cleaner subcommand model but adds a dependency. Argparse is stdlib but verbose for this many subcommands. Recommendation: click.
