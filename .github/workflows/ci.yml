@@ -85,7 +85,11 @@ jobs:
         # from quarantine per supply-chain-protection policy. Two-phase scan:
         # 1) JSON scan to detect CVEs with fixes  2) Full scan ignoring those.
         run: |
-          IGNORE_FLAGS="--ignore-vuln CVE-2026-4539"
+          # GHSA-58qw-9mgm-455v: pip behavior change for concatenated tar+ZIP archives.
+          # No fix version; upstream tracks it as a behavior-tightening change, not a
+          # patch-pending vulnerability. Pip is the installer itself (build-side), not a
+          # runtime dependency of the wheel. Suppression added in OWB-S155 (Sprint 35).
+          IGNORE_FLAGS="--ignore-vuln CVE-2026-4539 --ignore-vuln GHSA-58qw-9mgm-455v"
 
           # Phase 1: detect CVEs with available fixes (exempt from quarantine)
           AUDIT_JSON=$(uv run pip-audit --format=json --skip-editable 2>/dev/null || true)
