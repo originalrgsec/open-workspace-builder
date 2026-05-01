@@ -14,6 +14,7 @@ Sprint 35 — **Supply-Chain Policy Patch**. Single-story patch release that gen
 - `src/open_workspace_builder/content/policies/supply-chain-protection.md` — ADR-override section reframed away from the "GitHub Action enforce-mode" framing toward the bundled PreToolUse hook the consumer actually runs locally. Four-step procedure (file ADR exception → one-time override commit → do not disable globally → review at sprint close) preserved with each step adapted to local-hook semantics: ADR location is the project's own `decisions/` index (not an external "deployment vault"); override mechanisms are the manifest pin (preserved) and the hook's `--first-party-prefix` argument list (replaces the per-Action invocation flag); "do not disable the hook globally" replaces "do not flip to permanent report-only mode". The closing-paragraph contract — only sanctioned override path, ADR before the override commit, commit message references ADR ID — is preserved verbatim.
 - Carried over from `c114f53` (already on `main` past v1.18.0 tag): two new sections in the same policy file (§6.1 Binary integrity in CI with `_checksums.txt` manifest verification or hardcoded SHA256 fallback; §6.2 Reusable-workflow SHA pinning to 40-char commit SHAs). The `--exit-code 1` flag for direct `trivy fs` workflow calls is now documented as mandatory (previously implicit). Repos with a dirty CVE baseline must file cleanup follow-ups before adopting the gate, not relax it.
 - Carried over from `543ad69`: SDR sprint-plan section gained backfilled entries for Sprints 31–34.
+- `.github/workflows/ci.yml` — `dep-scan` job suppresses pre-existing pip `GHSA-58qw-9mgm-455v`. Filed as **OWB-S155** within Sprint 35 after the close PR's CI surfaced the failure. The advisory is a pip behavior-tightening change for concatenated tar+ZIP archives with no `fix_versions`; the existing two-phase scan logic (which auto-exempts CVEs that have fixes available) cannot catch it. Pip is the installer itself (build-side, dev/install only), not a runtime dependency of the wheel OWB ships, so suppression does not affect end-user supply-chain posture.
 
 ### Stats
 
@@ -21,7 +22,7 @@ Sprint 35 — **Supply-Chain Policy Patch**. Single-story patch release that gen
 - Coverage ≥ 85.36% (held).
 - Pyright basic mode: 39 errors observed against budget of 40 (held; DRN-078).
 - Ruff / format / Trivy / Semgrep / Gitleaks / pyright-gate: clean.
-- Sprint 35: one story (OWB-S154), ~1 point.
+- Sprint 35: two stories (OWB-S154 docs genericize, OWB-S155 CI dep-scan suppression hotfix added mid-sprint), ~1.5 points total.
 
 ## [1.18.0] - 2026-04-22
 
