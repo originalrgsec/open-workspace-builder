@@ -1,10 +1,25 @@
 name: CI
 
+# Action-pin convention (TD-CROSS-010 / TDB-10):
+#   uses: <owner>/<repo>@<40-char-SHA>  # vX.Y.Z (or branch ref) as of YYYY-MM-DD
+# All third-party Actions are pinned to a 40-char commit SHA per
+# `code/supply-chain-protection.md`. The trailing comment names the
+# tag or branch the SHA was on at pin time so audit-trail intent is
+# preserved across rotations. SHAs were resolved 2026-05-02 against
+# the upstream tag refs via `gh api repos/<owner>/<repo>/git/ref/tags/<tag>`.
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
+# Cancel superseded CI runs on the same ref. Saves runner-minutes
+# and keeps `main`/PR check status reflective of the latest commit.
+# release.yml deliberately does NOT cancel — see comment there.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -16,12 +31,12 @@ jobs:
       matrix:
         python-version: ["3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4 as of 2026-05-02
         with:
           fetch-depth: 0  # full history needed for SBOM provenance drift check
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a  # v4 as of 2026-05-02
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
@@ -44,7 +59,7 @@ jobs:
   sast:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4 as of 2026-05-02
 
       - name: Install Semgrep
         run: pip install semgrep
@@ -68,10 +83,10 @@ jobs:
   dep-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4 as of 2026-05-02
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a  # v4 as of 2026-05-02
 
       - name: Set up Python
         run: uv python install 3.12
