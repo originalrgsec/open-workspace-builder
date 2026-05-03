@@ -117,6 +117,7 @@ nav:
     - Threat Model: threat-model.md
   - Credits: credits.md
   - Releases:
+    - v1.18.2: releases/v1.18.2.md
     - v1.18.1: releases/v1.18.1.md
     - v1.18.0: releases/v1.18.0.md
     - v1.17.0: releases/v1.17.0.md

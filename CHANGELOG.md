@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.2] - 2026-05-02
+
+Sprint 36 — **Cross-Account CI Hardening** (TDB-10 / TD-CROSS-010). CI/CD chore release; no behavior change to OWB itself or its bundled content. Adopts the supply-chain hardening that AEL has shipped for several sprints: every third-party Action across all four workflows is now pinned to a 40-char commit SHA, and `ci.yml` cancels superseded runs to save runner-minutes during force-pushes. Branch protection on `main` is applied via `gh api` post-merge; the workflow names this PR's CI exposes (`test (3.12)`, `test (3.13)`, `sast`, `dep-scan`) become the required-checks set.
+
+### Added
+
+- **Carried over from prep commit `26c239d`**: a new section in `src/open_workspace_builder/content/policies/supply-chain-protection.md` documenting the silent-failure mode for `@<sha>` references on cross-repo private→private reusable workflow calls (0-job runs, "workflow file issue" UI message, empty `gh run view --log`), and the owner-controlled annotated-tag recovery pattern with caller-side `tag → <40-char-sha> as of YYYY-MM-DD` comment convention. Public-repo reusable workflows and third-party Actions are unaffected and continue to follow the raw-SHA rule. Origin: AEL-S025 silent Slack-notify failures (2026-05-01).
+
+### Changed
+
+- **Action-pin convention** documented in the `ci.yml` header comment: `uses: <owner>/<repo>@<40-char-SHA>  # vX.Y.Z (or branch ref) as of YYYY-MM-DD`. SHAs resolved 2026-05-02 against upstream tag refs via `gh api repos/<owner>/<repo>/git/ref/tags/<tag>`.
+- **`ci.yml`** — pinned `actions/checkout@v4` (3 occurrences), `astral-sh/setup-uv@v4` (2 occurrences). Added workflow-level `concurrency` block: group `ci-${{ github.workflow }}-${{ github.ref }}`, `cancel-in-progress: true`.
+- **`release.yml`** — pinned `actions/checkout@v4` (2 occurrences), `actions/setup-python@v5` (3 occurrences), `actions/upload-artifact@v4`, `actions/download-artifact@v4` (3 occurrences), `pypa/gh-action-pypi-publish@release/v1`. Header comment documents the deliberate omission of `cancel-in-progress`: tag-push and dispatch-replay invocations must run to completion so PyPI upload, GitHub Release creation, and Slack notify cannot be left half-executed. The workflow itself is idempotent (skip-existing on PyPI; release-create-or-clobber-upload; Slack gated on `publish.result == 'success'`), so retry is safe.
+- **`docs.yml`** — pinned `actions/checkout@v4`, `actions/setup-python@v5`, `actions/upload-pages-artifact@v3`, `actions/deploy-pages@v4`. Existing `concurrency: group: "pages", cancel-in-progress: false` block kept (GitHub-Pages-required pattern; cancelling an in-flight Pages deploy can leave the live site partially deployed). Comment expanded inline to document why TDB-10 explicitly does NOT switch this to `cancel-in-progress: true`.
+- **`suppression-monitor.yml`** — pinned `actions/checkout@v4`, `astral-sh/setup-uv@v4`.
+
+### Stats
+
+- Tests, coverage, pyright budget unchanged from v1.18.1 (no source changes).
+- Ruff / format / Trivy / Semgrep / Gitleaks / pyright-gate: clean.
+
+### Branch protection (post-merge gh api PUT)
+
+Applied via `gh api -X PUT repos/originalrgsec/open-workspace-builder/branches/main/protection` after the v1.18.2 release-workflow run completes. Required checks are the four CI job names exposed by `ci.yml`: `test (3.12)`, `test (3.13)`, `sast`, `dep-scan`. `enforce_admins: true`. PR required, 0 reviewer threshold (solo operator). Pre-state snapshot recorded in the TDB-10 session log so the change is reversible.
+
 ## [1.18.1] - 2026-05-01
 
 Sprint 35 — **Supply-Chain Policy Patch**. Single-story patch release that genericizes a +18 line addition to the bundled `supply-chain-protection.md` policy. The addition cited a deployment-layer CI Action concept, an external (non-OWB) story ID, and operator-account-specific framing that violated the v1.18.0 distribution-genericize gate. Section reframed around the artifact OWB actually ships — the bundled `dependency-gate.py` PreToolUse hook installed at `~/.claude/hooks/dependency-gate.py` after `owb init`. Two prior commits to `main` past the v1.18.0 tag (`c114f53` binary-integrity / reusable-workflow SHA pinning; `543ad69` SDR sprint-plan backfill) ride along into v1.18.1.
