@@ -1,7 +1,7 @@
 """Google OAuth 2.0 flow for Sheets API access.
 
-Follows the same pattern as volcanix-papers: OAuth InstalledAppFlow with
-age-encrypted credential storage. Scoped to spreadsheets only.
+Standard OAuth InstalledAppFlow with age-encrypted credential storage.
+Scoped to spreadsheets only.
 """
 
 from __future__ import annotations
