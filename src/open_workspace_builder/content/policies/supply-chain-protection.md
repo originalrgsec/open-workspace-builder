@@ -140,6 +140,43 @@ the source repo's main branch, and update each consumer's pin in
 its own PR. Add a comment naming the source PR or branch the SHA
 was on at pin time so the audit trail stays intact across rotations.
 
+**Pin shape: owner-controlled tag preferred over raw `@SHA` for
+private→private reusable workflows.** GitHub's resolution of
+`@<40-char-sha>` for cross-repo private→private reusable-workflow
+calls is, in some configurations, stricter than `@<branch>` or
+`@<tag>`. The observed failure mode is silent: every release fires
+the workflow, but the run starts with 0 jobs, 0s duration, and a
+"workflow file issue" message visible only via the GitHub web UI.
+`gh run view --log` and `gh api .../jobs` return empty because
+there is no job to log against. The rejection happens at
+workflow-validation time before any step runs.
+
+The supported pattern is an **owner-controlled annotated tag** on
+the source repo (e.g., `@notify-updates-v1`,
+`@dependency-gate-v1.0.2`) pinned to a specific reviewed commit.
+The tag is immutable in practice (only the source-repo owner can
+move it; do not), so the policy intent — pin to a specific audited
+commit — is preserved. The tag → SHA mapping is recorded in the
+source repo's release notes for that tag, which keeps the audit
+trail intact end-to-end.
+
+Caller-side comment convention:
+
+```
+uses: org/repo/.github/workflows/foo.yml@workflow-tag-vX  # tag → <40-char-sha> as of YYYY-MM-DD
+```
+
+This documents the resolution at pin time without re-introducing
+the raw-SHA failure mode. Public-repo reusable workflows and
+third-party Actions are not affected by the validation issue and
+continue to follow the raw-SHA rule above.
+
+**When a raw-SHA pin starts failing.** If a previously-working
+`@<sha>` reference begins emitting silent 0-job runs after a
+tooling or repo-config change, the recovery is to retag the source
+commit and convert callers to the tag form. The SHA itself remains
+in the audit trail via the tag's release notes.
+
 ### 7. CLAUDE.md / Project Instructions
 
 Add this to every project's CLAUDE.md or equivalent:
