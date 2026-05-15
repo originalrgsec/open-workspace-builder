@@ -5,6 +5,67 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.3] - 2026-05-15
+
+Litellm cap-relaxation hotfix. Closes OWB#15 and unblocks downstream
+consumers (Home-Ops) from `homeops security audit-deps --deep`
+advisory churn on the four litellm proxy-server CVEs. All four
+advisories are **litellm.proxy-only**; OWB's library-client usage
+is not directly exposed, but the cap-relaxation aligns OWB's
+constraint surface with current downstream needs.
+
+### Changed
+
+- **`litellm>=1.40.0,<=1.83.0` → `litellm>=1.83.10,<1.84.0`** in
+  both `[llm]` and `[security]` extras. Lower bound 1.83.10 closes
+  CVE-2026-42208 (proxy SQLi, fix 1.83.7), CVE-2026-42271 (proxy
+  MCP RCE, fix 1.83.7), CVE-2026-42203 (proxy SSTI on
+  `/prompts/test`, fix 1.83.7), CVE-2026-40217 (proxy guardrails
+  sandbox escape, fix 1.83.10 — only fully patched here). Upper
+  bound `<1.84.0` preserves OWB's 7-day supply-chain-protection
+  quarantine: 1.84.0 was published 2026-05-14 and is too recent
+  for the policy. A future minor can lift to `<2.0.0` after the
+  quarantine window clears (≥ 2026-05-21).
+- Cap rationale comment in `pyproject.toml` rewritten to capture
+  both the original 2026-03-24 supply-chain attack history and
+  the 2026-05-15 advisory closure rationale, with GHSA IDs
+  enumerated for traceability.
+
+### Lock churn (resolver-determined, not chosen here)
+
+litellm 1.83.10 has a leaner transitive dep set than 1.83.0
+(OpenTelemetry instrumentation suite dropped upstream). Resolving
+under the new cap produces:
+
+- **Removed (12 packages):** the OpenTelemetry instrumentation suite
+  (`opentelemetry-api`, `opentelemetry-exporter-otlp-proto-common`,
+  `opentelemetry-exporter-otlp-proto-http`,
+  `opentelemetry-instrumentation`,
+  `opentelemetry-instrumentation-requests`,
+  `opentelemetry-instrumentation-threading`,
+  `opentelemetry-proto`, `opentelemetry-sdk`,
+  `opentelemetry-semantic-conventions`, `opentelemetry-util-http`),
+  plus `semantic-version` and `wrapt` (transitives only used by
+  OpenTelemetry).
+- **Downgraded:** `aiohttp` 3.13.4→3.13.3, `glom` 25.12→22.1,
+  `importlib-metadata` 8.7.1→8.5.0, `jsonschema` 4.25.1→4.23.0,
+  `litellm` 1.83.0→1.83.10, `openai` 2.30→2.24,
+  `python-dotenv` 1.2.2→1.0.1, `ruamel-yaml` 0.19.1→0.17.40,
+  `semgrep` 1.156→1.79.
+
+The **semgrep 1.156→1.79** downgrade is the most consequential
+side-effect: a 77-version drop on OWB's own SAST tool. The
+downgrade is forced by transitive constraints litellm 1.83.10
+propagates through shared deps (glom is the proximate conflict).
+Test suite remains green (2011 passed / 4 skipped / 0 failed).
+**Future story candidate:** insulate OWB-controlled tools (esp.
+semgrep) from litellm-driven cascades via
+`tool.uv.override-dependencies` or by tightening direct pins.
+
+### Tests
+
+2011 passed / 4 skipped / 0 failed under the new lock.
+
 ## [1.18.2] - 2026-05-02
 
 Sprint 36 — **Cross-Account CI Hardening** (TDB-10 / TD-CROSS-010). CI/CD chore release; no behavior change to OWB itself or its bundled content. Adopts the supply-chain hardening that AEL has shipped for several sprints: every third-party Action across all four workflows is now pinned to a 40-char commit SHA, and `ci.yml` cancels superseded runs to save runner-minutes during force-pushes. Branch protection on `main` is applied via `gh api` post-merge; the workflow names this PR's CI exposes (`test (3.12)`, `test (3.13)`, `sast`, `dep-scan`) become the required-checks set.
