@@ -48,17 +48,10 @@ dependencies = [
 #     upper <1.84.0 — 1.84.0 published 2026-05-14, fails the OWB 7-day
 #       supply-chain-protection quarantine policy. A future minor (after
 #       2026-05-21) can lift this to <2.0.0 if 1.84.0 remains clean.
-#
-# Note: relaxing the cap moves litellm 1.83.0 → 1.83.10, which has a
-# leaner transitive dep set (OpenTelemetry instrumentation dropped
-# upstream between 1.83.0 and 1.83.10). Transitive consequences in
-# `uv.lock` include: openai, python-dotenv, ruamel-yaml downgrades to
-# versions compatible with litellm 1.83.10's tighter pins, and a
-# corresponding shift in shared-transitive packages (semgrep, glom,
-# importlib-metadata, jsonschema, aiohttp). The downgrades are
-# resolver-determined, not chosen here. Future story candidate:
-# pin shared transitives via tool.uv.override-dependencies to insulate
-# OWB-controlled tools (esp. semgrep) from litellm-driven cascades.
+#   2026-05-25 (security audit): lock upgraded litellm 1.83.10 → 1.83.14
+#     (published 2026-04-26, 29 days old). Unblocks python-dotenv 1.0.1 →
+#     1.2.2 (path traversal fix). Also bumps pyjwt 2.11→2.12 (proxy-only),
+#     aiohttp 3.13.3→3.13.4. Zero PyPI-listed advisories on 1.83.14.
 llm = [
     "litellm>=1.83.10,<1.84.0",
 ]
