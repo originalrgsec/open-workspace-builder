@@ -367,8 +367,12 @@ def _tier_index(tier_name):
 
             # {tier_name} Projects
 
-            <!-- List projects in this tier. Link to each project's _index.md. -->
-            <!-- Example: - [[projects/{tier_name}/project-name/_index|Project Name]] — one-line description -->
+            List each project in this tier as a bullet with an Obsidian wiki
+            link to its `_index.md` and a one-line description.
+
+            **Example (delete once real projects are added):**
+
+            - [[projects/{tier_name}/project-name/_index|Project Name]] — one-line description
         """)
     return _gen
 
