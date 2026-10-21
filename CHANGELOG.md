@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   urllib3 and virtualenv. No quarantine override used. Remaining:
   certifi GHSA-6q48-6c7w-9gw2, whose fix (2026.10.19) clears the 7-day
   window on 2026-10-26.
+- **certifi** `>=2026.10.19` (GHSA-6q48-6c7w-9gw2): removes `emSign ECC
+  Root CA - G3`, whose eMudhra intermediate keys are publicly
+  recoverable. Per-package quarantine exception via
+  `exclude-newer-package`; the wheel diff was verified to contain only
+  the root removal and version string.
 - **virtualenv** floor `>=21.14.7` (GHSA-vxj4-q4g9-crj7, bash `activate`
   command execution via environment name). Pulls distlib 0.4.3 and
   packaging 26.3. Published 2026-10-12, inside the existing cutoff.
