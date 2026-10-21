@@ -661,12 +661,21 @@ def scan(
     backend = None
     effective_layers = layer_nums if layer_nums is not None else config.security.scanner_layers
     if 3 in effective_layers:
-        try:
+        unavailable = _layer3_unavailable_reason(config)
+        if unavailable is None:
             from open_workspace_builder.llm.backend import ModelBackend
 
             backend = ModelBackend(models_config=config.models)
-        except ImportError:
-            pass  # Layer 3 will be skipped gracefully (no backend)
+        elif layer_nums is not None:
+            # Explicitly requested on the command line: refuse to report a
+            # verdict that silently omits the requested layer.
+            raise click.UsageError(f"Layer 3 requested but unavailable: {unavailable}")
+        else:
+            click.echo(
+                f"WARNING: Layer 3 (semantic) is enabled in config but will NOT run: "
+                f"{unavailable}. Verdicts below reflect Layers 1-2 only.",
+                err=True,
+            )
 
     scanner = Scanner(layers=layer_nums, backend=backend, security_config=config.security)
 
@@ -968,6 +977,17 @@ def _run_trivy_scan(target: Path) -> dict:
         "trivy_version": result.trivy_version,
         "ecosystems_scanned": list(result.ecosystems_scanned),
     }
+
+
+def _layer3_unavailable_reason(config: Config) -> str | None:
+    """Return why Layer 3 cannot run, or None if it can."""
+    import importlib.util
+
+    if importlib.util.find_spec("litellm") is None:
+        return "litellm is not installed (install the 'llm' or 'security' extra)"
+    if not getattr(config.models, "security_scan", ""):
+        return "models.security_scan is empty in config"
+    return None
 
 
 def _print_verdict(file_path: str, verdict: str, flag_count: int) -> None:

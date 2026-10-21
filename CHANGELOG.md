@@ -5,6 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Security
+
+- **Dependency sweep.** `exclude-newer` advanced to
+  `2026-10-14T00:00:00Z` (explicit UTC; a bare date resolved to the end
+  of the day in local time). Closes 84 of 85 open advisories in
+  `uv.lock` across aiohttp, anyio, cryptography, fsspec, httplib2, idna,
+  litellm, mcp, msgpack, multidict, oauthlib, pip, pyasn1,
+  pydantic-settings, pygments, pyjwt, python-multipart, starlette,
+  urllib3 and virtualenv. No quarantine override used. Remaining:
+  certifi GHSA-6q48-6c7w-9gw2, whose fix (2026.10.19) clears the 7-day
+  window on 2026-10-26.
+- **`constraint-dependencies` moved to `[tool.uv]` in `pyproject.toml`.**
+  uv does not apply them from `uv.toml` when locking a project, so the
+  previous floors (including `starlette>=1.0.1`) never reached
+  `uv.lock`. `uv.lock` now records them under `[manifest]`.
+- **litellm** extras: `>=1.83.10,<1.84.0` → `>=1.88.6,<2.0.0`
+  (CVE-2026-49468, CVE-2026-59822, CVE-2026-12773, CVE-2026-84377).
+  Note: current litellm adds boto3/botocore as dependencies.
+- **mcp** extra: `>=1.0.0` → `>=1.30.0,<2`.
+- **dependency-gate hook hardening:**
+  - License policy uses exact matching on SPDX expressions
+    (`OR`/`AND`) and classifier names. The previous bidirectional
+    substring match accepted empty, missing or arbitrary short license
+    strings. PEP 639 `license_expression` is preferred when present.
+  - Quarantine fails closed when the publication time is unknown, and
+    uses the newest file upload for the version, so a file added to an
+    old release restarts the clock.
+  - First-party exemption is now an explicit `FIRST_PARTY_PACKAGES`
+    name list (replaces `FIRST_PARTY_OWNERS`). Registry project URLs
+    are self-declared by the uploader and no longer grant exemptions;
+    the old match was also an unanchored substring.
+  - npm (`npm install|i|add`, `yarn add`, `pnpm add`) is now checked
+    against the npm registry for license and publish time, including
+    scoped packages, which were previously dropped by the parser.
+  - `uv tool install` and `pipx install` are gated.
+  - TLS falls back to certifi or the system CA bundle when the
+    interpreter has no default trust store (python.org macOS builds),
+    instead of denying every install. Verification is never disabled.
+
+### Fixed
+
+- `owb security scan` no longer silently skips Layer 3. When Layer 3 is
+  requested with `--layers` and cannot run (litellm missing or
+  `models.security_scan` empty), the command exits 2. When it comes
+  from config, a warning states that verdicts reflect Layers 1-2 only.
+
 ## [1.18.3] - 2026-05-15
 
 Litellm cap-relaxation hotfix. Closes OWB#15 and unblocks downstream

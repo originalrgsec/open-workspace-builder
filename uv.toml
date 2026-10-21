@@ -60,16 +60,18 @@
 #     bypass).
 # python-dotenv path-traversal fix (1.2.2) is blocked by litellm 1.83.10's
 # exact pin on python-dotenv==1.0.1. Tracked as a future litellm bump item.
-exclude-newer = "2026-05-18"
+# 2026-10-21 (dependency CVE sweep): pin advanced from 2026-05-18 to
+# 2026-10-14 (7 days before the sweep) to close open advisories in
+# transitive and optional dependencies. Every fixed version below was
+# published on or before 2026-10-13, so no quarantine override is used.
+# Not closed by this sweep:
+#   certifi GHSA-6q48-6c7w-9gw2 (compromised emSign intermediates): the
+#     fix, 2026.10.19, is inside the quarantine window until 2026-10-26.
+#   pyjwt CVE-2026-103001: no fixed release published.
+# Explicit UTC timestamp: uv reads a bare date as the end of that day in
+# local time, which can land inside the 7-day window.
+exclude-newer = "2026-10-14T00:00:00Z"
 
-# Supply-chain constraints on transitive dependencies (2026-05-25 audit).
-# starlette>=1.0.1 constraint is present but ineffective until the next
-# exclude-newer advance: 1.0.1 published 2026-05-21, quarantine clears
-# 2026-05-28. The python-multipart 0.0.29 upgrade mitigates the most
-# exploitable vector (parsing DoS) in the Starlette stack meanwhile.
-constraint-dependencies = [
-    "urllib3>=2.7.0",
-    "python-multipart>=0.0.27",
-    "starlette>=1.0.1",
-    "python-dotenv>=1.2.2",
-]
+# constraint-dependencies live in pyproject.toml [tool.uv]: uv does not
+# apply them from uv.toml when locking a project (the previous starlette
+# floor here never reached uv.lock).
