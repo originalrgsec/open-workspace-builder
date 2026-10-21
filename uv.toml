@@ -72,6 +72,16 @@
 # local time, which can land inside the 7-day window.
 exclude-newer = "2026-10-14T00:00:00Z"
 
+# 2026-10-21 quarantine exception, certifi only (owner-approved): certifi
+# <2026.10.19 trusts "emSign ECC Root CA - G3", whose eMudhra intermediate
+# keys are publicly recoverable (GHSA-6q48-6c7w-9gw2; Go CVE-2026-111943).
+# 2026.10.19 was published 2026-10-20 and would clear quarantine on
+# 2026-10-27. Verified before the exception: the wheel diff against
+# 2026.7.22 is the __version__ string plus removal of that single root
+# from cacert.pem, with no other code or certificate changes. Remove this
+# override once the global exclude-newer passes 2026-10-21.
+exclude-newer-package = { certifi = "2026-10-21T00:00:00Z" }
+
 # constraint-dependencies live in pyproject.toml [tool.uv]: uv does not
 # apply them from uv.toml when locking a project (the previous starlette
 # floor here never reached uv.lock).
