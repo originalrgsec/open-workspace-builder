@@ -34,10 +34,13 @@ Exit behavior:
 from __future__ import annotations
 
 import json
+import os
 import re
 import shlex
+import ssl
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -66,11 +69,13 @@ ALLOWED_LICENSES: frozenset[str] = frozenset(
         "bsd license",
         "isc",
         "isc license",
+        "isc license (iscl)",
         "cc0-1.0",
         "cc0",
         "public domain",
         "unlicense",
         "the unlicense",
+        "the unlicense (unlicense)",
         "0bsd",
         "psf-2.0",
         "python software foundation license",
@@ -87,20 +92,32 @@ CONDITIONAL_LICENSES: frozenset[str] = frozenset(
     {
         "mpl-2.0",
         "mozilla public license 2.0",
+        "mozilla public license 2.0 (mpl 2.0)",
         "bsl-1.0",
         "artistic-2.0",
         "artistic license 2.0",
     }
 )
 
-# First-party GitHub orgs/users whose packages skip all checks (lowercase).
-# Add your own GitHub username or org here.
-FIRST_PARTY_OWNERS: frozenset[str] = frozenset(
+# First-party packages that skip all checks, listed by exact registry name
+# (PEP 503-normalized for Python, e.g. "my-package"). Matching is by name
+# only: registry metadata such as project URLs is self-declared by whoever
+# uploads a package and must never be used to grant an exemption.
+FIRST_PARTY_PACKAGES: frozenset[str] = frozenset(
     {
-        # "your-github-org",
-        # "your-github-username",
+        # "your-package-name",
     }
 )
+
+# CA bundles tried, in order, when the interpreter has no default trust
+# store (e.g. python.org macOS builds before "Install Certificates" runs).
+_FALLBACK_CA_BUNDLES: tuple[str, ...] = (
+    "/etc/ssl/cert.pem",
+    "/etc/ssl/certs/ca-certificates.crt",
+    "/etc/pki/tls/certs/ca-bundle.crt",
+)
+
+REGISTRY_TIMEOUT_SECONDS = 10
 
 # --- Install command parsing (OWB-S133) ---
 #
@@ -126,8 +143,11 @@ INSTALL_VERBS: list[tuple[str, tuple[str, ...]]] = [
     ("python", ("pip3", "install")),
     ("python", ("python", "-m", "pip", "install")),
     ("python", ("python3", "-m", "pip", "install")),
+    ("python", ("uv", "tool", "install")),
+    ("python", ("pipx", "install")),
     ("node", ("npm", "install")),
     ("node", ("npm", "i")),
+    ("node", ("npm", "add")),
     ("node", ("yarn", "add")),
     ("node", ("pnpm", "add")),
     ("rust", ("cargo", "add")),
@@ -188,6 +208,12 @@ FLAGS_WITH_VALUE: frozenset[str] = frozenset(
 _EXACT_PIN_RE = re.compile(r"^([A-Za-z0-9_.\-]+)(?:\[[^\]]+\])?==([A-Za-z0-9_.\-+]+)$")
 # Name-only extractor: first A-Za-z chunk (may contain _, ., -).
 _NAME_RE = re.compile(r"^([A-Za-z0-9_.\-]+)")
+
+
+# npm exact version: 1.2.3 or 1.2.3-pre.1 (optionally with a leading "=").
+_NPM_EXACT_RE = re.compile(r"^=?(\d+\.\d+\.\d+(?:-[0-9A-Za-z.\-]+)?)$")
+# npm package name, optionally scoped.
+_NPM_NAME_RE = re.compile(r"^(@[a-z0-9][a-z0-9._\-]*/)?[a-z0-9][a-z0-9._\-]*$")
 
 
 @dataclass(frozen=True)
@@ -285,6 +311,27 @@ def _parse_requirement(token: str) -> tuple[str, str | None] | None:
     return name, None
 
 
+def _parse_npm_spec(token: str) -> tuple[str, str | None] | None:
+    """Parse an npm install token into (name, version_or_tag_or_None).
+
+    Handles ``name``, ``name@1.2.3``, ``name@^1``, ``name@next`` and the
+    scoped forms ``@scope/name`` / ``@scope/name@1.2.3``. Returns None for
+    tokens that are not registry packages (git/file/alias specs, GitHub
+    ``user/repo`` shorthand).
+    """
+    token = token.strip().strip("'\"")
+    if not token or ":" in token:
+        return None
+    if token.startswith("@"):
+        at = token.find("@", 1)
+    else:
+        at = token.find("@")
+    name, spec = (token, None) if at == -1 else (token[:at], token[at + 1 :] or None)
+    if not _NPM_NAME_RE.match(name.lower()):
+        return None
+    return name, spec
+
+
 def extract_packages(command: str) -> list[PackageSpec]:
     """Return a list of PackageSpec parsed from a shell command string.
 
@@ -332,7 +379,10 @@ def extract_packages(command: str) -> list[PackageSpec]:
             if _is_skippable(tok):
                 i += 1
                 continue
-            parsed = _parse_requirement(tok)
+            if ecosystem == "node":
+                parsed = _parse_npm_spec(tok)
+            else:
+                parsed = _parse_requirement(tok)
             if parsed is not None:
                 name, pinned = parsed
                 results.append(PackageSpec(ecosystem=ecosystem, name=name, pinned_version=pinned))
@@ -341,29 +391,111 @@ def extract_packages(command: str) -> list[PackageSpec]:
     return results
 
 
+def _normalize_name(pkg_name: str, ecosystem: str) -> str:
+    if ecosystem == "python":
+        return re.sub(r"[-_.]+", "-", pkg_name).lower()
+    return pkg_name.lower()
+
+
 def is_first_party(pkg_name: str, ecosystem: str) -> bool:
-    """Check if a package is first-party by querying PyPI for the home page."""
-    if ecosystem != "python":
-        return False
-    if not FIRST_PARTY_OWNERS:
-        return False
+    """True if the package is listed by exact name in FIRST_PARTY_PACKAGES."""
+    normalized = {_normalize_name(p, ecosystem) for p in FIRST_PARTY_PACKAGES}
+    return _normalize_name(pkg_name, ecosystem) in normalized
+
+
+def _ssl_context() -> ssl.SSLContext:
+    """Default TLS context, with a CA fallback for interpreters lacking one.
+
+    Verification is never disabled; when no trust store can be found the
+    request fails and the gate denies the install.
+    """
+    ctx = ssl.create_default_context()
+    if os.environ.get("SSL_CERT_FILE") or os.environ.get("SSL_CERT_DIR"):
+        return ctx
+    if ctx.cert_store_stats().get("x509_ca", 0) > 0:
+        return ctx
     try:
-        url = f"https://pypi.org/pypi/{pkg_name}/json"
-        req = urllib.request.Request(url, headers={"Accept": "application/json"})
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read())
-        info = data.get("info", {})
-        # Check project URLs for first-party owners.
-        home_page = (info.get("home_page") or "").lower()
-        project_urls = info.get("project_urls") or {}
-        all_urls = [home_page] + [v.lower() for v in project_urls.values()]
-        for url_str in all_urls:
-            for owner in FIRST_PARTY_OWNERS:
-                if f"github.com/{owner}" in url_str:
-                    return True
-    except (urllib.error.URLError, json.JSONDecodeError, OSError):
+        import certifi  # type: ignore[import-not-found]
+
+        ctx.load_verify_locations(certifi.where())
+        return ctx
+    except ImportError:
         pass
-    return False
+    for bundle in _FALLBACK_CA_BUNDLES:
+        if os.path.isfile(bundle):
+            ctx.load_verify_locations(bundle)
+            break
+    return ctx
+
+
+def _fetch_json(url: str) -> Any:
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    with urllib.request.urlopen(  # noqa: S310 - fixed https registry URLs
+        req, timeout=REGISTRY_TIMEOUT_SECONDS, context=_ssl_context()
+    ) as resp:
+        return json.loads(resp.read())
+
+
+def evaluate_license(expression: str | None) -> tuple[bool, bool]:
+    """Evaluate a license string or SPDX expression against policy.
+
+    Returns ``(allowed, conditional)``. Every term is compared by exact
+    (case-insensitive) match against ALLOWED_LICENSES / CONDITIONAL_LICENSES;
+    substring matching is deliberately avoided because it lets arbitrary
+    strings (including the empty string) satisfy the check. ``A OR B``
+    passes if any alternative passes; ``A AND B`` requires every term.
+    Missing or unrecognized licenses are not allowed.
+    """
+    if not expression:
+        return False, False
+    text = expression.strip().lower()
+    if not text or text in ("unknown", "none", "unlicensed", "see license", "see license file"):
+        return False, False
+    # Whole-string match first: classifier names contain parentheses,
+    # e.g. "ISC License (ISCL)", which expression parsing would split.
+    if text in ALLOWED_LICENSES:
+        return True, False
+    if text in CONDITIONAL_LICENSES:
+        return True, True
+    text = text.replace("(", " ").replace(")", " ")
+    best: tuple[bool, bool] = (False, False)
+    for alternative in re.split(r"\s+or\s+|\s*/\s*", text):
+        terms = [t.strip() for t in re.split(r"\s+and\s+", alternative) if t.strip()]
+        if not terms:
+            continue
+        conditional = False
+        ok = True
+        for term in terms:
+            term = re.sub(r"\s+", " ", term)
+            if term in ALLOWED_LICENSES:
+                continue
+            if term in CONDITIONAL_LICENSES:
+                conditional = True
+                continue
+            ok = False
+            break
+        if ok:
+            if not conditional:
+                return True, False
+            best = (True, True)
+    return best
+
+
+def _pypi_license(info: dict[str, Any]) -> str:
+    """Pick the most authoritative license declaration from PyPI metadata."""
+    expression = (info.get("license_expression") or "").strip()
+    if expression:
+        return expression
+    classifiers = [
+        c.split(" :: ")[-1]
+        for c in (info.get("classifiers") or [])
+        if c.startswith("License :: ") and c.count(" :: ") >= 2
+    ]
+    if classifiers:
+        return " OR ".join(classifiers)
+    raw = (info.get("license") or "").strip()
+    # Some packages paste the full license text; its first line is the name.
+    return raw.splitlines()[0].strip() if raw else ""
 
 
 def check_pypi(pkg_name: str, pinned_version: str | None = None) -> dict[str, Any]:
@@ -390,10 +522,7 @@ def check_pypi(pkg_name: str, pinned_version: str | None = None) -> dict[str, An
         "error": None,
     }
     try:
-        url = f"https://pypi.org/pypi/{pkg_name}/json"
-        req = urllib.request.Request(url, headers={"Accept": "application/json"})
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read())
+        data = _fetch_json(f"https://pypi.org/pypi/{urllib.parse.quote(pkg_name)}/json")
     except urllib.error.HTTPError as e:
         if e.code == 404:
             result["error"] = f"Package '{pkg_name}' not found on PyPI."
@@ -406,26 +535,9 @@ def check_pypi(pkg_name: str, pinned_version: str | None = None) -> dict[str, An
 
     info = data.get("info", {})
 
-    # License detection: prefer the license field, fall back to classifiers.
-    license_raw = (info.get("license") or "").strip()
-    if not license_raw or license_raw.lower() in ("unknown", ""):
-        classifiers = info.get("classifiers") or []
-        for c in classifiers:
-            if c.startswith("License :: OSI Approved :: "):
-                license_raw = c.split(" :: ")[-1]
-                break
-            if c.startswith("License :: "):
-                license_raw = c.split(" :: ")[-1]
-                break
-
+    license_raw = _pypi_license(info)
     result["license"] = license_raw
-    license_lower = license_raw.lower().strip()
-
-    if any(allowed in license_lower or license_lower in allowed for allowed in ALLOWED_LICENSES):
-        result["license_allowed"] = True
-    elif any(cond in license_lower or license_lower in cond for cond in CONDITIONAL_LICENSES):
-        result["license_allowed"] = True
-        result["license_conditional"] = True
+    result["license_allowed"], result["license_conditional"] = evaluate_license(license_raw)
 
     # Quarantine check: prefer the exact pinned version when provided
     # (OWB-S133 AC-2), else fall back to the latest release on PyPI.
@@ -440,18 +552,90 @@ def check_pypi(pkg_name: str, pinned_version: str | None = None) -> dict[str, An
         return result
     result["checked_version"] = target_version
     version_files = releases.get(target_version, [])
-    if version_files:
-        upload_time_str = version_files[0].get("upload_time_iso_8601")
-        if upload_time_str:
-            try:
-                upload_dt = datetime.fromisoformat(upload_time_str.replace("Z", "+00:00"))
-                result["publication_date"] = upload_time_str
-                days_old = (datetime.now(timezone.utc) - upload_dt).days
-                if days_old < QUARANTINE_DAYS:
-                    result["quarantine_ok"] = False
-            except (ValueError, TypeError):
-                pass
+    upload_times = [f.get("upload_time_iso_8601") for f in version_files]
+    _apply_quarantine(result, [t for t in upload_times if t], pkg_name, target_version)
+    return result
 
+
+def _apply_quarantine(
+    result: dict[str, Any], timestamps: list[str], pkg_name: str, version: str
+) -> None:
+    """Set quarantine fields from upload timestamps; fail closed if unknown.
+
+    Uses the newest timestamp so a file added to an old release (a common
+    way to slip in a malicious wheel) restarts the quarantine clock.
+    """
+    parsed: list[datetime] = []
+    for ts in timestamps:
+        try:
+            parsed.append(datetime.fromisoformat(ts.replace("Z", "+00:00")))
+        except (ValueError, TypeError):
+            continue
+    if not parsed:
+        result["error"] = (
+            f"Cannot determine publication date for '{pkg_name}' {version or '(latest)'}."
+        )
+        return
+    newest = max(parsed)
+    result["publication_date"] = newest.isoformat()
+    if (datetime.now(timezone.utc) - newest).days < QUARANTINE_DAYS:
+        result["quarantine_ok"] = False
+
+
+def check_npm(pkg_name: str, spec: str | None = None) -> dict[str, Any]:
+    """Check an npm package against the registry for license and publish time.
+
+    ``spec`` may be an exact version, a dist-tag (``next``), a range, or
+    None. Exact versions and dist-tags resolve precisely; ranges and None
+    fall back to the ``latest`` dist-tag, matching check_pypi's behavior.
+    """
+    result: dict[str, Any] = {
+        "package": pkg_name,
+        "ecosystem": "node",
+        "license": None,
+        "license_allowed": False,
+        "license_conditional": False,
+        "quarantine_ok": True,
+        "publication_date": None,
+        "checked_version": None,
+        "error": None,
+    }
+    try:
+        data = _fetch_json(f"https://registry.npmjs.org/{urllib.parse.quote(pkg_name, safe='@')}")
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            result["error"] = f"Package '{pkg_name}' not found on the npm registry."
+        else:
+            result["error"] = f"npm registry returned HTTP {e.code} for '{pkg_name}'."
+        return result
+    except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
+        result["error"] = f"Failed to reach the npm registry: {e}"
+        return result
+
+    dist_tags = data.get("dist-tags") or {}
+    versions = data.get("versions") or {}
+    exact = _NPM_EXACT_RE.match(spec or "")
+    if exact:
+        target = exact.group(1)
+        if target not in versions:
+            result["error"] = f"Package '{pkg_name}' has no version '{target}' on npm."
+            return result
+    elif spec and spec in dist_tags:
+        target = dist_tags[spec]
+    else:
+        target = dist_tags.get("latest", "")
+    result["checked_version"] = target
+
+    manifest = versions.get(target) or {}
+    license_field = manifest.get("license", data.get("license"))
+    if isinstance(license_field, dict):
+        license_field = license_field.get("type")
+    license_raw = license_field if isinstance(license_field, str) else ""
+    result["license"] = license_raw
+    result["license_allowed"], result["license_conditional"] = evaluate_license(license_raw)
+
+    published = (data.get("time") or {}).get(target)
+    _apply_quarantine(result, [published] if published else [], pkg_name, target)
     return result
 
 
@@ -474,6 +658,39 @@ def allow() -> dict[str, Any]:
             "permissionDecision": "allow",
         }
     }
+
+
+def _result_issue(result: dict[str, Any]) -> str | None:
+    """Turn a registry check result into a deny reason, or None if it passes."""
+    pkg_name = result["package"]
+    if result["error"]:
+        return (
+            f"[{pkg_name}] {result['error']} "
+            "Cannot verify license or quarantine. "
+            "Install manually after verification."
+        )
+    if not result["license_allowed"]:
+        license_display = result["license"] or "UNKNOWN"
+        return (
+            f"[{pkg_name}] License '{license_display}' is not in the "
+            "allowed-licenses list. Options:\n"
+            "  1. Find a permissively-licensed alternative\n"
+            "  2. File an exception in the project's decisions/ folder\n"
+            "  3. Add the license to ALLOWED_LICENSES if your policy permits it"
+        )
+    if result["license_conditional"]:
+        print(
+            f"dependency-gate: {pkg_name} — conditional license "
+            f"({result['license']}). Verify conditions do not apply.",
+            file=sys.stderr,
+        )
+    if not result["quarantine_ok"]:
+        return (
+            f"[{pkg_name}] Published {result['publication_date']}. "
+            f"Supply-chain quarantine requires packages to be >{QUARANTINE_DAYS} "
+            "days old before installation. Wait or pin an older version."
+        )
+    return None
 
 
 def main() -> int:
@@ -501,8 +718,7 @@ def main() -> int:
     for spec in packages:
         ecosystem = spec.ecosystem
         pkg_name = spec.name
-        # First-party exemption.
-        if ecosystem == "python" and is_first_party(pkg_name, ecosystem):
+        if is_first_party(pkg_name, ecosystem):
             print(
                 f"dependency-gate: {pkg_name} — first-party exemption, skipping checks.",
                 file=sys.stderr,
@@ -511,49 +727,21 @@ def main() -> int:
 
         if ecosystem == "python":
             result = check_pypi(pkg_name, pinned_version=spec.pinned_version)
-
-            if result["error"]:
-                issues.append(
-                    f"[{pkg_name}] {result['error']} "
-                    "Cannot verify license or quarantine. "
-                    "Install manually after verification."
-                )
-                continue
-
-            if not result["license_allowed"]:
-                license_display = result["license"] or "UNKNOWN"
-                issues.append(
-                    f"[{pkg_name}] License '{license_display}' is not in the "
-                    "allowed-licenses list. Options:\n"
-                    "  1. Find a permissively-licensed alternative\n"
-                    "  2. File an exception in the project's decisions/ folder\n"
-                    "  3. Add the license to ALLOWED_LICENSES if your policy permits it"
-                )
-                continue
-
-            if result["license_conditional"]:
-                print(
-                    f"dependency-gate: {pkg_name} — conditional license "
-                    f"({result['license']}). Verify conditions do not apply.",
-                    file=sys.stderr,
-                )
-
-            if not result["quarantine_ok"]:
-                issues.append(
-                    f"[{pkg_name}] Published {result['publication_date']}. "
-                    f"Supply-chain quarantine requires packages to be >{QUARANTINE_DAYS} "
-                    "days old before installation. Wait or pin an older version."
-                )
-                continue
+        elif ecosystem == "node":
+            result = check_npm(pkg_name, spec.pinned_version)
         else:
-            # Non-Python ecosystems: remind to check manually.
-            # The hook cannot auto-check npm/cargo/go registries yet.
+            # cargo/go/brew: no registry check implemented yet.
             print(
                 f"dependency-gate: {pkg_name} ({ecosystem}) — automated license "
                 "check not available for this ecosystem. Check manually before "
                 "proceeding.",
                 file=sys.stderr,
             )
+            continue
+
+        issue = _result_issue(result)
+        if issue:
+            issues.append(issue)
 
     if issues:
         reason = "Dependency gate blocked this install:\n\n" + "\n\n".join(issues)
