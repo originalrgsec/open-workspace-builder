@@ -1,18 +1,18 @@
 ---
 type: policy
 created: 2026-03-13
-updated: 2026-04-08
-tags: [policy, licensing, open-source, compliance, volcanix]
-applies-to: all-volcanix-projects
+updated: 2026-04-19
+tags: [policy, licensing, open-source, compliance]
+applies-to: all-projects
 ---
 
 # Allowed Open Source Licenses
 
 ## Purpose
 
-Defines which open source licenses are permitted in the Volcanix technology stack. The governing principle is zero IP encumbrance: no license may require disclosure of Volcanix proprietary source code, restrict commercial use, or create ongoing compliance obligations that are easy to accidentally violate.
+Defines which open source licenses are permitted in the projects built from this workspace. The governing principle is zero IP encumbrance: no license may require disclosure of proprietary source code, restrict commercial use, or create ongoing compliance obligations that are easy to accidentally violate.
 
-This policy applies to all direct dependencies and transitive dependencies in any Volcanix product or internal tool. Claude should reference this document when selecting packages, frameworks, or libraries.
+This policy applies to all direct dependencies and transitive dependencies in any project or internal tool built from this workspace. The AI agent should reference this document when selecting packages, frameworks, or libraries.
 
 ## Allowed (Permissive)
 
@@ -27,9 +27,9 @@ These licenses impose no meaningful restrictions on commercial use or proprietar
 | ISC | Simplified BSD/MIT equivalent. Common in Node.js ecosystem. |
 | CC0 / Public Domain / Unlicense | No restrictions whatsoever. |
 | 0BSD | Zero-clause BSD. Even less restrictive than MIT (no notice requirement). |
-| PSF-2.0 (Python Software Foundation License) | Permissive license used by core Python ecosystem packages (`typing_extensions`, `pytz`, parts of the standard library). Functionally MIT-equivalent with a grant-back clause that does not affect downstream users. Added 2026-04-08 as part of the COR-S037 retrospective's policy-gap cleanup. |
-| CNRI-Python | Another Python-family permissive license. Appears in compound licenses for core Python tooling (e.g. `regex`). Treated as equivalent to PSF-2.0 / MIT. Added 2026-04-08. |
-| Zlib | Permissive license from the zlib compression library. Functionally equivalent to MIT/BSD. Appears in compound licenses for scientific-computing packages (notably `numpy`). Added 2026-04-08. |
+| PSF-2.0 (Python Software Foundation License) | Permissive license used by core Python ecosystem packages (`typing_extensions`, `pytz`, parts of the standard library). Functionally MIT-equivalent with a grant-back clause that does not affect downstream users. |
+| CNRI-Python | Another Python-family permissive license. Appears in compound licenses for core Python tooling (e.g., `regex`). Treated as equivalent to PSF-2.0 / MIT. |
+| Zlib | Permissive license from the zlib compression library. Functionally equivalent to MIT/BSD. Appears in compound licenses for scientific-computing packages (notably `numpy`). |
 
 ## Allowed with Conditions
 
@@ -38,7 +38,7 @@ These licenses are safe when used as intended but require awareness of specific 
 | License | Condition |
 |---------|-----------|
 | MPL 2.0 (Mozilla Public License) | File-level copyleft. Modifications to MPL-licensed source files must be released. Using the library unmodified as a dependency creates no obligation. Do not fork and modify MPL source files without understanding the disclosure requirement. |
-| BSL (Business Source License) | Evaluate per project. Read the "Additional Use Grant" in each BSL project. Typically restricts offering the software as a competing hosted service, which does not apply to Volcanix using it as infrastructure. Converts to a permissive license after the change date. |
+| BSL (Business Source License) | Evaluate per project. Read the "Additional Use Grant" in each BSL project. Typically restricts offering the software as a competing hosted service, which may or may not apply to your use case. Converts to a permissive license after the change date. |
 | Artistic License 2.0 | Permissive in practice. Unusual language but low risk. Rarely encountered outside Perl. |
 
 ## External CLI Tool Invocations
@@ -50,26 +50,30 @@ Tools used exclusively through CLI invocation are exempt from the Disallowed tab
 | Condition | Rationale |
 |-----------|-----------|
 | The tool is invoked only via subprocess or shell command, never imported as a library | Importing creates a linking relationship that triggers copyleft. |
-| The tool is installed separately (system package, pipx, standalone binary), not bundled into the Volcanix distribution | Bundling may constitute distribution of the copyleft work alongside proprietary code. |
-| No Volcanix source code is derived from or patches the tool's source | Modifying copyleft source triggers disclosure requirements on the modifications. |
+| The tool is installed separately (system package, pipx, standalone binary), not bundled into the distribution | Bundling may constitute distribution of the copyleft work alongside proprietary code. |
+| No proprietary source code is derived from or patches the tool's source | Modifying copyleft source triggers disclosure requirements on the modifications. |
 | The tool's output is not itself copyleft-encumbered (check the tool's license for output clauses) | Some licenses (notably AGPL) have broad output clauses. Verify per tool. |
 
 When relying on this exemption, record the tool, its license, and the invocation method in the project's `decisions/` folder so that future maintainers do not accidentally convert a CLI invocation into a library import.
 
-### Currently Approved CLI Tool Exemptions
+### Example CLI Tool Exemption
 
-| Tool | License | Invocation Method | Project | Decision Record |
-|------|---------|-------------------|---------|----------------|
-| Semgrep | LGPL-2.1 | `subprocess.run()` via `owb security sast` | OWB | DRN-047 / AD-17 |
+The workspace itself uses this pattern for Semgrep:
+
+| Tool | License | Invocation Method | Rationale |
+|------|---------|-------------------|-----------|
+| Semgrep | LGPL-2.1 | `subprocess.run()` via `owb security sast` | Invoked as a separate process, never imported as a Python library. No Semgrep source is bundled or modified. |
+
+Document your own CLI tool exemptions in the same format in the project's `decisions/` folder.
 
 ## Disallowed (Copyleft / Commercial Restriction)
 
-These licenses create IP encumbrance risk and must not be used as linked dependencies in any Volcanix project. See "External CLI Tool Invocations" above for the exemption that applies to tools invoked exclusively via subprocess.
+These licenses create IP encumbrance risk and must not be used as linked dependencies in any project built from this workspace. See "External CLI Tool Invocations" above for the exemption that applies to tools invoked exclusively via subprocess.
 
 | License | Reason |
 |---------|--------|
 | GPL v2 / GPL v3 | Strong copyleft. Linking GPL code into an application requires the entire application to be distributed under GPL. |
-| AGPL v3 | Network copyleft. Triggers GPL obligations when software is accessed over a network (SaaS). Any Volcanix web service using AGPL code must release its entire source. |
+| AGPL v3 | Network copyleft. Triggers GPL obligations when software is accessed over a network (SaaS). Any web service using AGPL code must release its entire source. |
 | LGPL v2.1 / LGPL v3 | Weak copyleft. Requires dynamic linking and user ability to relink. Creates ongoing compliance obligations that are easy to violate accidentally. Disallowed as a linked dependency for simplicity. |
 | SSPL (Server Side Public License) | Requires open-sourcing the entire service stack (monitoring, backups, orchestration), not just the application. Used by MongoDB. |
 | CC BY-NC (Creative Commons NonCommercial) | Explicitly prohibits commercial use. |
@@ -79,13 +83,13 @@ These licenses create IP encumbrance risk and must not be used as linked depende
 
 ## Enforcement
 
-When adding a dependency to any Volcanix project:
+When adding a dependency to a project:
 
-1. Check the package license before adding it (most package managers display this: `npm info <pkg> license`, `pip show <pkg>`, `cargo info <pkg>`)
-2. If the license is in the Allowed table, proceed
-3. If the license is in Allowed with Conditions, verify the condition does not apply to your use case
-4. If the license is in Disallowed or not listed here, check whether the tool qualifies for the External CLI Tool Invocation exemption. If it does, record it in the exemptions table and file an ADR. If it does not, find an alternative or escalate for a policy exception
-5. For transitive dependencies, run a license audit periodically (`license-checker` for npm, `pip-licenses` for Python, `cargo-deny` for Rust)
+1. Check the package license before adding it (most package managers display this: `npm info <pkg> license`, `pip show <pkg>`, `cargo info <pkg>`).
+2. If the license is in the Allowed table, proceed.
+3. If the license is in Allowed with Conditions, verify the condition does not apply to your use case.
+4. If the license is in Disallowed or not listed here, check whether the tool qualifies for the External CLI Tool Invocation exemption. If it does, record it in the exemptions table and file an ADR. If it does not, find an alternative or escalate for a policy exception.
+5. For transitive dependencies, run a license audit periodically (`license-checker` for npm, `pip-licenses` for Python, `cargo-deny` for Rust).
 
 ## Audit Tools
 
@@ -99,7 +103,7 @@ When adding a dependency to any Volcanix project:
 
 ## Exceptions
 
-No full exceptions granted yet. CLI tool invocation exemptions are tracked in the "External CLI Tool Invocations" section above and do not require a full exception. If a critical dependency has a disallowed license, cannot qualify for the CLI exemption, and no permissively-licensed alternative exists, document the business justification and risk assessment as a decision record in the relevant project's `decisions/` folder.
+CLI tool invocation exemptions are tracked in the "External CLI Tool Invocations" section above and do not require a full exception. If a critical dependency has a disallowed license, cannot qualify for the CLI exemption, and no permissively-licensed alternative exists, document the business justification and risk assessment as a decision record in the relevant project's `decisions/` folder.
 
 ## Review Schedule
 

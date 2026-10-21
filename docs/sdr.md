@@ -902,6 +902,42 @@ class ReputationLedger:
 - Tests: 1,859 passed, 1 skipped. Coverage 86.32% (up from 85.45%). 26 new tests (6 config, 11 factory, 9 wizard).
 - Follow-up: OWB-S133 (dependency-gate hook argv parsing bug, blocks `uv add` and related install commands; subsumes the himitsubako Sprint 7 follow-up on `==` pin respect). Added to backlog.
 
+### Sprint 31: Code Quality Scrub
+- Stories: OWB-S134 (XS — himitsubako v0.8.0 absorb), OWB-S140 (XS — scrub-skills SDLC policy absorb), OWB-S135 / S136 / S137 (`/simplify`, `/code-review`, `/refactor-clean` runs), OWB-S138 (pyright strict triage spike).
+- Goal: First full mid-sprint scrub-skills pass against the OWB codebase following the HMB-S038 policy. Pair it with a pyright-mode decision (DRN-078 basic mode, budget 96).
+- Version: v1.15.0. 1,921 tests, 85% coverage.
+- Follow-ups spawned: OWB-S141 (himitsubako pin bump), OWB-S142 (gate fail-closed), OWB-S143 (HTTP read cap), OWB-S144 (SBOM BomWithMetadata refactor), OWB-SEC-005 (sources/url_validator SSRF), OWB-SEC-006 (scanner pattern ReDoS audit).
+
+### Sprint 32: Security Follow-Through & Hook Install
+- Stories: OWB-S139 (pyright pre-commit hook install), OWB-SEC-005 (url_validator SSRF HIGH fix), OWB-SEC-006 (scanner ReDoS caps).
+- Version: v1.16.0. 1,971 tests, 85.36% coverage. Pyright enforced at budget 96 via `scripts/pyright-gate.py`.
+
+### Sprint 33: Hook Hardening & SBOM Refactor
+- Stories: OWB-S141 (himitsubako pin >=0.9.0), OWB-S142 (dependency gate fail-closed on tool error), OWB-S143 (HTTP read size cap, CWE-770), OWB-S144 (BomWithMetadata dataclass replaces monkey-patched CycloneDX Bom).
+- Goal: Close the four Sprint 31 spawns that did not make it into Sprint 32.
+- Version: v1.17.0. 1,989 tests, 85.36% coverage. Pyright budget 96 → 40 after the SBOM refactor.
+- Hotfix landed inline: SBOM provenance mtime UTC-vs-local timezone skew.
+
+### Sprint 34: Distribution Content Refresh
+- Stories: OWB-S147 (policy batch 1 — 4 updated), OWB-S148 (policy batch 2 — 3 new including PII handling), OWB-S149 (4 ECC rules — autonomous SDLC + git ops split), OWB-S150 (3 agents — policy consultation), OWB-S151 (bundle security-writetime + sprint-close-reminder hooks, absorbs TD-005, new AD-19), OWB-S152 (new vault-pii-audit skill with first-run himitsubako interview), OWB-S153 (release plumbing).
+- Goal: First bundled-content refresh since v1.14.1 (Sprint 30). Ship eight sprints of drift with a genericize pass on every artifact. Pre-commit operator review gate on every step.
+- Version: v1.18.0. 2,014 tests passed (+25), 1 skipped. Coverage ≥ 85.36%, pyright 39/40, all gates clean.
+- Deferred follow-ups: TD-005 §2 (declarative YAML rule loader for security-writetime), JS/TS/Go rules for security-writetime, blocking mode for security-writetime, scanner unit tests for vault-pii-audit, `owb init` auto-scaffold of `.owb/pii-profile.yaml`.
+
+### Sprint 35: Supply-Chain Policy Patch
+- Stories: OWB-S154 (genericize ADR-override section in `supply-chain-protection.md`), OWB-S155 (CI dep-scan suppression hotfix for pre-existing pip `GHSA-58qw-9mgm-455v` — added mid-sprint after the close PR's CI surfaced the failure on PR #14 + same failure already on main HEAD `c114f53`).
+- Goal: Close a single distribution-genericize gate slip. A +18 line addition to the bundled supply-chain policy had landed (uncommitted on `main`) carrying cross-project framing — a CI Action concept, an external story ID, and operator-account-specific repo framing — that did not match the artifact OWB actually ships. Section reframed around the bundled `dependency-gate.py` PreToolUse hook installed via `owb init`.
+- Version: v1.18.1. Patch release. 2,014 tests, 1 skipped (held). Coverage ≥ 85.36% (held). Pyright 39/40 (held). All gates clean.
+- Two intervening commits past the v1.18.0 tag rode along: `c114f53` (binary-integrity sections + `--exit-code 1` mandatory for direct `trivy fs` workflow calls + reusable-workflow SHA pinning) and `543ad69` (this section's Sprints 31–34 backfill).
+- Mid-sprint scope expansion documented: OWB-S155 surfaced when CI ran on the close PR. Pip is the installer itself, not a runtime dep of the wheel OWB ships; suppression is the canonical pattern for no-fix advisories pending an upstream patch. Filed as a separate story (rather than expanding S154) to keep the audit trail clean.
+
+### Sprint 36: Cross-Account CI Hardening (TDB-10 / TD-CROSS-010)
+- Stories: prep commit `26c239d` (owner-controlled tag pin pattern section in `supply-chain-protection.md`; origin AEL-S025 silent Slack-notify failures) + TD-CROSS-010 commit (SHA-pin every third-party Action across all four workflows; add `concurrency: cancel-in-progress: true` to `ci.yml`; preserve `docs.yml`'s Pages-required `cancel-in-progress: false` block; document deliberate non-cancel in `release.yml`).
+- Goal: Adopt the AEL supply-chain hardening baseline at OWB; close cross-project tech-debt ticket TD-CROSS-010 carried by operator-side sprint TDB-10. Branch protection on `main` is applied via `gh api -X PUT repos/originalrgsec/open-workspace-builder/branches/main/protection` after the v1.18.2 release-workflow run completes; required-checks set is `test (3.12)`, `test (3.13)`, `sast`, `dep-scan` per the current `ci.yml` job names. `enforce_admins: true`. PR required, 0 reviewer threshold (solo operator).
+- Version: v1.18.2. Patch release. 2,014 tests, 1 skipped (v1.18.1 baseline held). Coverage 85.94% (≥ 80% required). Pyright 39/40 (held). All gates clean.
+- SHAs resolved 2026-05-02 against upstream tag refs via `gh api repos/<owner>/<repo>/git/ref/tags/<tag>`. Action-pin convention documented in the `ci.yml` header comment: `uses: <owner>/<repo>@<40-char-SHA>  # vX.Y.Z (or branch ref) as of YYYY-MM-DD`. Companion vault decision: `decisions/DRN-084-volcanix-branding-namespace.md` (cross-project namespace ADR; closes TD-CROSS-001 AC-1, AC-2, AC-4 audit-only subset).
+- Deviation from sprint plan: sprint plan called for three commits (SHA-pin, concurrency, branch protection). Branch protection is an `gh api` call rather than a code commit, so the PR collapses to one CI-hardening code commit (`d2d8a87`) plus the prep commit (`26c239d`). Branch protection runs post-merge as documented in `docs/releases/v1.18.2.md`. Single combined commit rationale: SHA-pin and concurrency edits touch the same four workflow files and review cleanly together as one "CI hardening" change.
+
 ## Open Questions
 
 1. Should the CLI use `click` or `argparse`? Click provides a cleaner subcommand model but adds a dependency. Argparse is stdlib but verbose for this many subcommands. Recommendation: click.

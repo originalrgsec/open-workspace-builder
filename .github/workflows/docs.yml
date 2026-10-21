@@ -1,5 +1,7 @@
 name: Deploy Documentation
 
+# Action-pin convention: see ci.yml header comment.
+
 on:
   push:
     branches: [main]
@@ -15,6 +17,13 @@ permissions:
   pages: write
   id-token: write
 
+# Pages-deploy concurrency: GitHub Pages requires a single named
+# group serializing all Pages deploys with cancel-in-progress=false
+# so an in-flight deploy is not interrupted by a superseding
+# commit. TDB-10 / TD-CROSS-010 explicitly does NOT switch this to
+# cancel-in-progress=true — cancelling an in-flight Pages deploy
+# can leave the live site in a partially-deployed state. Build-side
+# duplicate runs are accepted as the tradeoff.
 concurrency:
   group: "pages"
   cancel-in-progress: false
@@ -23,9 +32,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4 as of 2026-05-02
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5 as of 2026-05-02
         with:
           python-version: '3.12'
 
@@ -36,7 +45,7 @@ jobs:
         run: mkdocs build
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa  # v3 as of 2026-05-02
         with:
           path: site/
 
@@ -49,4 +58,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e  # v4 as of 2026-05-02

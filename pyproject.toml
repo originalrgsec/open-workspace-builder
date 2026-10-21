@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "open-workspace-builder"
-version = "1.17.0"
+version = "1.18.3"
 description = "Scaffold, maintain, and secure AI coding workspaces"
 readme = "README.md"
 license = "MIT"
@@ -25,19 +25,39 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# litellm upper bound: versions 1.82.7 and 1.82.8 were compromised in a supply
-# chain attack on 2026-03-24 (Snyk SNYK-PYTHON-LITELLM-15762713). v1.83.0
-# reviewed 2026-04-09: Sigstore OIDC attestation confirmed, CI hardening
-# (cosign signing, pinned Codecov SHA, OpenSSF Scorecard) committed 2026-03-28
-# through 2026-03-31. No formal PIR published, but hardening evidence is
-# sufficient. Fixes CVE-2026-35030 (critical), CVE-2026-35029 (high), and
-# pass-the-hash auth bypass (high). Quarantine: 9 days (published 2026-03-31).
+# litellm bounds — supply-chain caution + advisory closure history:
+#
+#   2026-03-24: Snyk SNYK-PYTHON-LITELLM-15762713 — versions 1.82.7 + 1.82.8
+#     compromised. Cap set to <=1.83.0 at that time.
+#   2026-04-09: v1.83.0 reviewed clean (Sigstore OIDC, CI hardening, cosign
+#     signing, pinned Codecov SHA, OpenSSF Scorecard). Closes
+#     CVE-2026-35030 (critical), CVE-2026-35029 (high), pass-the-hash auth
+#     bypass (high). 9-day quarantine.
+#   2026-05-15 (v1.18.3 hotfix): four proxy-server CVEs in 1.81.8–1.83.9
+#     range:
+#       CVE-2026-42208 — proxy API-key SQLi (fix 1.83.7)  GHSA-r75f-5x8p-qvmc
+#       CVE-2026-42271 — proxy MCP RCE       (fix 1.83.7)  GHSA-v4p8-mg3p-g94g
+#       CVE-2026-42203 — proxy /prompts/test SSTI (fix 1.83.7) GHSA-xqmj-j6mv-4862
+#       CVE-2026-40217 — proxy guardrails sandbox escape (fix 1.83.10)
+#         GHSA-wxxx-gvqv-xp7p (published 2026-05-11, post-OWB#15-filing).
+#     All four are litellm.proxy-only; OWB's library-client usage is not
+#     directly exposed, but downstream consumers (Home-Ops) cannot ship the
+#     audit-deps clean state until the cap is raised.
+#   Bound rationale:
+#     lower 1.83.10 — closes all four CVEs (CVE-2026-40217 only fixes here).
+#     upper <1.84.0 — 1.84.0 published 2026-05-14, fails the OWB 7-day
+#       supply-chain-protection quarantine policy. A future minor (after
+#       2026-05-21) can lift this to <2.0.0 if 1.84.0 remains clean.
+#   2026-05-25 (security audit): lock upgraded litellm 1.83.10 → 1.83.14
+#     (published 2026-04-26, 29 days old). Unblocks python-dotenv 1.0.1 →
+#     1.2.2 (path traversal fix). Also bumps pyjwt 2.11→2.12 (proxy-only),
+#     aiohttp 3.13.3→3.13.4. Zero PyPI-listed advisories on 1.83.14.
 llm = [
-    "litellm>=1.40.0,<=1.83.0",
+    "litellm>=1.83.10,<1.84.0",
 ]
 security = [
     "pyyaml>=6.0",
-    "litellm>=1.40.0,<=1.83.0",
+    "litellm>=1.83.10,<1.84.0",
 ]
 keyring = [
     "himitsubako[keychain]>=0.9.0",

@@ -5,6 +5,156 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.3] - 2026-05-15
+
+Litellm cap-relaxation hotfix. Closes OWB#15 and unblocks downstream
+consumers (Home-Ops) from `homeops security audit-deps --deep`
+advisory churn on the four litellm proxy-server CVEs. All four
+advisories are **litellm.proxy-only**; OWB's library-client usage
+is not directly exposed, but the cap-relaxation aligns OWB's
+constraint surface with current downstream needs.
+
+### Changed
+
+- **`litellm>=1.40.0,<=1.83.0` → `litellm>=1.83.10,<1.84.0`** in
+  both `[llm]` and `[security]` extras. Lower bound 1.83.10 closes
+  CVE-2026-42208 (proxy SQLi, fix 1.83.7), CVE-2026-42271 (proxy
+  MCP RCE, fix 1.83.7), CVE-2026-42203 (proxy SSTI on
+  `/prompts/test`, fix 1.83.7), CVE-2026-40217 (proxy guardrails
+  sandbox escape, fix 1.83.10 — only fully patched here). Upper
+  bound `<1.84.0` preserves OWB's 7-day supply-chain-protection
+  quarantine: 1.84.0 was published 2026-05-14 and is too recent
+  for the policy. A future minor can lift to `<2.0.0` after the
+  quarantine window clears (≥ 2026-05-21).
+- Cap rationale comment in `pyproject.toml` rewritten to capture
+  both the original 2026-03-24 supply-chain attack history and
+  the 2026-05-15 advisory closure rationale, with GHSA IDs
+  enumerated for traceability.
+
+### Lock churn (resolver-determined, not chosen here)
+
+litellm 1.83.10 has a leaner transitive dep set than 1.83.0
+(OpenTelemetry instrumentation suite dropped upstream). Resolving
+under the new cap produces:
+
+- **Removed (12 packages):** the OpenTelemetry instrumentation suite
+  (`opentelemetry-api`, `opentelemetry-exporter-otlp-proto-common`,
+  `opentelemetry-exporter-otlp-proto-http`,
+  `opentelemetry-instrumentation`,
+  `opentelemetry-instrumentation-requests`,
+  `opentelemetry-instrumentation-threading`,
+  `opentelemetry-proto`, `opentelemetry-sdk`,
+  `opentelemetry-semantic-conventions`, `opentelemetry-util-http`),
+  plus `semantic-version` and `wrapt` (transitives only used by
+  OpenTelemetry).
+- **Downgraded:** `aiohttp` 3.13.4→3.13.3, `glom` 25.12→22.1,
+  `importlib-metadata` 8.7.1→8.5.0, `jsonschema` 4.25.1→4.23.0,
+  `litellm` 1.83.0→1.83.10, `openai` 2.30→2.24,
+  `python-dotenv` 1.2.2→1.0.1, `ruamel-yaml` 0.19.1→0.17.40,
+  `semgrep` 1.156→1.79.
+
+The **semgrep 1.156→1.79** downgrade is the most consequential
+side-effect: a 77-version drop on OWB's own SAST tool. The
+downgrade is forced by transitive constraints litellm 1.83.10
+propagates through shared deps (glom is the proximate conflict).
+Test suite remains green (2011 passed / 4 skipped / 0 failed).
+**Future story candidate:** insulate OWB-controlled tools (esp.
+semgrep) from litellm-driven cascades via
+`tool.uv.override-dependencies` or by tightening direct pins.
+
+### Tests
+
+2011 passed / 4 skipped / 0 failed under the new lock.
+
+## [1.18.2] - 2026-05-02
+
+Sprint 36 — **Cross-Account CI Hardening** (TDB-10 / TD-CROSS-010). CI/CD chore release; no behavior change to OWB itself or its bundled content. Adopts the supply-chain hardening that AEL has shipped for several sprints: every third-party Action across all four workflows is now pinned to a 40-char commit SHA, and `ci.yml` cancels superseded runs to save runner-minutes during force-pushes. Branch protection on `main` is applied via `gh api` post-merge; the workflow names this PR's CI exposes (`test (3.12)`, `test (3.13)`, `sast`, `dep-scan`) become the required-checks set.
+
+### Added
+
+- **Carried over from prep commit `26c239d`**: a new section in `src/open_workspace_builder/content/policies/supply-chain-protection.md` documenting the silent-failure mode for `@<sha>` references on cross-repo private→private reusable workflow calls (0-job runs, "workflow file issue" UI message, empty `gh run view --log`), and the owner-controlled annotated-tag recovery pattern with caller-side `tag → <40-char-sha> as of YYYY-MM-DD` comment convention. Public-repo reusable workflows and third-party Actions are unaffected and continue to follow the raw-SHA rule. Origin: AEL-S025 silent Slack-notify failures (2026-05-01).
+
+### Changed
+
+- **Action-pin convention** documented in the `ci.yml` header comment: `uses: <owner>/<repo>@<40-char-SHA>  # vX.Y.Z (or branch ref) as of YYYY-MM-DD`. SHAs resolved 2026-05-02 against upstream tag refs via `gh api repos/<owner>/<repo>/git/ref/tags/<tag>`.
+- **`ci.yml`** — pinned `actions/checkout@v4` (3 occurrences), `astral-sh/setup-uv@v4` (2 occurrences). Added workflow-level `concurrency` block: group `ci-${{ github.workflow }}-${{ github.ref }}`, `cancel-in-progress: true`.
+- **`release.yml`** — pinned `actions/checkout@v4` (2 occurrences), `actions/setup-python@v5` (3 occurrences), `actions/upload-artifact@v4`, `actions/download-artifact@v4` (3 occurrences), `pypa/gh-action-pypi-publish@release/v1`. Header comment documents the deliberate omission of `cancel-in-progress`: tag-push and dispatch-replay invocations must run to completion so PyPI upload, GitHub Release creation, and Slack notify cannot be left half-executed. The workflow itself is idempotent (skip-existing on PyPI; release-create-or-clobber-upload; Slack gated on `publish.result == 'success'`), so retry is safe.
+- **`docs.yml`** — pinned `actions/checkout@v4`, `actions/setup-python@v5`, `actions/upload-pages-artifact@v3`, `actions/deploy-pages@v4`. Existing `concurrency: group: "pages", cancel-in-progress: false` block kept (GitHub-Pages-required pattern; cancelling an in-flight Pages deploy can leave the live site partially deployed). Comment expanded inline to document why TDB-10 explicitly does NOT switch this to `cancel-in-progress: true`.
+- **`suppression-monitor.yml`** — pinned `actions/checkout@v4`, `astral-sh/setup-uv@v4`.
+
+### Stats
+
+- Tests, coverage, pyright budget unchanged from v1.18.1 (no source changes).
+- Ruff / format / Trivy / Semgrep / Gitleaks / pyright-gate: clean.
+
+### Branch protection (post-merge gh api PUT)
+
+Applied via `gh api -X PUT repos/originalrgsec/open-workspace-builder/branches/main/protection` after the v1.18.2 release-workflow run completes. Required checks are the four CI job names exposed by `ci.yml`: `test (3.12)`, `test (3.13)`, `sast`, `dep-scan`. `enforce_admins: true`. PR required, 0 reviewer threshold (solo operator). Pre-state snapshot recorded in the TDB-10 session log so the change is reversible.
+
+## [1.18.1] - 2026-05-01
+
+Sprint 35 — **Supply-Chain Policy Patch**. Single-story patch release that genericizes a +18 line addition to the bundled `supply-chain-protection.md` policy. The addition cited a deployment-layer CI Action concept, an external (non-OWB) story ID, and operator-account-specific framing that violated the v1.18.0 distribution-genericize gate. Section reframed around the artifact OWB actually ships — the bundled `dependency-gate.py` PreToolUse hook installed at `~/.claude/hooks/dependency-gate.py` after `owb init`. Two prior commits to `main` past the v1.18.0 tag (`c114f53` binary-integrity / reusable-workflow SHA pinning; `543ad69` SDR sprint-plan backfill) ride along into v1.18.1.
+
+### Changed
+
+- `src/open_workspace_builder/content/policies/supply-chain-protection.md` — ADR-override section reframed away from the "GitHub Action enforce-mode" framing toward the bundled PreToolUse hook the consumer actually runs locally. Four-step procedure (file ADR exception → one-time override commit → do not disable globally → review at sprint close) preserved with each step adapted to local-hook semantics: ADR location is the project's own `decisions/` index (not an external "deployment vault"); override mechanisms are the manifest pin (preserved) and the hook's `--first-party-prefix` argument list (replaces the per-Action invocation flag); "do not disable the hook globally" replaces "do not flip to permanent report-only mode". The closing-paragraph contract — only sanctioned override path, ADR before the override commit, commit message references ADR ID — is preserved verbatim.
+- Carried over from `c114f53` (already on `main` past v1.18.0 tag): two new sections in the same policy file (§6.1 Binary integrity in CI with `_checksums.txt` manifest verification or hardcoded SHA256 fallback; §6.2 Reusable-workflow SHA pinning to 40-char commit SHAs). The `--exit-code 1` flag for direct `trivy fs` workflow calls is now documented as mandatory (previously implicit). Repos with a dirty CVE baseline must file cleanup follow-ups before adopting the gate, not relax it.
+- Carried over from `543ad69`: SDR sprint-plan section gained backfilled entries for Sprints 31–34.
+- `.github/workflows/ci.yml` — `dep-scan` job suppresses pre-existing pip `GHSA-58qw-9mgm-455v`. Filed as **OWB-S155** within Sprint 35 after the close PR's CI surfaced the failure. The advisory is a pip behavior-tightening change for concatenated tar+ZIP archives with no `fix_versions`; the existing two-phase scan logic (which auto-exempts CVEs that have fixes available) cannot catch it. Pip is the installer itself (build-side, dev/install only), not a runtime dependency of the wheel OWB ships, so suppression does not affect end-user supply-chain posture.
+
+### Stats
+
+- 2,014 tests passing, 1 skipped (Sprint 34 baseline held; no test changes in this docs-only patch).
+- Coverage ≥ 85.36% (held).
+- Pyright basic mode: 39 errors observed against budget of 40 (held; DRN-078).
+- Ruff / format / Trivy / Semgrep / Gitleaks / pyright-gate: clean.
+- Sprint 35: two stories (OWB-S154 docs genericize, OWB-S155 CI dep-scan suppression hotfix added mid-sprint), ~1.5 points total.
+
+## [1.18.0] - 2026-04-22
+
+Sprint 34 — **Distribution Content Refresh**. First bundled-content refresh since v1.14.1 (Sprint 30). Ports eight sprints of vault-policy, global-rule, hook, and skill drift into `src/open_workspace_builder/content/` and `src/open_workspace_builder/vendor/`, with a genericize pass on every artifact (operator-specific paths, account names, project identifiers, and incident citations stripped).
+
+### Added
+
+- **New bundled policies** (`src/open_workspace_builder/content/policies/`):
+  - `scrub-skills-quick-reference.md` — one-page summary of the mid-sprint `/simplify` → `/code-review` → `/refactor-clean` order.
+  - `cli-standards.md` — shared Click-based CLI conventions (config loading, auth group, exit codes, output conventions, async bridge, contract testing).
+  - `pii-handling-policy.md` — PII and secrets encryption policy with three-way storage-backend choice (himitsubako / direct age / explicit refuse-plaintext) and two-level profile location.
+- **New bundled skill** (`src/open_workspace_builder/content/skills/vault-pii-audit/`):
+  - `SKILL.md` — prose skill with first-run interview covering PII element survey, exclusions, storage backend selection, himitsubako install detection, age-key path, and profile write. Refuse-fallback clause if operator declines both encrypted-store backends.
+  - `scripts/scan.py` — config-driven scanner. 18 detection patterns (11 secrets, 7 PII) gated by the profile's `categories:` list. Pre-seeded exclusions minimal (`noreply@anthropic.com` only); operator-specific exclusions load from `<vault_root>/.owb/pii-profile.yaml`.
+- **New bundled PreToolUse hooks** (`src/open_workspace_builder/vendor/ecc/hooks/`):
+  - `security-writetime.py` — scans `Edit` / `Write` / `MultiEdit` payloads against nine regex rules (GHA workflow injection, `subprocess(shell=True)`, `yaml.load()` without SafeLoader, HTTP clients with `verify=False`, `Flask(debug=True)`, `eval`/`exec`, `pickle.loads`, `0.0.0.0` bind in config, hardcoded private keys). Warn-only, `# noqa: security` suppression.
+  - `sprint-close-reminder.sh` — warns on `git commit` commands whose message contains a version pattern or release keyword.
+- **New ADR:** `AD-19` — documents the decision to bundle the two hooks byte-near-identically with Python-literal rule tuples, warn-only semantics, operator-controlled install, and the explicit deferral of TD-005 §2 (declarative YAML/TOML rule loader).
+- **New tests** (`tests/hooks/`):
+  - `test_security_writetime.py` — 17 tests covering one positive per rule, path-filter boundaries, `noqa` suppression, `main()` tool-name gating.
+  - `test_sprint_close_reminder.py` — 8 tests covering version-pattern detection and plain-commit silence.
+
+### Changed
+
+- **`content/policies/development-process.md`:** added Scrub Skills section, new item 3a "GitHub Release — Verify, Don't Create", Post-Deploy Verification item 5, Scrub Skills Record item 6, Quality-Metrics Report item 7 with gate table; renumbered to 10-item checklist.
+- **`content/policies/oss-health-policy.md`:** added Pre-Install Gate (MANDATORY) section with four-step license-first sequencing.
+- **`content/policies/allowed-licenses.md`:** retroactive de-branding pass — `applies-to` generalized, 12 prose instances of operator branding removed, `Beancount` CLI exemption row removed.
+- **`content/policies/product-development-workflow.md`:** Phase 5 QA list gains item 10 pointing at Scrub Skills.
+- **`vendor/ecc/rules/common/sprint-workflow.md`:** +50 lines — Autonomous End-to-End Contract, clarifying-questions-in-planning-only clause, enumerated 10-item Sprint Completion Checklist, Git Ops Ownership section.
+- **`vendor/ecc/rules/common/git-workflow.md`:** +37 lines — Autonomous Git Operations + Gated Ops split.
+- **`vendor/ecc/rules/common/development-workflow.md`:** +6 lines — sprint-execution shortcut at top of Feature Implementation Workflow.
+- **`vendor/ecc/rules/common/security.md`:** small clarity tweak for tooling-generic framing.
+- **`vendor/ecc/agents/code-reviewer.md`, `planner.md`, `tdd-guide.md`:** policy-consultation sections pointing at bundled policy filenames.
+
+### Deferred
+
+- Declarative YAML/TOML rule loader for `security-writetime.py` (TD-005 §2). Rules stay as a `@dataclass(frozen=True)` tuple in this release.
+- JavaScript / TypeScript / Go rules for `security-writetime.py`.
+- Blocking mode for any `security-writetime.py` rule.
+- Scanner unit tests for `vault-pii-audit/scripts/scan.py`.
+- `owb init` auto-scaffold of `.owb/pii-profile.yaml` (the skill's first-run interview generates the file on demand).
+
+### Migration
+
+No breaking changes, no Python API signature changes, no CLI command signature changes. Operators running `owb migrate` on an existing workspace pick up the new and updated files alongside the existing tree. First invocation of the new `vault-pii-audit` skill triggers the one-time interview.
+
 ## [1.17.0] - 2026-04-18
 
 Sprint 33 — **Hook Hardening & SBOM Refactor**. Closes the four

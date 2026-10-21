@@ -49,4 +49,27 @@
 # resolve `himitsubako>=0.9.0`; local resolved cleanly because the
 # uv cache had already seen the PyPI publish before CI's clean
 # clone did.
-exclude-newer = "2026-04-19"
+# 2026-05-25 (security audit): pin advanced from 2026-04-19 to 2026-05-18
+# to resolve three HIGH CVEs in transitive dependencies:
+#   urllib3 2.6.3 → 2.7.0: CVE-2026-44431 (header leak on cross-origin
+#     redirect), CVE-2026-44432 (decompression DoS). Published 2026-05-07,
+#     quarantine cleared 2026-05-14.
+#   python-multipart 0.0.22 → 0.0.27: CVE-2026-42561 + GHSA-mj87-hwqh-73pj
+#     (multipart parsing DoS). GHSA-pp6c-gr5w-3c5g (header-count DoS).
+#   starlette 1.0.0 → 1.0.1: PYSEC-2026-161 (host-header injection / auth
+#     bypass).
+# python-dotenv path-traversal fix (1.2.2) is blocked by litellm 1.83.10's
+# exact pin on python-dotenv==1.0.1. Tracked as a future litellm bump item.
+exclude-newer = "2026-05-18"
+
+# Supply-chain constraints on transitive dependencies (2026-05-25 audit).
+# starlette>=1.0.1 constraint is present but ineffective until the next
+# exclude-newer advance: 1.0.1 published 2026-05-21, quarantine clears
+# 2026-05-28. The python-multipart 0.0.29 upgrade mitigates the most
+# exploitable vector (parsing DoS) in the Starlette stack meanwhile.
+constraint-dependencies = [
+    "urllib3>=2.7.0",
+    "python-multipart>=0.0.27",
+    "starlette>=1.0.1",
+    "python-dotenv>=1.2.2",
+]

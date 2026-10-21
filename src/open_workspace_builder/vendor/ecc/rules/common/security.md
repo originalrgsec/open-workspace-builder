@@ -2,9 +2,7 @@
 
 ## Mandatory Security Checks
 
-Before ANY commit, verify these LLM-judgment items. Items enforced by pre-commit
-hooks (secrets scanning, SAST, linting) are omitted; configure tooling-level
-enforcement separately.
+Before ANY commit, verify these LLM-judgment items. Items enforced by pre-commit hooks (secrets scanning, SAST, linting) are omitted; configure tooling-level enforcement separately.
 
 - [ ] All user inputs validated
 - [ ] CSRF protection enabled
@@ -21,6 +19,7 @@ enforcement separately.
 ## Security Response Protocol
 
 If security issue found:
+
 1. STOP immediately
 2. Use **security-reviewer** agent
 3. Fix CRITICAL issues before continuing

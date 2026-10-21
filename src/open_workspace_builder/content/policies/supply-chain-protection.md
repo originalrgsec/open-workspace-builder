@@ -66,11 +66,116 @@ No release age filter. Mitigate by:
 
 Add these checks to every CI pipeline:
 - **`trivy fs . --severity CRITICAL,HIGH --exit-code 1`** as a required check on every PR. Trivy covers npm, pip, Cargo, Go, and more in a single scan. Apache 2.0 license. GitHub Action: `aquasecurity/trivy-action` with `scan-type: fs`.
+  - **The `--exit-code 1` flag is mandatory.** Workflows that ship Trivy as `--exit-code 0` (informational only) silently downgrade the gate. New repos must adopt `--exit-code 1` from day one. Repos with a dirty baseline must file CVE-cleanup follow-ups before adopting the gate, not relax it. (Pre-commit hooks that run Trivy already exit non-zero on findings; the rule only applies to direct `trivy fs` workflow calls.)
 - **`npm audit --audit-level=high`** as an additional npm-specific check (built-in, free).
 - **`pip-audit`** for Python projects without uv (or as a complement to Trivy).
 - **Lockfile integrity:** fail if lockfile changed without a corresponding dependency update PR.
 - **Renovate** (self-hosted, free) for automated, reviewable dependency update PRs. Configure `minimumReleaseAge: "7 days"` to enforce quarantine on automated updates. Never auto-merge.
 - **osv-scanner** (optional, Apache 2.0) as a second opinion alongside Trivy.
+
+#### 6.1 Binary integrity in CI
+
+CI workflows that download release-tarball binaries (`curl | tar`,
+GitHub release assets, etc.) **must** verify SHA256 before extraction.
+Two acceptable patterns:
+
+1. **Upstream `_checksums.txt` manifest** (preferred). Most projects
+   that publish release tarballs also publish a checksums manifest
+   alongside them (e.g., `trivy_<VERSION>_checksums.txt`,
+   `gitleaks_<VERSION>_checksums.txt`,
+   `sops-v<VERSION>.checksums.txt`). Pattern:
+
+   ```bash
+   curl -fsSL "${binary_url}" -o /tmp/binary.tar.gz
+   curl -fsSL "${checksums_url}" -o /tmp/checksums.txt
+   ( cd /tmp && grep " ${expected_artifact}\$" checksums.txt | sha256sum --check - )
+   tar -xz -C "$HOME/.local/bin" -f /tmp/binary.tar.gz "${binary_name}"
+   ```
+
+2. **Hardcoded SHA256 in workflow env** (fallback). Some projects
+   publish only Sigstore `.proof` attestations rather than a
+   `_checksums.txt` manifest (notably `FiloSottile/age`). For those,
+   compute the SHA256 once against the pinned release version and
+   pin the value in workflow `env:`. Pattern:
+
+   ```yaml
+   env:
+     AGE_VERSION: "1.3.1"
+     AGE_LINUX_AMD64_SHA256: "bdc69c09cbdd6cf8b1f333d372a1f58247b3a33146406333e30c0f26e8f51377"
+   ```
+
+   ```bash
+   curl -fsSL "${age_url}" -o /tmp/age.tar.gz
+   echo "${AGE_LINUX_AMD64_SHA256}  /tmp/age.tar.gz" | sha256sum --check -
+   ```
+
+   Bumping the pinned version requires recomputing the hash against
+   the new release. Record the computation date in a comment.
+
+The unsigned `curl ... | tar -xz` pattern is **prohibited** in CI.
+A network man-in-the-middle (or a compromised release asset that
+hasn't been yanked yet) bypasses every other supply-chain control if
+the binary itself isn't verified.
+
+#### 6.2 Reusable-workflow SHA pinning
+
+GitHub Actions reusable workflows referenced via `uses:` must pin to
+a commit SHA, not a branch:
+
+- **Wrong:** `uses: org/repo/.github/workflows/foo.yml@main`
+- **Right:** `uses: org/repo/.github/workflows/foo.yml@<40-char-sha>  # source PR / date`
+
+Combined with `secrets: inherit`, an unpinned reusable workflow
+makes every consuming repo vulnerable to a single-point compromise
+of the source repo. SHA-pinning constrains the blast radius to the
+specific commit you reviewed at pin time.
+
+The same rule applies to third-party Action `uses:` references
+(`actions/checkout`, `astral-sh/setup-uv`, etc.) — pin to a 40-char
+commit SHA with the tag name in a trailing comment for readability.
+
+**Bumping a pin** is a multi-repo PR set whenever the source
+workflow changes. Walk the consumer set, pick a known-good SHA on
+the source repo's main branch, and update each consumer's pin in
+its own PR. Add a comment naming the source PR or branch the SHA
+was on at pin time so the audit trail stays intact across rotations.
+
+**Pin shape: owner-controlled tag preferred over raw `@SHA` for
+private→private reusable workflows.** GitHub's resolution of
+`@<40-char-sha>` for cross-repo private→private reusable-workflow
+calls is, in some configurations, stricter than `@<branch>` or
+`@<tag>`. The observed failure mode is silent: every release fires
+the workflow, but the run starts with 0 jobs, 0s duration, and a
+"workflow file issue" message visible only via the GitHub web UI.
+`gh run view --log` and `gh api .../jobs` return empty because
+there is no job to log against. The rejection happens at
+workflow-validation time before any step runs.
+
+The supported pattern is an **owner-controlled annotated tag** on
+the source repo (e.g., `@notify-updates-v1`,
+`@dependency-gate-v1.0.2`) pinned to a specific reviewed commit.
+The tag is immutable in practice (only the source-repo owner can
+move it; do not), so the policy intent — pin to a specific audited
+commit — is preserved. The tag → SHA mapping is recorded in the
+source repo's release notes for that tag, which keeps the audit
+trail intact end-to-end.
+
+Caller-side comment convention:
+
+```
+uses: org/repo/.github/workflows/foo.yml@workflow-tag-vX  # tag → <40-char-sha> as of YYYY-MM-DD
+```
+
+This documents the resolution at pin time without re-introducing
+the raw-SHA failure mode. Public-repo reusable workflows and
+third-party Actions are not affected by the validation issue and
+continue to follow the raw-SHA rule above.
+
+**When a raw-SHA pin starts failing.** If a previously-working
+`@<sha>` reference begins emitting silent 0-job runs after a
+tooling or repo-config change, the recovery is to retag the source
+commit and convert callers to the tag form. The SHA itself remains
+in the audit trail via the tag's release notes.
 
 ### 7. CLAUDE.md / Project Instructions
 
@@ -116,6 +221,24 @@ For non-CVE situations where you genuinely need a package released in the last 7
 - For Renovate: temporarily override `minimumReleaseAge` for a specific package in `renovate.json` with a comment and revert after the update merges.
 - Document the bypass in the commit message with justification
 - This should be rare (once or twice a year at most)
+
+### ADR override procedure for `dependency-gate` PreToolUse hook blocks
+
+The bundled `dependency-gate.py` PreToolUse hook (shipped at `vendor/ecc/hooks/dependency-gate.py` and registered at `~/.claude/hooks/dependency-gate.py` after `owb init`) blocks dependency-install commands when a finding violates project policy: license not on the allow-list, package inside the 7-day quarantine window, or unknown-package state. When the operator has independently judged a finding acceptable for a specific install, the sanctioned override path is:
+
+1. **File an ADR exception** in the project's decisions index under `decisions/ADR-NNN-<package>-gate-exception.md` with:
+   - The package name + version being exempted.
+   - The finding category (license, quarantine, unknown).
+   - The reason the operator judges the finding acceptable.
+   - The expiry condition (e.g., "until upstream allow-list adds license X" or "until quarantine clock elapses on YYYY-MM-DD").
+   - The blast radius (which workspace, which repo, which downstream consumers depend on the exempted package).
+2. **One-time override commit** referencing the ADR. Two valid mechanisms:
+   - For a one-shot package: pin its version exact in the manifest with an inline comment naming the ADR and the expiry condition (preferred — leaves an audit trail in the manifest itself).
+   - For a class of first-party findings: add the package prefix to the hook's `--first-party-prefix` argument list. Only add prefixes for packages the operator owns or builds in-tree.
+3. **Do NOT disable the hook globally.** Removing the hook from `settings.json` or flipping it to a permanent allow-everything configuration is not an ADR exception; it is a reversal of the policy that installed the gate. Reversal needs its own story.
+4. **Review the ADR exception at sprint close.** If the expiry condition is met, remove the manifest pin (or the prefix entry) in the same sprint. If not, record the carryover in the next sprint's plan.
+
+This procedure is the only sanctioned path for working around `dependency-gate` hook blocks. Filing the ADR before the override commit is a hard requirement; the commit message must reference the ADR ID.
 
 ### FOSS Tool Reference
 

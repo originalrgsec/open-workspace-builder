@@ -165,9 +165,16 @@ class TestSprintWorkflowRule:
         assert "execution phase contract" in content.lower()
 
     def test_gated_actions(self, content: str) -> None:
-        """Should list actions that remain gated."""
-        assert "force push" in content.lower()
-        assert "tagging a release" in content.lower()
+        """Should list actions that remain gated.
+
+        The v1.18.0 refresh restructures the gated list around destructive /
+        cross-account operations only. Tag creation moved to default-yes
+        under the Git Ops Ownership model, but the hard-floor rules
+        remain: never force-push, never cross an account boundary.
+        """
+        lowered = content.lower()
+        assert "push --force" in lowered or "force push" in lowered
+        assert "cross-account" in lowered or "account boundary" in lowered
 
     def test_default_yes_actions(self, content: str) -> None:
         """Should list default-yes actions."""
