@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   urllib3 and virtualenv. No quarantine override used. Remaining:
   certifi GHSA-6q48-6c7w-9gw2, whose fix (2026.10.19) clears the 7-day
   window on 2026-10-26.
+- **virtualenv** floor `>=21.14.7` (GHSA-vxj4-q4g9-crj7, bash `activate`
+  command execution via environment name). Pulls distlib 0.4.3 and
+  packaging 26.3. Published 2026-10-12, inside the existing cutoff.
 - **`constraint-dependencies` moved to `[tool.uv]` in `pyproject.toml`.**
   uv does not apply them from `uv.toml` when locking a project, so the
   previous floors (including `starlette>=1.0.1`) never reached
