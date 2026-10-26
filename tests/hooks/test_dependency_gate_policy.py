@@ -50,6 +50,8 @@ def _iso(days_ago: int) -> str:
         "(MIT OR GPL-3.0-only)",
         "BSD License",
         "ISC License (ISCL)",
+        "Apache 2.0 License",
+        "Apache License, Version 2.0",
     ],
 )
 def test_license_allowed(gate, expression: str) -> None:
