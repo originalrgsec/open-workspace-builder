@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Dependency gate: Apache-2.0 spelling variants.** The exact-match license
+  allowlist now accepts `Apache 2.0 License`, `Apache-2.0 License`,
+  `Apache License, Version 2.0` and `Apache License Version 2.0`. Packages
+  such as `transformers` publish only a free-text `license` field with this
+  wording and were blocked as unlicensed.
+
 ### Security
 
 - **Dependency sweep.** `exclude-newer` advanced to
