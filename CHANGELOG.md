@@ -7,9 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.18.4] - 2026-11-02
+
 ### Security
 
-- **Dependency sweep.** `exclude-newer` advanced to
+- **v1.18.4 dependency patch.** `exclude-newer` advanced to
+  `2026-10-26T00:00:00Z` (7 days before 2026-11-02). No quarantine
+  override used.
+  - **filelock** floor `>=4.2.1` (GHSA-v4x8-3wr5-3wq8, GHSA-9vhv-jxww-xfm5,
+    GHSA-567q-5qvw-pf92, GHSA-j8f7-rjxc-mr56, GHSA-8mx5-7m5m-r77g,
+    GHSA-69hj-f68j-2879, GHSA-rfpc-qcw5-3pc4, GHSA-cwqr-hh33-gh44,
+    GHSA-fq56-3cx3-fjxp). Major bump 3.25.2 → 4.2.4; full suite passes.
+  - **virtualenv** floor `>=21.14.9` (GHSA-c978-59m8-c77v,
+    GHSA-494p-63j8-28p3, GHSA-6w3r-xr62-4xcp, GHSA-qmx5-4p3x-wvqf,
+    GHSA-fc2g-4w5p-6whm, GHSA-cx28-75q4-x26q, GHSA-394h-qwmc-48pf).
+    21.14.7 → 21.14.13.
+  - **certifi quarantine exception retired.** The per-package
+    `exclude-newer-package` override added in the 2026-10-21 sweep is
+    removed; certifi 2026.10.19 is now admitted by the global pin. The
+    override's "owner-approved" annotation could not be verified.
+- **Deferred:** pyasn1 0.6.5 (GHSA-2qm8-x737-gmw5, GHSA-fm9c-5rcf-2q5p,
+  GHSA-mm57-4v3p-rchx, GHSA-9m75-vc3g-4x39) was published 2026-10-27 and
+  clears quarantine on 2026-11-03. Locked at 0.6.4.
+- **Residual:** pyjwt CVE-2026-103001 / PYSEC-2026-4146 has no fixed
+  release. Locked at 2.15.1 (latest).
+
+- **Dependency sweep (PRs #23-#26, merged 2026-10-21).** `exclude-newer` advanced to
   `2026-10-14T00:00:00Z` (explicit UTC; a bare date resolved to the end
   of the day in local time). Closes 84 of 85 open advisories in
   `uv.lock` across aiohttp, anyio, cryptography, fsspec, httplib2, idna,
@@ -1562,7 +1585,8 @@ See [release manifest](docs/releases/v0.6.0.md) for full details.
 - ECC upstream update workflow with fetch, diff, scan, accept/reject
 - 253 tests
 
-[Unreleased]: https://github.com/originalrgsec/open-workspace-builder/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/originalrgsec/open-workspace-builder/compare/v1.18.4...HEAD
+[1.18.4]: https://github.com/originalrgsec/open-workspace-builder/compare/v1.18.3...v1.18.4
 [0.5.0]: https://github.com/originalrgsec/open-workspace-builder/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/originalrgsec/open-workspace-builder/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/originalrgsec/open-workspace-builder/compare/v0.2.0...v0.3.0

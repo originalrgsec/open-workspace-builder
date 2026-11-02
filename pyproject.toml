@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "open-workspace-builder"
-version = "1.18.3"
+version = "1.18.4"
 description = "Scaffold, maintain, and secure AI coding workspaces"
 readme = "README.md"
 license = "MIT"
@@ -144,8 +144,9 @@ testpaths = ["tests"]
 constraint-dependencies = [
     "aiohttp>=3.14.4",            # CVE-2026-111064/111066/69244, GHSA-2g87-pp6c-29x5
     "anyio>=4.14.2",
-    "certifi>=2026.10.19",        # GHSA-6q48-6c7w-9gw2 (quarantine exception, see uv.toml)              # CVE-2026-63374, CVE-2026-64847
+    "certifi>=2026.10.19",        # GHSA-6q48-6c7w-9gw2 # CVE-2026-63374, CVE-2026-64847
     "cryptography>=50.0.0",       # CVE-2026-69247/69248/69249, GHSA-537c-gmf6-5ccf
+    "filelock>=4.2.1",            # GHSA-v4x8-3wr5-3wq8 and 8 related advisories (2026-11-02)
     "fsspec>=2026.6.0",           # CVE-2026-104851
     "httplib2>=0.32.0",           # CVE-2026-59939
     "idna>=3.15",                 # CVE-2026-45409
@@ -161,5 +162,5 @@ constraint-dependencies = [
     "python-dotenv>=1.2.2",
     "starlette>=1.3.1",           # CVE-2026-48710/48817/48818, CVE-2026-54282/54283
     "urllib3>=2.8.0",             # CVE-2026-97687/97688/97689
-    "virtualenv>=21.14.7",        # CVE-2026-102925/102930/102937/102938, GHSA-vxj4-q4g9-crj7
+    "virtualenv>=21.14.9",        # CVE-2026-102925/102930/102937/102938, GHSA-vxj4-q4g9-crj7, GHSA-c978-59m8-c77v +6 (2026-11-02)
 ]
