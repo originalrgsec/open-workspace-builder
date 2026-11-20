@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "open-workspace-builder"
-version = "1.18.4"
+version = "1.18.5"
 description = "Scaffold, maintain, and secure AI coding workspaces"
 readme = "README.md"
 license = "MIT"
@@ -152,9 +152,9 @@ constraint-dependencies = [
     "idna>=3.15",                 # CVE-2026-45409
     "msgpack>=1.2.1",             # GHSA-6v7p-g79w-8964
     "multidict>=6.9.1",           # CVE-2026-104874
-    "oauthlib>=4.0.0",            # CVE-2026-49264, CVE-2026-49265
+    "oauthlib>=4.0.1",            # CVE-2026-49264/49265, CVE-2026-49272 (GHSA-3jp2-3mrg-2vxc)
     "pip>=26.2",                  # CVE-2026-13346/3219/6357/8643
-    "pyasn1>=0.6.4",              # CVE-2026-59884/59885/59886
+    "pyasn1>=0.6.5",              # CVE-2026-59884/59885/59886, GHSA-2qm8/fm9c/mm57/9m75
     "pydantic-settings>=2.14.2",  # GHSA-4xgf-cpjx-pc3j
     "pygments>=2.20.0",           # CVE-2026-4539
     "pyjwt>=2.15.0",              # CVE-2026-48522..48526, CVE-2026-101917/101918, 102267..102275

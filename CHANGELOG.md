@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.18.5] - 2026-11-20
+
+### Security
+
+- **v1.18.5 dependency patch.** `exclude-newer` advanced to
+  `2026-11-13T00:00:00Z` (7 days before 2026-11-20). No quarantine
+  override used.
+  - **oauthlib** floor `>=4.0.1` (CVE-2026-49272 / GHSA-3jp2-3mrg-2vxc).
+    4.0.0 → 4.0.1. Published 2026-10-31; quarantine cleared 2026-11-07.
+  - **pyasn1** floor `>=0.6.5` (GHSA-2qm8-x737-gmw5, GHSA-fm9c-5rcf-2q5p,
+    GHSA-mm57-4v3p-rchx, GHSA-9m75-vc3g-4x39). 0.6.4 → 0.6.5. Published
+    2026-10-27; quarantine cleared 2026-11-03 (deferred from v1.18.4).
+- **Residual:** pyjwt CVE-2026-103001 / PYSEC-2026-4146 still has no fixed
+  release. Locked at 2.15.1 (latest).
+
 ## [1.18.4] - 2026-11-02
 
 ### Security
@@ -1585,7 +1600,8 @@ See [release manifest](docs/releases/v0.6.0.md) for full details.
 - ECC upstream update workflow with fetch, diff, scan, accept/reject
 - 253 tests
 
-[Unreleased]: https://github.com/originalrgsec/open-workspace-builder/compare/v1.18.4...HEAD
+[Unreleased]: https://github.com/originalrgsec/open-workspace-builder/compare/v1.18.5...HEAD
+[1.18.5]: https://github.com/originalrgsec/open-workspace-builder/compare/v1.18.4...v1.18.5
 [1.18.4]: https://github.com/originalrgsec/open-workspace-builder/compare/v1.18.3...v1.18.4
 [0.5.0]: https://github.com/originalrgsec/open-workspace-builder/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/originalrgsec/open-workspace-builder/compare/v0.3.0...v0.4.0
