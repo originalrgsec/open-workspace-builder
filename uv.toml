@@ -76,7 +76,11 @@
 # "owner-approved" annotation could not be verified.
 # Deferred: pyasn1 0.6.5 (GHSA-2qm8/fm9c/mm57/9m75) published 2026-10-27,
 #   clears quarantine 2026-11-03. Advance the pin then.
-exclude-newer = "2026-10-26T00:00:00Z"
+# 2026-11-20 (v1.18.5): pin advanced to 2026-11-13T00:00:00Z (7 days before
+# 2026-11-20) to admit pyasn1 0.6.5 (published 2026-10-27; quarantine cleared
+# 2026-11-03) and oauthlib 4.0.1 (published 2026-10-31; quarantine cleared
+# 2026-11-07). No quarantine override.
+exclude-newer = "2026-11-13T00:00:00Z"
 
 
 # constraint-dependencies live in pyproject.toml [tool.uv]: uv does not
